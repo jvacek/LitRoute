@@ -3,7 +3,7 @@ from django.contrib.gis.geos import Point
 from django.utils import timezone
 from factory import fuzzy
 
-from .models import CheckIn, Unit
+from .models import CheckIn, Game, Unit
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -13,6 +13,13 @@ class UserFactory(factory.django.DjangoModelFactory):
     username = factory.Faker("user_name")
     email = factory.Faker("email")
     password = factory.Faker("password")
+
+
+class GameFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Game
+
+    mode = Game.Modes.RELAY
 
 
 class UnitFactory(factory.django.DjangoModelFactory):
