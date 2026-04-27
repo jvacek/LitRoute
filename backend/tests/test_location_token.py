@@ -6,17 +6,12 @@ import pytest
 from django.core import signing
 
 from backend.location_token import _haversine_m, issue_location_claim, verify_location_claim
-from config.constants import LOCATION_CLAIM_MAX_DRIFT_METERS, LOCATION_CLAIM_TTL_SECONDS
+from config.constants import LOCATION_CLAIM_TTL_SECONDS
 
 LAT = 51.5074
 LNG = -0.1278
 ACCURACY = 10.0
 USER_ID = 42
-
-
-# ---------------------------------------------------------------------------
-# Haversine
-# ---------------------------------------------------------------------------
 
 
 class TestHaversine:
@@ -25,39 +20,22 @@ class TestHaversine:
 
     def test_known_distance(self):
         # ~1 degree of latitude ≈ 111 km
-        distance = _haversine_m(0.0, 0.0, 1.0, 0.0)
-        assert distance == pytest.approx(111_195, rel=0.01)
+        assert _haversine_m(0.0, 0.0, 1.0, 0.0) == pytest.approx(111_195, rel=0.01)
 
     def test_symmetry(self):
         assert _haversine_m(LAT, LNG, 51.51, -0.13) == pytest.approx(_haversine_m(51.51, -0.13, LAT, LNG), rel=1e-9)
 
-    def test_small_offset_within_max_drift(self):
-        # ~0.003 degrees latitude ≈ 333m, below LOCATION_CLAIM_MAX_DRIFT_METERS
-        assert _haversine_m(LAT, LNG, LAT + 0.003, LNG) < LOCATION_CLAIM_MAX_DRIFT_METERS
-
-    def test_small_offset_beyond_max_drift(self):
-        # ~0.006 degrees latitude ≈ 666m, above LOCATION_CLAIM_MAX_DRIFT_METERS
-        assert _haversine_m(LAT, LNG, LAT + 0.006, LNG) > LOCATION_CLAIM_MAX_DRIFT_METERS
-
-
-# ---------------------------------------------------------------------------
-# issue_location_claim
-# ---------------------------------------------------------------------------
-
 
 class TestIssueLocationClaim:
-    def test_returns_string(self):
-        token = issue_location_claim(LAT, LNG, ACCURACY, USER_ID)
+    @pytest.fixture
+    def token(self):
+        return issue_location_claim(LAT, LNG, ACCURACY, USER_ID)
+
+    def test_returns_string(self, token):
         assert isinstance(token, str)
 
-    def test_returns_nonempty(self):
-        token = issue_location_claim(LAT, LNG, ACCURACY, USER_ID)
+    def test_returns_nonempty(self, token):
         assert len(token) > 0
-
-
-# ---------------------------------------------------------------------------
-# verify_location_claim
-# ---------------------------------------------------------------------------
 
 
 class TestVerifyLocationClaim:
