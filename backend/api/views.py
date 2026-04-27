@@ -214,7 +214,7 @@ class UnitViewSet(RetrieveModelMixin, GenericViewSet):
     serializer_class = UnitSerializer
     lookup_field = "identifier"
     permission_classes = [IsAuthenticatedOrReadOnly]
-    queryset = Unit.objects.annotate(
+    queryset = Unit.objects.select_related("game").annotate(
         checkin_count=Count("checkin", distinct=True),
         subscriber_count=Count("subscribers", distinct=True),
     )
@@ -267,7 +267,7 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         headers = self.get_success_headers(data)
         return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer):  # noqa: C901, PLR0912
         from backend.location_token import verify_location_claim  # noqa: PLC0415
         from backend.services import unit_distance_cache_key  # noqa: PLC0415
 
@@ -279,7 +279,7 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
                 raise PermissionDenied(msg)
             if not unit.can_user_check_in(self.request.user):
                 msg = (
-                    "You can't check in here \u2014 once someone else takes the lighter, "
+                    "You can't check in here — once someone else takes the lighter, "
                     "its journey moves on. You can still follow along by subscribing."
                 )
                 raise PermissionDenied(msg)
