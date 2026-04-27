@@ -19,3 +19,18 @@ export async function apiFetch(
     },
   });
 }
+
+export async function requestLocationClaim(
+  lat: number,
+  lng: number,
+  accuracy: number,
+): Promise<string> {
+  const r = await apiFetch('/api/location-claim/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lat, lng, accuracy }),
+  });
+  if (!r.ok) throw new Error('Failed to get location claim');
+  const data = (await r.json()) as { token: string };
+  return data.token;
+}

@@ -143,10 +143,25 @@ export default function CheckinCreate() {
 
   const [guestCheckinId, setGuestCheckinId] = useState<number | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [isLocationGpsEnforced, setIsLocationGpsEnforced] = useState(false);
+  const [gpsDriftAllowanceM, setGpsDriftAllowanceM] = useState(500);
 
   useEffect(() => {
-    apiFetch(`/api/units/${identifier}/`).then((r) => {
-      if (r.status === 404) setNotFound(true);
+    apiFetch(`/api/units/${identifier}/`).then(async (r) => {
+      if (r.status === 404) {
+        setNotFound(true);
+        return;
+      }
+      if (r.ok) {
+        const data = (await r.json()) as {
+          is_location_gps_enforced: boolean;
+          game: { max_gps_drift: number } | null;
+        };
+        setIsLocationGpsEnforced(data.is_location_gps_enforced ?? false);
+        if (data.game?.max_gps_drift != null) {
+          setGpsDriftAllowanceM(data.game.max_gps_drift);
+        }
+      }
     });
   }, [identifier]);
 
@@ -200,6 +215,8 @@ export default function CheckinCreate() {
         mode="create"
         unitUrl={unitUrl}
         maptilerKey={maptilerKey}
+        isLocationGpsEnforced={isLocationGpsEnforced}
+        gpsDriftAllowanceM={gpsDriftAllowanceM}
         onSubmit={handleSubmit}
       />
     </main>
