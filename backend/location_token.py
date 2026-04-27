@@ -16,7 +16,13 @@ def issue_location_claim(lat: float, lng: float, accuracy: float, user_id: int) 
     )
 
 
-def verify_location_claim(token: str, user_id: int, submitted_lat: float, submitted_lng: float) -> None:
+def verify_location_claim(
+    token: str,
+    user_id: int,
+    submitted_lat: float,
+    submitted_lng: float,
+    max_drift: int = LOCATION_CLAIM_MAX_DRIFT_METERS,
+) -> None:
     try:
         data = signing.loads(token, salt=_SALT, max_age=LOCATION_CLAIM_TTL_SECONDS)
     except signing.SignatureExpired as exc:
@@ -31,7 +37,7 @@ def verify_location_claim(token: str, user_id: int, submitted_lat: float, submit
         raise ValueError(msg)
 
     distance = _haversine_m(data["lat"], data["lng"], submitted_lat, submitted_lng)
-    if distance > LOCATION_CLAIM_MAX_DRIFT_METERS:
+    if distance > max_drift:
         msg = f"Submitted location is {distance:.0f}m from claimed GPS position"
         raise ValueError(msg)
 
