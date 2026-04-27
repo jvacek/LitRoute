@@ -31,5 +31,5 @@ LOCATION_CLAIM_TTL_SECONDS = 2 * 60  # 2 minutes
 LOCATION_CLAIM_MAX_DRIFT_METERS = 500
 
 DISTANCE_DEFAULT_ALLOWED_TIME = 24 * 60  # minutes (24 h) — Distance mode default
-HOT_POTATO_SHELF_LIFE = 60 * 60 * 24 * 5  # seconds (5 days) — Hot Potato mode default
+HOT_POTATO_SHELF_LIFE = 24 * 5  # hours (5 days) — Hot Potato mode default
 HOT_POTATO_MIN_DISTANCE_METERS = 1000
