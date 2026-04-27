@@ -10,7 +10,8 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 
 from backend.factories import UnitFactory
-from backend.models import CheckIn
+from backend.location_token import issue_location_claim
+from backend.models import CheckIn, Game
 from config.constants import CHECKIN_DELETE_GRACE_PERIOD_HOURS, CHECKIN_EDIT_GRACE_PERIOD_HOURS, STATS_CACHE_KEY
 from flamerelay.users.tests.factories import UserFactory
 
@@ -356,3 +357,114 @@ class TestAdminOnlyCheckin:
                 format="json",
             )
         assert res.status_code == 201  # noqa: PLR2004
+
+
+# ── Unit game field ────────────────────────────────────────────────────────────
+
+
+class TestUnitGameField:
+    def test_game_null_when_no_game(self, client, unit):
+        res = client.get(f"/api/units/{unit.identifier}/")
+        assert res.json()["game"] is None
+
+    def test_game_fields_when_game_attached(self, client, db):
+        game = Game.objects.create(mode=Game.Modes.RACE)
+        unit = UnitFactory.create(game=game)
+        res = client.get(f"/api/units/{unit.identifier}/")
+        data = res.json()["game"]
+        assert data["mode"] == "race"
+        assert "max_gps_drift" in data
+        assert "allowed_time" in data
+        assert "shelf_life" in data
+
+
+# ── Location Claim ─────────────────────────────────────────────────────────────
+
+
+class TestLocationClaimView:
+    def test_anon_returns_401(self, client, db):
+        res = client.post(
+            "/api/location-claim/",
+            {"lat": 51.5, "lng": -0.1, "accuracy": 10.0},
+            format="json",
+        )
+        assert res.status_code == 401  # noqa: PLR2004
+
+    def test_missing_fields_returns_400(self, client, user):
+        client.force_authenticate(user=user)
+        res = client.post("/api/location-claim/", {}, format="json")
+        assert res.status_code == 400  # noqa: PLR2004
+
+    def test_returns_token_string(self, client, user):
+        client.force_authenticate(user=user)
+        res = client.post(
+            "/api/location-claim/",
+            {"lat": 51.5074, "lng": -0.1278, "accuracy": 10.0},
+            format="json",
+        )
+        assert res.status_code == 200  # noqa: PLR2004
+        assert isinstance(res.json().get("token"), str)
+
+
+# ── CheckIn Create — GPS-enforced ──────────────────────────────────────────────
+
+
+class TestCheckInCreateGpsEnforced:
+    @pytest.fixture
+    def gps_unit(self, db):
+        game = Game.objects.create(mode=Game.Modes.RACE)
+        return UnitFactory.create(game=game)
+
+    def test_missing_token_returns_400(self, client, gps_unit, user):
+        client.force_authenticate(user=user)
+        with (
+            patch("backend.models.send_email_to_subscribers_task.apply_async"),
+            patch("backend.models.send_thank_you_email_task.apply_async"),
+        ):
+            res = client.post(
+                f"/api/units/{gps_unit.identifier}/checkins/",
+                {"location": "51.5074,-0.1278"},
+            )
+        assert res.status_code == 400  # noqa: PLR2004
+        assert "location_token" in res.json()
+
+    def test_valid_token_creates_checkin(self, client, gps_unit, user):
+        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id)
+        client.force_authenticate(user=user)
+        with (
+            patch("backend.models.send_email_to_subscribers_task.apply_async"),
+            patch("backend.models.send_thank_you_email_task.apply_async"),
+        ):
+            res = client.post(
+                f"/api/units/{gps_unit.identifier}/checkins/",
+                {"location": "51.5074,-0.1278", "location_token": token},
+            )
+        assert res.status_code == 201  # noqa: PLR2004
+
+    def test_token_wrong_user_returns_400(self, client, gps_unit, user, db):
+        other = UserFactory.create()
+        token = issue_location_claim(51.5074, -0.1278, 10.0, other.id)
+        client.force_authenticate(user=user)
+        with (
+            patch("backend.models.send_email_to_subscribers_task.apply_async"),
+            patch("backend.models.send_thank_you_email_task.apply_async"),
+        ):
+            res = client.post(
+                f"/api/units/{gps_unit.identifier}/checkins/",
+                {"location": "51.5074,-0.1278", "location_token": token},
+            )
+        assert res.status_code == 400  # noqa: PLR2004
+
+    def test_location_beyond_drift_returns_400(self, client, gps_unit, user):
+        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id)
+        client.force_authenticate(user=user)
+        with (
+            patch("backend.models.send_email_to_subscribers_task.apply_async"),
+            patch("backend.models.send_thank_you_email_task.apply_async"),
+        ):
+            res = client.post(
+                f"/api/units/{gps_unit.identifier}/checkins/",
+                # ~666 m north — beyond the default 500 m drift
+                {"location": "51.5134,-0.1278", "location_token": token},
+            )
+        assert res.status_code == 400  # noqa: PLR2004
