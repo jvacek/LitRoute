@@ -38,6 +38,48 @@ class Team(models.Model):
         return self.name
 
 
+class Game(models.Model):
+    class Modes(models.TextChoices):
+        RELAY = "relay", "Relay"
+        RACE = "race", "Race"
+        HOT_POTATO = "hot_potato", "Hot Potato"
+        DISTANCE = "distance", "Distance"
+
+    mode = models.CharField(
+        max_length=20,
+        choices=Modes.choices,
+        default=Modes.RELAY,
+    )
+
+    allowed_time = models.PositiveIntegerField(
+        default=24 * 60,
+        help_text="Time limit for the game in hours. (Distance mode)",
+    )
+
+    max_gps_drift = models.PositiveIntegerField(
+        default=500,
+        help_text="Maximum allowed GPS drift in meters for check-ins. (Distance mode)",
+    )
+
+    shelf_life = models.PositiveIntegerField(
+        default=60 * 60 * 24 * 5,
+        help_text="Time in seconds before a check-in expires. (Hot Potato mode)",
+    )
+
+    # TODO implement postgis
+    # goal_shape = models.MultiPolygonField()
+
+    def __str__(self):
+        return f"{self.get_mode_display()} + {self.id}"
+
+    def is_gps_enforced(self) -> bool:
+        return self.mode in (
+            self.Modes.RACE,
+            self.Modes.HOT_POTATO,
+            self.Modes.DISTANCE,
+        )
+
+
 class CaseInsensitiveCharField(CaseInsensitiveFieldMixin, models.CharField):
     # FYI this class is imported directly in the migration so keep that in mind pls
     def __init__(self, *args, **kwargs):
@@ -79,6 +121,7 @@ class Unit(models.Model):
         default=False,
         help_text="Whether only admins can check in to this unit, primarily used for demos or for disabling lighters.",
     )
+    game = models.ForeignKey(Game, on_delete=models.PROTECT, null=True, blank=True)
 
     class Meta:
         verbose_name = "Unit"
@@ -92,8 +135,7 @@ class Unit(models.Model):
 
     @property
     def is_gps_location_enforced(self) -> bool:
-        # return self.game.is_gps_enforced() if self.game else False
-        return False
+        return self.game.is_gps_enforced() if self.game else False
 
     def can_user_check_in(self, user) -> bool:
         if not user or not getattr(user, "pk", None):
