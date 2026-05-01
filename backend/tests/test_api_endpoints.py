@@ -382,13 +382,13 @@ class TestUnitGameField:
 
 
 class TestLocationClaimView:
-    def test_anon_returns_401(self, client, db):
+    def test_anon_returns_403(self, client, db):
         res = client.post(
             "/api/location-claim/",
             {"lat": 51.5, "lng": -0.1, "accuracy": 10.0},
             format="json",
         )
-        assert res.status_code == 401  # noqa: PLR2004
+        assert res.status_code == 403  # noqa: PLR2004
 
     def test_missing_fields_returns_400(self, client, user):
         client.force_authenticate(user=user)
