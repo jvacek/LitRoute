@@ -26,6 +26,7 @@ from rest_framework.mixins import (
     RetrieveModelMixin,
     UpdateModelMixin,
 )
+from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -179,6 +180,7 @@ class GlobePinsView(APIView):
 
 class LocationClaimView(APIView):
     permission_classes = [IsAuthenticated]
+    parser_classes = [JSONParser]
 
     @extend_schema(
         request=inline_serializer(
