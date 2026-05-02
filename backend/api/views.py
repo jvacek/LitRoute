@@ -18,7 +18,7 @@ from django.utils import timezone
 from django.views import View
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers, status
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
@@ -26,7 +26,7 @@ from rest_framework.mixins import (
     RetrieveModelMixin,
     UpdateModelMixin,
 )
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
@@ -40,6 +40,7 @@ from config.constants import (
     GLOBE_PINS_CACHE_TTL,
     GLOBE_PINS_COUNT,
     GUEST_EMAIL_VERIFICATION_EXPIRY_SECONDS,
+    LOCATION_CLAIM_MAX_DRIFT_METERS,
     STATS_CACHE_KEY,
     STATS_CACHE_TTL,
 )
@@ -176,6 +177,39 @@ class GlobePinsView(APIView):
         return Response({"pins": pins})
 
 
+class LocationClaimView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        request=inline_serializer(
+            name="LocationClaimRequest",
+            fields={
+                "lat": serializers.FloatField(),
+                "lng": serializers.FloatField(),
+                "accuracy": serializers.FloatField(),
+            },
+        ),
+        responses=inline_serializer(
+            name="LocationClaimResponse",
+            fields={"token": serializers.CharField()},
+        ),
+    )
+    def post(self, request) -> Response:
+        from backend.location_token import issue_location_claim  # noqa: PLC0415
+
+        try:
+            lat = float(request.data["lat"])
+            lng = float(request.data["lng"])
+            accuracy = float(request.data["accuracy"])
+        except KeyError, TypeError, ValueError:
+            return Response(
+                {"detail": "lat, lng, and accuracy are required numeric fields."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        token = issue_location_claim(lat, lng, accuracy, request.user.id)
+        return Response({"token": token})
+
+
 class UnitViewSet(RetrieveModelMixin, GenericViewSet):
     serializer_class = UnitSerializer
     lookup_field = "identifier"
@@ -234,6 +268,7 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
+        from backend.location_token import verify_location_claim  # noqa: PLC0415
         from backend.services import unit_distance_cache_key  # noqa: PLC0415
 
         unit = get_object_or_404(Unit, identifier=self.kwargs["identifier"])
@@ -248,6 +283,20 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
                     "its journey moves on. You can still follow along by subscribing."
                 )
                 raise PermissionDenied(msg)
+            if unit.is_gps_location_enforced:
+                token = self.request.data.get("location_token")
+                if not token:
+                    raise ValidationError({"location_token": "Required for this unit."})
+                point = serializer.validated_data.get("location")
+                try:
+                    lat, lng = point.y, point.x
+                except (AttributeError, TypeError) as exc:
+                    raise ValidationError({"location": "Invalid location format."}) from exc
+                max_drift = unit.game.max_gps_drift if unit.game else LOCATION_CLAIM_MAX_DRIFT_METERS
+                try:
+                    verify_location_claim(token, self.request.user.id, lat, lng, max_drift)
+                except ValueError as exc:
+                    raise ValidationError({"location_token": str(exc)}) from exc
             checkin = serializer.save(created_by=self.request.user, unit=unit)
             unit.subscribers.add(self.request.user)
         else:
@@ -261,7 +310,6 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
             else:
                 logger.warning("CLOUDFLARE_TURNSTILE_SECRET_KEY is not set — anonymous check-in captcha is disabled")
             checkin = serializer.save(created_by=None, unit=unit, edit_token=uuid.uuid4())
-
         cache.delete_many([unit_distance_cache_key(unit.identifier), STATS_CACHE_KEY, GLOBE_PINS_CACHE_KEY])
 
         image_files = self.request.FILES.getlist("images")

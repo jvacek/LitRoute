@@ -90,6 +90,11 @@ class Unit(models.Model):
     def get_absolute_url(self) -> str:
         return f"/unit/{self.identifier}/"
 
+    @property
+    def is_gps_location_enforced(self) -> bool:
+        # return self.game.is_gps_enforced() if self.game else False
+        return False
+
     def can_user_check_in(self, user) -> bool:
         if not user or not getattr(user, "pk", None):
             return True  # anonymous always allowed; admin_only_checkin checked upstream

@@ -62,6 +62,7 @@ class UnitSerializer(serializers.ModelSerializer):
     distance_traveled_km = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
     can_check_in = serializers.SerializerMethodField()
+    is_location_gps_enforced = serializers.SerializerMethodField()
 
     class Meta:
         model = Unit
@@ -75,6 +76,7 @@ class UnitSerializer(serializers.ModelSerializer):
             "distance_traveled_km",
             "is_subscribed",
             "can_check_in",
+            "is_location_gps_enforced",
         ]
 
     def get_distance_traveled_km(self, obj: Unit) -> float:
@@ -95,3 +97,6 @@ class UnitSerializer(serializers.ModelSerializer):
         if not request or not request.user.is_authenticated:
             return True
         return obj.can_user_check_in(request.user)
+
+    def get_is_location_gps_enforced(self, obj: Unit) -> bool:
+        return obj.is_gps_location_enforced
