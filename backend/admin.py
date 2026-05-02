@@ -1,7 +1,13 @@
 from django.contrib import admin
 from django.utils.html import format_html, format_html_join
 
-from .models import CheckIn, CheckInImage, Team, Unit
+from .models import CheckIn, CheckInImage, Game, Team, Unit
+
+
+@admin.register(Game)
+class GameAdmin(admin.ModelAdmin):
+    list_display = ("id", "mode", "allowed_time", "max_gps_drift", "shelf_life")
+    list_filter = ("mode",)
 
 
 @admin.register(Team)
@@ -66,6 +72,29 @@ class UnitAdmin(admin.ModelAdmin):
         if self._is_contributor(request):
             return qs.filter(created_by=request.user)
         return qs
+
+    def get_fieldsets(self, request, obj=None):
+        if not self._is_contributor(request):
+            return super().get_fieldsets(request, obj)
+        description = (
+            "You can only see and edit units you created. "
+            "Once a unit has a check-in, its identifier is locked and the unit cannot be deleted. "
+            "Units with no check-ins can be deleted from this page."
+        )
+        return [
+            (
+                None,
+                {
+                    "fields": ["identifier", "team", "game", "admin_only_checkin", "created_by"],
+                    "description": description,
+                },
+            )
+        ]
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context["is_contributor"] = self._is_contributor(request)
+        return super().changelist_view(request, extra_context)
 
     def save_model(self, request, obj, form, change):
         if not change and self._is_contributor(request):
