@@ -92,6 +92,23 @@ setItems((prev) => prev.filter((x) => x.id !== id));
 
 DRF puts the human-readable reason in `detail` for permission/grace-period errors, so `body?.detail` is almost always the right message to surface.
 
+### 404 on initial data loads
+
+For GETs that load page state, **always check `r.ok` before calling `.json()`** — DRF error bodies (`{"detail": "Not found."}`) are valid JSON, so without the check they silently become the component's state. Pattern:
+
+```ts
+if (!r.ok) {
+  setNotFound(true);
+  return null;
+}
+```
+
+Then render `<ErrorPage code={404} />` when `notFound` is true. See `Unit.tsx` and `CheckinEdit.tsx` for reference.
+
+### 401 handling
+
+After a failed mutation returns 401, call `await refresh()` then `navigate('/accounts/login/')` — do not treat 401 as a form validation error.
+
 ## Internationalisation (i18n)
 
 The frontend uses **react-i18next** for all UI strings. Translations are bundled at build time (no HTTP backend) — webpack imports the JSON files directly.
