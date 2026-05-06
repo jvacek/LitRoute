@@ -83,32 +83,25 @@ Config in `pyproject.toml` (`[tool.pytest.ini_options]`): uses `config.settings.
 
 ## Linting & Formatting
 
-**Ruff** handles both linting and formatting (120-char line length). Pre-commit hooks run automatically on commit:
+All linters and formatters run as pre-commit hooks (auto-run on commit). For fast local verification before finishing a change, use **`prek`** — the Rust rewrite of pre-commit, drop-in compatible with `.pre-commit-config.yaml`:
 
 ```bash
-uv run ruff check .           # lint
-uv run ruff format .          # format
-pre-commit run --all-files    # run all hooks manually
+prek run --files <file> [<file> ...]   # check specific changed files
+prek run --all-files                    # full sweep
 ```
 
-Pre-commit also runs: Prettier (JS/CSS), djLint (templates), django-upgrade, pyproject-fmt, ESLint (TS/TSX), and `tsc --noEmit`.
+Run `prek` after editing any file rather than reaching for individual tools — it's the canonical "did I break anything?" check and covers every hook in one pass.
 
-**After writing or editing any `.py` file, always run Ruff before finishing:**
+The hook chain covers: **Ruff** (Python lint+format, 120-char lines), **Prettier** (JS/CSS/JSON), **ESLint** + `tsc --noEmit` (TS/TSX), **djLint** (templates), `django-upgrade`, `pyproject-fmt`, **`lint-translations`** (sorts locale JSON, drops stale keys — see Translation key hygiene), `uv-lock`.
+
+If you want to fix a single file without the full chain:
 
 ```bash
-uv run ruff check --fix <file>
-uv run ruff format <file>
+uv run ruff check --fix <file> && uv run ruff format <file>   # .py
+npx prettier --write <file> && npx eslint <file>              # .ts/.tsx/.css
 ```
 
-**After writing or editing any `.ts`, `.tsx`, or `.css` file, always run Prettier and ESLint before finishing:**
-
-```bash
-npx prettier --write <file>
-npx eslint <file>
-npx tsc --noEmit
-```
-
-Settings are in `.prettierrc` (`singleQuote: true`, `tabWidth: 2`). Templates are excluded. Running Prettier manually avoids pre-commit failures caused by formatting differences.
+Settings: `.prettierrc` (`singleQuote: true`, `tabWidth: 2`). Templates are excluded from Prettier.
 
 **In JSX text, never use bare apostrophes or quotes.** The `react/no-unescaped-entities` ESLint rule rejects them. Use HTML entities instead:
 
@@ -193,6 +186,7 @@ Critical conventions to keep in mind:
 - **Translation key hygiene**: run `python3 scripts/find-duplicate-translations.py` to find values shared by multiple keys — candidates for consolidation into `common.*`. Context-sensitive duplicates (same English today but likely to diverge in translation — e.g. a nav link vs a page heading) are intentionally kept separate. The `common.*` namespace holds strings that are genuinely the same concept regardless of where they appear.
 - **Translation lookup**: run `python3 scripts/lookup-translations.py <key> [<key> ...]` to print TSV (`key<TAB>value`) for one or more dot-path keys. Subtrees expand to all leaves (e.g. `home.errors` prints every `home.errors.*` line). Pass `--language fr` to read from a different locale (defaults to `en`); keys can also be piped in via stdin. Useful when drafting translations or auditing what a namespace contains without scrolling the JSON.
 - **Translation coverage**: run `python3 scripts/translation-coverage.py` to see per-locale coverage stats and missing-key counts grouped by top-level namespace. Pass `--language fr` to scope to one locale, or `-l fr --list` to print just the missing dotted keys (one per line) — pipe that into `lookup-translations.py` to pull the EN source values when starting on a new namespace.
+- **Translation linting**: `scripts/lint-translations.py` runs as a pre-commit hook (also via `prek`) on every locale `translation.json`. It sorts keys alphabetically at every level (EN included) and drops any non-EN keys that EN no longer has — i.e. orphaned translations from renamed/removed source strings. Run manually with `python3 scripts/lint-translations.py [--check]` (`--check` is a dry run; default mode rewrites in place and exits 1 when changes were made, so pre-commit re-stages).
 - **CSRF**: use `apiFetch` from `api.ts` for `/api/` requests. For allauth headless endpoints (`/_allauth/`), use `allauthApi.ts` which handles its own CSRF — do not use raw `fetch()` for either.
 - **401 handling**: after a failed mutation returns 401, call `await refresh()` then `navigate('/accounts/login/')` — do not treat 401 as a form validation error.
 - **404 handling on initial data loads**: always check `r.ok` (or `r.status`) before calling `.json()` on a GET that loads page data. DRF error bodies (`{"detail": "Not found."}`) are valid JSON — without the check they silently become the component's state. Pattern: `if (!r.ok) { setNotFound(true); return null; }` then render `<ErrorPage code={404} />` when `notFound` is true. See `Unit.tsx` and `CheckinEdit.tsx` for reference.
