@@ -1,11 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../AuthContext';
 import { apiFetch } from '../api';
-
-const LANGUAGES = [
-  { code: 'en', label: 'English' },
-  { code: 'fr', label: 'Français' },
-];
+import { LANGUAGES } from '../i18n';
 
 export default function LanguagePicker() {
   const { i18n, t } = useTranslation();
