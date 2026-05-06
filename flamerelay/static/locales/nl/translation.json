@@ -1,0 +1,222 @@
+{
+  "common": {
+    "loading": "Laden",
+    "cancel": "Annuleren",
+    "back": "Terug",
+    "or": "of",
+    "unexpectedError": "Er is een onverwachte fout opgetreden.",
+    "saving": "Opslaan",
+    "confirming": "Bevestigen",
+    "sending": "Versturen",
+    "verificationCodeLabel": "Verificatiecode",
+    "remove": "Verwijderen",
+    "password": "Wachtwoord",
+    "confirm": "Bevestigen",
+    "about": "Over",
+    "support": "Steun",
+    "nameLabel": "Naam",
+    "namePlaceholder": "Je naam",
+    "profile": "Profiel",
+    "settings": "Instellingen",
+    "connectedAccounts": "Gekoppelde accounts",
+    "twoFactorAuth": "Tweestapsverificatie",
+    "signingIn": "Aanmelden",
+    "verifying": "Verifiëren"
+  },
+  "nav": {
+    "homeAriaLabel": "LitRoute startpagina",
+    "supportAriaLabel": "Dit project steunen",
+    "signIn": "Aanmelden",
+    "toggleNav": "Navigatie aan/uit",
+    "mainNav": "Hoofdnavigatie",
+    "mobileNav": "Mobiele navigatie",
+    "languageLabel": "Taal"
+  },
+  "footer": {
+    "tagline": "Volg de reis van je aansteker"
+  },
+  "home": {
+    "eyebrow": "Vind hem. Check in. Geef hem door.",
+    "headline": "Een aansteker met een verleden. Voeg jouw verhaal toe.",
+    "subheadline": "Vind een aansteker met een QR-sticker. Scan hem om te ontdekken waar hij overal is geweest en wie hem heeft vastgehouden. Laat je eigen noot achter — geef hem dan door aan de volgende onbekende.",
+    "tryExample": "probeer \"john-93\" voor een voorbeeld",
+    "lighterLabel": "Hoe heet de aansteker?",
+    "lighterAlt": "Een aansteker op zijn zij",
+    "submit": {
+      "checking": "Zoeken",
+      "default": "Bekijk de route"
+    },
+    "errors": {
+      "like": "Zoals",
+      "missingDash": "Het streepje ontbreekt — het moet een naam zijn, een streepje, dan een nummer.",
+      "nameTooShort": "De naam vóór het streepje is te kort — minstens 3 letters nodig (je typte \"{{prefix}}\").",
+      "noNumber": "Niets na het streepje — voeg een getal van 2 cijfers toe.",
+      "singleDigit": "Het getal heeft 2 cijfers nodig.",
+      "numberRequired": "Het deel na het streepje moet een getal zijn.",
+      "offMap": "Die aansteker is van de kaart verdwenen.",
+      "notFound": "We konden <lighterName>{{id}}</lighterName> niet vinden. Check de sticker nog eens — die ziet eruit als <lighterName>{{example}}</lighterName>."
+    },
+    "howItWorks": {
+      "heading": "Zo zit het.",
+      "step1Title": "Vind hem.",
+      "step1Body": "Zie je een aansteker met een QR-sticker? Scan hem, of typ zijn ID op litroute.com. Elke stad, elke hand waardoor hij ging — het wacht allemaal op je.",
+      "step2Title": "Check in.",
+      "step2Body": "Plaats een foto en een korte noot. Jouw moment — waar je was, wat je zag — wordt een blijvend hoofdstuk in het verhaal van de aansteker.",
+      "step3Title": "Geef hem door.",
+      "step3Body": "Geef hem aan een onbekende. Laat hem achter in een café, een hostel, bij een wandelpad. Jij bepaalt het volgende hoofdstuk.",
+      "step4Title": "Blijf op de hoogte.",
+      "step4Body": "Abonneer je en krijg een mailtje als iemand hem weer vindt — waar ook ter wereld dat is. Onschuldig stalken van een stukje metaal."
+    },
+    "cta": {
+      "heading": "Begin een reis.",
+      "body": "Ik ben Jonas, ik heb dit gemaakt tijdens mijn vrolijke werkloosheid. Zin om een aansteker de wereld in te sturen? Lees eerst <aboutLink>de over-pagina</aboutLink> — even contact opnemen voordat je begint met stickers printen.",
+      "link": "Over het project"
+    },
+    "stats": {
+      "activeLighters": "actieve aanstekers",
+      "checkinsLogged": "check-ins geregistreerd",
+      "peopleCheckedIn": "mensen die incheckten",
+      "traveledSoFar": "afgelegd tot nu toe",
+      "freeText": "Gratis te gebruiken, in leven gehouden door lezers zoals jij. <supportLink>Steun het project</supportLink>"
+    },
+    "journey": {
+      "exampleLabel": "Voorbeeld — niet jouw aansteker",
+      "heading": "Dit is wat je ziet als je er een scant.",
+      "subtext": "Dit zijn verzonnen check-ins om te laten zien hoe het werkt.",
+      "somewhere": "Ergens nieuws",
+      "openSlotBody": "Vind er een, check in, en jij zou hier kunnen staan.",
+      "yourName": "jouw naam hier",
+      "seeReal": "<journeyLink>Bekijk de reis van een echte aansteker</journeyLink>"
+    },
+    "globeCaption": "20 recent actieve aanstekers — elke stip is iemands verhaal"
+  },
+  "auth": {
+    "email": {
+      "title": "Aanmelden of registreren",
+      "emailLabel": "E-mailadres",
+      "submit": {
+        "loading": "Code versturen",
+        "default": "Doorgaan met e-mail"
+      },
+      "passkey": {
+        "default": "Aanmelden met een passkey"
+      }
+    }
+  },
+  "unit": {
+    "notFound": {
+      "heading": "Die aansteker is van de kaart verdwenen.",
+      "body1": "We konden <strong>{{identifier}}</strong> niet vinden.",
+      "body2": "De naam op de sticker ziet eruit als <handwriting>EMILY-07</handwriting> — check op typefouten en probeer het opnieuw.",
+      "cta": "Probeer een andere naam"
+    },
+    "noCheckinsYet": "Nog geen check-ins.",
+    "statsKmTraveled": "km afgelegd",
+    "statsStops": "stops",
+    "statsFollowers": "volgers",
+    "checkinBtn": "Nieuwe check-in",
+    "passedOn": "Je hebt deze aansteker doorgegeven — de reis gaat door.",
+    "subscribe": "Abonneren",
+    "unsubscribe": "Afmelden",
+    "travelLog": "Reisverslag",
+    "resetView": "Weergave resetten",
+    "origin": "Oorsprong",
+    "currentLocation": "Huidige locatie",
+    "placeNotGiven": "Plaats niet opgegeven",
+    "editBtn": "Bewerken",
+    "deleteBtn": "Verwijderen",
+    "cannotEdit": "Kan niet bewerken of verwijderen na 6 uur",
+    "supportPrompt": "LitRoute is gratis en gemaakt door één persoon. Heeft deze reis je doen glimlachen? Overweeg dan <supportLink>het project te steunen</supportLink>",
+    "gettingStarted": {
+      "heading": "Deze aansteker is net begonnen.",
+      "body": "Jij bent de eerste hier. Wie hem hierna vindt, zal blij zijn dat jij langskwam.",
+      "cta": "Maak de eerste check-in"
+    },
+    "status": {
+      "currentlyIn": "Op dit moment in {{place}}",
+      "lastSeenYesterday": "Gisteren voor het laatst gezien in {{place}}",
+      "lastSeenDaysAgo_one": "{{count}} dag geleden voor het laatst gezien in {{place}}",
+      "lastSeenDaysAgo_other": "{{count}} dagen geleden voor het laatst gezien in {{place}}"
+    },
+    "photoAlt": "check-in foto {{index}} van {{total}}",
+    "prevPhoto": "Vorige foto",
+    "nextPhoto": "Volgende foto",
+    "goToPhoto": "Ga naar foto {{index}}",
+    "deleteConfirm": "Deze check-in verwijderen?",
+    "deleteError": "Kon deze check-in niet verwijderen.",
+    "verifiedBanner": "Je e-mail is bevestigd — je bent nu geabonneerd!"
+  },
+  "checkin": {
+    "createTitle": "Nieuwe check-in",
+    "editTitle": "Check-in bewerken",
+    "form": {
+      "locationLabel": "Locatie",
+      "clickToDrop": "Klik op de kaart om een speld te plaatsen.",
+      "clickToMove": "Klik op de kaart om de speld te verplaatsen.",
+      "useMyLocation": {
+        "loading": "Locatie zoeken",
+        "default": "Mijn locatie gebruiken"
+      },
+      "privacyHint": "Exacte locatie ingesteld — verplaats de speld als je liever je precieze positie niet deelt.",
+      "dismiss": "Sluiten",
+      "selectedLocation": "Geselecteerd: {{location}}",
+      "placeLabel": "Plaats",
+      "placePlaceholder": "bijv. \"Grote Markt, Brussel\"",
+      "messageLabel": "Bericht",
+      "messagePlaceholder": "Waar heb je hem gevonden? Waar ben je? Wat is het volgende voor deze aansteker?",
+      "nameLabel": "Je naam (optioneel)",
+      "namePlaceholder": "Hoe moeten we dit ondertekenen?",
+      "passedOnNote": "Zodra iemand anders na jou incheckt, gaat de aansteker verder — je kunt dan geen check-ins meer toevoegen.",
+      "submit": {
+        "creating": "Versturen",
+        "create": "Inchecken",
+        "save": "Wijzigingen opslaan"
+      },
+      "errors": {
+        "locationRequired": "Klik op de kaart om je locatie in te stellen.",
+        "svgNotSupported": "Alleen rasterafbeeldingen (JPEG, PNG, WebP, enz.) worden ondersteund. SVG-bestanden kunnen niet worden geüpload.",
+        "maxPhotos": "Maximaal {{max}} foto's per check-in."
+      }
+    },
+    "checkedIn": "Check-in bevestigd",
+    "guestEmailTitle": "Je maakt nu deel uit van de reis.",
+    "guestEmailTagline": "Een vlammetje gaat ver.",
+    "guestEmailSubtitle": "Laat je e-mailadres achter om mee te volgen — we laten het weten als deze aansteker ergens nieuws incheckt.",
+    "guestEmailPlaceholder": "jij@email.com",
+    "guestEmailSubmit": "Houd me op de hoogte",
+    "guestEmailSentTitle": "Check je inbox.",
+    "guestEmailSent": "We hebben je een bevestigingslink gestuurd — tik erop en je staat op de lijst.",
+    "guestEmailSentBack": "Terug naar Unit",
+    "guestEmailSkip": "Voor nu overslaan"
+  },
+  "emailConfirm": {
+    "checkingLink": "Je verificatielink controleren",
+    "invalid": {
+      "title": "Ongeldige link",
+      "body": "Deze bevestigingslink is ongeldig of verlopen. <requestNewLink>Vraag een nieuwe aan</requestNewLink>."
+    },
+    "confirm": {
+      "title": "Bevestig je e-mailadres",
+      "body": "Bevestig <strong>{{email}}</strong> als je e-mailadres.",
+      "submit": {
+        "default": "E-mailadres bevestigen"
+      },
+      "failed": "Verificatie mislukt. Probeer het opnieuw."
+    }
+  },
+  "supportSection": {
+    "body1": "LitRoute is een eenmansproject. Geen reclame, geen abonnementen, geen investeerders — alleen serverkosten, e-mailbezorging en opslag uit eigen zak. De aanstekers zelf ook: elke aansteker wordt met de hand gekocht en geregistreerd voordat hij aan zijn reis kan beginnen.",
+    "body2": "Heb je hier met plezier een reis gevolgd? Dan helpt een kleine bijdrage echt.",
+    "donateCta": "Tip",
+    "kofiLabel": "Ko-fi",
+    "kofiDescription": "Eenmalige tip, geen account nodig",
+    "liberapayLabel": "Liberapay",
+    "liberapayDescription": "Wekelijks of maandelijks",
+    "githubLabel": "GitHub Sponsors",
+    "githubDescription": "Sponsor direct op GitHub",
+    "otherWaysHeading": "Of help zonder uit te geven:",
+    "weblateLabel": "Vertalen",
+    "weblateDescription": "Help LitRoute in jouw taal op Weblate",
+    "weblateCta": "Bijdragen"
+  }
+}
