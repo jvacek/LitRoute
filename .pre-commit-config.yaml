@@ -30,6 +30,11 @@ repos:
         entry: npm run typecheck
         pass_filenames: false
         types_or: [ts, tsx]
+      - id: lint-translations
+        name: lint translation JSON (sort + drop stale keys)
+        language: script
+        entry: scripts/lint-translations.py
+        files: ^flamerelay/static/locales/[^/]+/translation\.json$
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v4.0.0-alpha.8
