@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("backend", "0014_contributor_group"),
+        ("backend", "0025_checkin_anonymous_name"),
     ]
 
     operations = [
