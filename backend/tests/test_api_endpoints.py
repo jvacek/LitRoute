@@ -423,7 +423,8 @@ class TestCheckInCreateGpsEnforced:
         ):
             res = client.post(
                 f"/api/units/{gps_unit.identifier}/checkins/",
-                {"location": "51.5074,-0.1278"},
+                {"location": LONDON_PAYLOAD},
+                format="json",
             )
         assert res.status_code == 400  # noqa: PLR2004
         assert "location_token" in res.json()
@@ -437,7 +438,8 @@ class TestCheckInCreateGpsEnforced:
         ):
             res = client.post(
                 f"/api/units/{gps_unit.identifier}/checkins/",
-                {"location": "51.5074,-0.1278", "location_token": token},
+                {"location": LONDON_PAYLOAD, "location_token": token},
+                format="json",
             )
         assert res.status_code == 201  # noqa: PLR2004
 
@@ -451,7 +453,8 @@ class TestCheckInCreateGpsEnforced:
         ):
             res = client.post(
                 f"/api/units/{gps_unit.identifier}/checkins/",
-                {"location": "51.5074,-0.1278", "location_token": token},
+                {"location": LONDON_PAYLOAD, "location_token": token},
+                format="json",
             )
         assert res.status_code == 400  # noqa: PLR2004
 
@@ -465,6 +468,7 @@ class TestCheckInCreateGpsEnforced:
             res = client.post(
                 f"/api/units/{gps_unit.identifier}/checkins/",
                 # ~666 m north — beyond the default 500 m drift
-                {"location": "51.5134,-0.1278", "location_token": token},
+                {"location": {"type": "Point", "coordinates": [-0.1278, 51.5134]}, "location_token": token},
+                format="json",
             )
         assert res.status_code == 400  # noqa: PLR2004
