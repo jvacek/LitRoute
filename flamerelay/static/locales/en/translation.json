@@ -1,123 +1,83 @@
 {
-  "common": {
-    "loading": "Loading",
-    "cancel": "Cancel",
-    "back": "Back",
-    "or": "or",
-    "unexpectedError": "An unexpected error occurred.",
-    "saving": "Saving",
-    "confirming": "Confirming",
-    "sending": "Sending",
-    "verificationCodeLabel": "Verification code",
-    "remove": "Remove",
-    "password": "Password",
-    "confirm": "Confirm",
-    "about": "About",
-    "support": "Support",
-    "nameLabel": "Name",
-    "namePlaceholder": "Your name",
-    "profile": "Profile",
-    "settings": "Settings",
-    "connectedAccounts": "Connected accounts",
-    "twoFactorAuth": "Two-factor authentication",
-    "signingIn": "Signing in",
-    "verifying": "Verifying"
-  },
-  "nav": {
-    "homeAriaLabel": "LitRoute home",
-    "supportAriaLabel": "Support this project",
-    "signIn": "Sign in",
-    "toggleNav": "Toggle navigation",
-    "mainNav": "Main navigation",
-    "mobileNav": "Mobile navigation",
-    "languageLabel": "Language"
-  },
-  "footer": {
-    "tagline": "Track your lighter's journey",
-    "footerNav": "Footer navigation",
-    "viewCommit": "View current commit on GitHub"
-  },
-  "home": {
-    "eyebrow": "Find it. Check in. Pass it on.",
-    "headline": "A lighter with a history. Add yours.",
-    "subheadline": "Find a lighter with a QR sticker. Scan it to discover everywhere it's been and everyone who held it. Leave your own note — then pass it on to the next stranger.",
-    "tryExample": "try \"john-93\" to see an example",
-    "lighterLabel": "What's the lighter called?",
-    "lighterAlt": "A lighter lying on its side",
-    "submit": {
-      "checking": "Checking",
-      "default": "See the route"
-    },
-    "errors": {
-      "like": "Like",
-      "missingDash": "Missing the dash — it should be a name, a dash, then a number.",
-      "nameTooShort": "The name before the dash is too short — it needs at least 3 letters (you typed \"{{prefix}}\").",
-      "noNumber": "Nothing after the dash — add a 2-digit number.",
-      "singleDigit": "The number needs 2 digits.",
-      "numberRequired": "The part after the dash should be a number.",
-      "offMap": "That lighter's off the map.",
-      "notFound": "We couldn't find <lighterName>{{id}}</lighterName>. Double-check the sticker — it should look like <lighterName>{{example}}</lighterName>."
-    },
-    "howItWorks": {
-      "heading": "Here's the deal.",
-      "step1Title": "Find it.",
-      "step1Body": "Spot a lighter with a QR sticker. Scan it, or type its ID on litroute.com. Every city, every hand it passed through — it's all there waiting for you.",
-      "step2Title": "Check in.",
-      "step2Body": "Drop a photo and a quick note. Your moment — where you were, what you saw — becomes a permanent chapter in the lighter's story.",
-      "step3Title": "Pass it on.",
-      "step3Body": "Hand it to a stranger. Leave it at a coffee shop, a hostel, a trailhead. You decide the next chapter.",
-      "step4Title": "Follow along.",
-      "step4Body": "Subscribe and get an email the next time someone finds it — wherever in the world that turns out to be. Low-stakes stalking of a piece of metal."
-    },
-    "cta": {
-      "heading": "Start a journey.",
-      "body": "I'm Jonas, I made this while funemployed. Want to send a lighter into the world? <aboutLink>Read the about page</aboutLink> first — you'll need to get in touch before you start printing labels.",
-      "link": "About the project"
-    },
-    "stats": {
-      "activeLighters": "active lighters",
-      "checkinsLogged": "check-ins logged",
-      "peopleCheckedIn": "people who checked in",
-      "traveledSoFar": "traveled so far",
-      "freeText": "Free to use, kept alive by readers like you. <supportLink>Support the project</supportLink>"
-    },
-    "journey": {
-      "exampleLabel": "Example — not your lighter",
-      "heading": "Here's what you'll see when you scan one.",
-      "subtext": "These are made-up check-ins to show you how it works.",
-      "somewhere": "Somewhere new",
-      "openSlotBody": "Find one, check in, and you could be here.",
-      "yourName": "your name here",
-      "seeReal": "<journeyLink>See a real lighter's journey</journeyLink>"
-    },
-    "globeCaption": "20 recently active lighters — each dot is someone's story"
-  },
-  "auth": {
-    "email": {
-      "title": "Sign in or sign up",
-      "description": "Enter your email and we'll send you a one-time code — no password needed.",
-      "emailLabel": "Email",
-      "submit": {
-        "loading": "Sending code",
-        "default": "Continue with email"
+  "about": {
+    "aboutTitle": "About the project",
+    "faqTitle": "FAQ",
+    "header": "For people who leave things behind on purpose.",
+    "qa": {
+      "followAlong": {
+        "a": "On <instagramLink>Instagram (@lit_route)</instagramLink>, on <redditLink>Reddit (r/litroute)</redditLink>, and on <discordLink>Discord</discordLink>.",
+        "q": "Where can I follow along?"
       },
-      "passkey": {
-        "default": "Sign in with a passkey"
+      "help": {
+        "a1": "Sure! Even if you don't code, I'm looking for people who would be happy to buy their own lighters and register them into the system. I'm not at the stage where I can make this self-service, so just reach out to me using the contact info above.",
+        "a2": "If you do code, I'm happy to accept pull requests, just make sure to open an issue first so we can discuss it!",
+        "a3": "You can also help by translating LitRoute into your language — no coding needed. Translations are managed on <weblateLink>Weblate</weblateLink>.",
+        "q": "Is there any way I can help?"
+      },
+      "how": {
+        "a": "Built with Django and React. Open source — <githubLink>GitHub repo</githubLink>. PRs welcome after opening an issue.",
+        "q": "How?"
+      },
+      "money": {
+        "a1": "Honestly, I don't know. I'm not planning on it. I'd much rather keep funding this from my own pocket and tips.",
+        "a2": "This is my little personal project that I want to work on purely for fun, and when you start making money off of something it can quickly become a source of stress, so I'd rather avoid that.",
+        "a3": "Either way, your personal identifiable information will never be sold or given to anyone.",
+        "q": "Will you try to make money off of this?"
+      },
+      "secure": {
+        "a1": "Storing as little as possible is a design goal, not an afterthought. We don't store passwords at all — login is via a magic code sent to your email, so there's nothing to leak. The EXIF data on images is stripped, and your location is whatever you type in manually.",
+        "a2": "Don't believe me? The code is open for everyone to see. You can even run your own LitRoute, just please call it something else.",
+        "q": "Is it secure?"
+      },
+      "translate": {
+        "a": "The interface is currently available in English and French. Translations are community-managed through <weblateLink>Weblate</weblateLink> — if you'd like to bring LitRoute to a new language, contributions are very welcome.",
+        "q": "Is it available in other languages?"
+      },
+      "who": {
+        "a": "My name is Jonas. You can <emailLink>send me an email</emailLink> or reach me via <mastodonLink>@jvacek@fosstodon.org</mastodonLink>",
+        "q": "Who?"
+      },
+      "why": {
+        "a": "Because I wanted to. I'm funemployed, and I thought: what if a lighter could tell you where it had been?",
+        "q": "Why?"
       }
     },
+    "subheader": "A lighter travels from hand to hand. Each owner checks in — a photo, a location, a message. This is where you follow the journey.",
+    "supportHeading": "Support this project"
+  },
+  "auth": {
     "code": {
-      "title": "Check your inbox",
-      "description": "We emailed a sign-in code to <strong>{{email}}</strong>.",
-      "inboxFallback": "your inbox",
       "codeLabel": "Sign-in code",
+      "description": "We emailed a sign-in code to <strong>{{email}}</strong>.",
+      "differentEmail": "Use a different email",
+      "inboxFallback": "your inbox",
       "submit": {
         "default": "Sign in"
       },
-      "differentEmail": "Use a different email"
+      "title": "Check your inbox"
+    },
+    "email": {
+      "description": "Enter your email and we'll send you a one-time code — no password needed.",
+      "emailLabel": "Email",
+      "passkey": {
+        "default": "Sign in with a passkey"
+      },
+      "submit": {
+        "default": "Continue with email",
+        "loading": "Sending code"
+      },
+      "title": "Sign in or sign up"
+    },
+    "errors": {
+      "passkeyFailed": "Passkey sign-in was cancelled or failed. Try signing in with your email instead.",
+      "passkeyMfaFailed": "Passkey authentication failed. Try your authenticator code instead.",
+      "sendFailed": "Failed to send code. Try again.",
+      "somethingWrong": "Something went wrong.",
+      "verifyFailed": "Failed to verify login code. Please try again."
     },
     "mfa": {
-      "description": "Enter the code from your authenticator app, or a recovery code.",
       "codeLabel": "Authentication code",
+      "description": "Enter the code from your authenticator app, or a recovery code.",
       "passkey": {
         "default": "Use passkey"
       },
@@ -125,387 +85,438 @@
         "default": "Verify"
       }
     },
-    "errors": {
-      "verifyFailed": "Failed to verify login code. Please try again.",
-      "passkeyFailed": "Passkey sign-in was cancelled or failed. Try signing in with your email instead.",
-      "sendFailed": "Failed to send code. Try again.",
-      "passkeyMfaFailed": "Passkey authentication failed. Try your authenticator code instead.",
-      "somethingWrong": "Something went wrong."
-    },
     "signup": {
-      "title": "Almost there",
       "description": "Choose the name that'll appear on your check-ins. You can change this any time in settings.",
       "displayNameLabel": "Display name",
+      "previewLabel": "Your check-ins will look like this",
+      "saveFailed": "Could not save your name. Please try again.",
       "submit": {
         "default": "Continue"
       },
-      "saveFailed": "Could not save your name. Please try again.",
-      "previewLabel": "Your check-ins will look like this",
+      "title": "Almost there",
       "yourNameFallback": "Your Name"
     }
   },
-  "unit": {
-    "notFound": {
-      "heading": "That lighter's off the map.",
-      "body1": "We couldn't find <strong>{{identifier}}</strong>.",
-      "body2": "The name on the sticker should look like <handwriting>EMILY-07</handwriting> — check for typos and try again.",
-      "cta": "Try another name"
-    },
-    "noCheckinsYet": "No check-ins yet.",
-    "statsKmTraveled": "km traveled",
-    "statsStops": "stops",
-    "statsFollowers": "followers",
-    "checkinBtn": "New check-in",
-    "passedOn": "You've passed this lighter on — its journey continues.",
-    "subscribe": "Subscribe",
-    "unsubscribe": "Unsubscribe",
-    "travelLog": "Travel log",
-    "resetView": "Reset view",
-    "origin": "Origin",
-    "currentLocation": "Current location",
-    "placeNotGiven": "Place not given",
-    "editBtn": "Edit",
-    "deleteBtn": "Delete",
-    "cannotEdit": "Cannot edit or delete after 6 hours",
-    "supportPrompt": "LitRoute is free and built by one person. If this journey made you smile, consider <supportLink>supporting it</supportLink>",
-    "gettingStarted": {
-      "heading": "This lighter's just getting started.",
-      "body": "You're the first one here. Whoever finds it next will be glad you did.",
-      "cta": "Create the first check-in"
-    },
-    "status": {
-      "currentlyIn": "Currently in {{place}}",
-      "lastSeenYesterday": "Last seen yesterday in {{place}}",
-      "lastSeenDaysAgo_one": "Last seen {{count}} day ago in {{place}}",
-      "lastSeenDaysAgo_other": "Last seen {{count}} days ago in {{place}}"
-    },
-    "photoAlt": "check-in photo {{index}} of {{total}}",
-    "prevPhoto": "Previous photo",
-    "nextPhoto": "Next photo",
-    "goToPhoto": "Go to photo {{index}}",
-    "deleteConfirm": "Delete this check-in?",
-    "deleteError": "Could not delete this check-in.",
-    "verifiedBanner": "Your email is confirmed — you're now subscribed!"
-  },
   "checkin": {
+    "checkedIn": "Check-in confirmed",
     "createTitle": "New check-in",
     "editTitle": "Edit check-in",
     "form": {
-      "locationLabel": "Location",
       "clickToDrop": "Click the map to drop a pin.",
       "clickToMove": "Click the map to move the pin.",
-      "useMyLocation": {
-        "loading": "Locating",
-        "default": "Use my location"
-      },
-      "searchPlaceholder": "Search for a place…",
-      "locationSet": "Location set",
-      "privacyHint": {
-        "title": "Your exact location will be shared",
-        "body": "Your device's GPS coordinates were used. Move the pin to a nearby spot if you'd rather not share your precise position."
-      },
       "dismiss": "Dismiss",
-      "placeLabel": "Place",
-      "placePlaceholder": "e.g. \"Grande Place, Brussels\"",
+      "errors": {
+        "locationRequired": "Please click the map to set your location.",
+        "maxPhotos": "Maximum {{max}} photos per check-in.",
+        "svgNotSupported": "Only raster images (JPEG, PNG, WebP, etc.) are supported. SVG files cannot be uploaded."
+      },
+      "locationLabel": "Location",
+      "locationSet": "Location set",
       "messageLabel": "Message",
       "messagePlaceholder": "Where did you find it? Where are you? What's next for this lighter?",
       "nameLabel": "Your name (optional)",
       "namePlaceholder": "How should we sign this?",
       "passedOnNote": "Once someone else checks in after you, the lighter moves on — you won't be able to add more check-ins.",
+      "placeLabel": "Place",
+      "placePlaceholder": "e.g. \"Grande Place, Brussels\"",
+      "privacyHint": {
+        "body": "Your device's GPS coordinates were used. Move the pin to a nearby spot if you'd rather not share your precise position.",
+        "title": "Your exact location will be shared"
+      },
+      "searchPlaceholder": "Search for a place…",
       "submit": {
-        "creating": "Submitting",
         "create": "Check in",
+        "creating": "Submitting",
         "save": "Save changes"
       },
-      "errors": {
-        "locationRequired": "Please click the map to set your location.",
-        "svgNotSupported": "Only raster images (JPEG, PNG, WebP, etc.) are supported. SVG files cannot be uploaded.",
-        "maxPhotos": "Maximum {{max}} photos per check-in."
+      "useMyLocation": {
+        "default": "Use my location",
+        "loading": "Locating"
       }
     },
-    "checkedIn": "Check-in confirmed",
-    "guestEmailTitle": "You're part of the journey now.",
-    "guestEmailTagline": "A little flame goes a long way.",
-    "guestEmailSubtitle": "Leave your email to follow along — we'll let you know when this lighter checks in somewhere new.",
     "guestEmailPlaceholder": "your@email.com",
-    "guestEmailSubmit": "Notify me",
-    "guestEmailSentTitle": "Check your inbox.",
     "guestEmailSent": "We sent you a link to confirm — tap it and you're on the list.",
     "guestEmailSentBack": "Back to the unit",
-    "guestEmailSkip": "Skip for now"
+    "guestEmailSentTitle": "Check your inbox.",
+    "guestEmailSkip": "Skip for now",
+    "guestEmailSubmit": "Notify me",
+    "guestEmailSubtitle": "Leave your email to follow along — we'll let you know when this lighter checks in somewhere new.",
+    "guestEmailTagline": "A little flame goes a long way.",
+    "guestEmailTitle": "You're part of the journey now."
   },
-  "photoUpload": {
-    "label": "Photos",
-    "optional": "(optional)",
-    "counter": "{{count}} / {{max}} photos",
-    "zoneAriaFull": "Photo upload zone — maximum reached",
-    "zoneAriaAdd": "Photo upload zone — click or drag to add photos",
-    "empty": {
-      "dropHere": "Drop here!",
-      "addPhotos": "Add photos",
-      "releaseToUpload": "Release to upload",
-      "showWhere": "Show where you found it — up to {{max}} photos",
-      "clickOrDrag": "Click anywhere or drag & drop"
+  "common": {
+    "about": "About",
+    "back": "Back",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "confirming": "Confirming",
+    "connectedAccounts": "Connected accounts",
+    "loading": "Loading",
+    "nameLabel": "Name",
+    "namePlaceholder": "Your name",
+    "or": "or",
+    "password": "Password",
+    "profile": "Profile",
+    "remove": "Remove",
+    "saving": "Saving",
+    "sending": "Sending",
+    "settings": "Settings",
+    "signingIn": "Signing in",
+    "support": "Support",
+    "twoFactorAuth": "Two-factor authentication",
+    "unexpectedError": "An unexpected error occurred.",
+    "verificationCodeLabel": "Verification code",
+    "verifying": "Verifying"
+  },
+  "contributorGuide": {
+    "footerText": "Something unclear or missing? <aboutLink>Visit the about page</aboutLink> or get in touch.",
+    "greeting": "Hey — thank you for being here.",
+    "greetingBody1": "Honestly, LitRoute only works because people like you are willing to buy lighters, label them, and trust strangers to keep them moving. That's the whole thing. Without that, it's just a website.",
+    "greetingBody2": "I started this because I wanted to see how far a lighter could travel, and every time I get a notification from one of them I still find it kind of magical. I hope you do too. If you ever have feedback, ideas, or just want to share how one of your lighters is doing — please reach out. It genuinely means a lot.",
+    "header": "Adding & distributing lighters",
+    "openAdmin": "Open admin panel",
+    "passingOnSubtext": "The same questions recipients will have — useful to know before you hand the lighter over.",
+    "passingOnTitle": "Passing it on",
+    "steps": {
+      "attachLabel": {
+        "a": "Stick the label to the lighter in a way that will last — clear packing tape over the top works well. The label needs to survive being pocketed and passed around, so make sure the edges are properly sealed. Orient the text so it runs along the <b>length</b> of the lighter, not across it — that way someone can read the whole line without having to rotate it halfway through.",
+        "q": "Attach the label",
+        "tip": "Consider doodling or drawing on the lighter too. A lighter with a face or a little character is harder to throw away — give it a personality and people will want to keep it going."
+      },
+      "createUnit": {
+        "a": "In the admin panel, go to <b>Backend › Units</b> and click <b>Add unit</b>. Use a first name and a number as the identifier (e.g. <code>john-93</code>, <code>leila-23</code>). At least three characters before the dash, at least two digits after. The identifier becomes part of the URL, so keep it short and readable.",
+        "q": "Create the unit",
+        "tip": "Pick names with one obvious spelling — avoid ambiguous ones like Steven vs. Stephen or Jeffrey vs. Jeffery. If someone has to guess to find the URL, you've already lost them."
+      },
+      "firstCheckin": {
+        "a": "Visit your unit's page and make the first check-in yourself. This seeds the journey and gives the next person something to see when they scan the code. You were automatically subscribed when you created the unit, so you'll get an email every time someone checks in.",
+        "q": "Make the first check-in"
+      },
+      "handOff": {
+        "a": "Give the lighter to someone and let it travel. You don't need to do anything else — just watch the notifications come in.",
+        "q": "Hand it off"
+      },
+      "makeLabel": {
+        "a": "Write the unit's name in <b>all caps</b> and the main domain on the label — e.g. <b>JOHN-93</b> and <b>LITROUTE.COM</b>. A QR code pointing to the unit URL makes it even easier for recipients to check in without having to type anything.",
+        "q": "Make the label",
+        "tip": "Also add a short nudge so people know what to do: <em>\"Scan me, tag me, pass me on\"</em> or <em>\"Check in. Keep me moving.\"</em>"
+      }
     },
-    "maxReached": "Maximum {{max}} photos reached — remove one to add another.",
-    "dragToReorder": "Drag to reorder · click to add more",
-    "removePhoto": "Remove photo",
-    "existingPhoto": "Existing photo",
-    "preview": "Preview",
-    "tips": {
-      "heading": "Photo tips",
-      "location": "Show where you are — a landmark, a view, or your surroundings",
-      "lighter": "Lighter in hand or on a surface makes a great shot",
-      "hide": "Cover or hide the lighter's name — it's the page's password"
+    "stepsTitle": "Step by step",
+    "subheader": "A practical guide for contributors: how to register a new unit, label the lighter, and send it on its way."
+  },
+  "emailConfirm": {
+    "checkingLink": "Checking your verification link",
+    "confirm": {
+      "body": "Confirm <strong>{{email}}</strong> as your email address.",
+      "failed": "Verification failed. Please try again.",
+      "submit": {
+        "default": "Confirm email address"
+      },
+      "title": "Confirm your email"
+    },
+    "invalid": {
+      "body": "This email confirmation link is invalid or has expired. <requestNewLink>Request a new one</requestNewLink>.",
+      "title": "Invalid link"
     }
   },
+  "errorPage": {
+    "403": {
+      "description": "You don't have permission to access this page.",
+      "headline": "You're not allowed here"
+    },
+    "403csrf": {
+      "description": "Your form session timed out. Go back and try again.",
+      "headline": "Session expired"
+    },
+    "404": {
+      "description": "This page doesn't exist or may have moved. The lighter you're looking for is off the map.",
+      "headline": "The trail ends here"
+    },
+    "500": {
+      "description": "We track these errors automatically. Try refreshing — if the problem persists, come back later.",
+      "headline": "Something went wrong"
+    },
+    "backToHome": "Back to Home"
+  },
+  "faq": {
+    "lighter": {
+      "anythingDo": {
+        "a1": "If you can, please <b>top up the lighter</b> before passing it on. That way it will travel that little bit further.",
+        "a2": "You can also doodle on it, or decorate it in any way you want.",
+        "q": "Anything I should do with the lighter?"
+      },
+      "cantSeeAll": {
+        "a1": "It's an arbitrary choice I made, but I feel like I'd like to <b>keep the experience special and personal</b> to those who have actually had the lighters in their hands. Hopefully this will also encourage you to be more personal with your check-ins as you won't worry about the whole world seeing your messages.",
+        "a2": "Want to write a little love-letter to your crush which they get to read when they check the lighter's history? Go ahead, no one will see it but them (and the people who they will pass the lighter to, so watch out lmao).",
+        "q": "Why can I not see all the lighters?"
+      },
+      "giveToWhom": {
+        "a1": "Anyone you want. It's your lighter, <b>you decide</b>. I recommend giving it to someone who you think will enjoy silliness, and <b>who can help the lighter travel as far as possible</b>; someone who you think will come across more people with a similar spirit. Maybe someone who's been having a rough time lately?",
+        "a2": "Otherwise, maybe you can also <b>try leaving it in a busy place</b> like at a bar, a club smoking room, airport lounges, or any other place you think like-minded people might end up in. It's a bit of a risk though, because it might get thrown away by someone who doesn't know what it is, or they won't be curious enough to check the site.",
+        "q": "Who should I give the lighter to?"
+      },
+      "lightDied": {
+        "a": "If you can, please refill it. If you can't, please pass it on to someone else.",
+        "q": "What do I do if the lighter died?"
+      },
+      "multipleCheckins": {
+        "a1": "Make as many check-ins as you want, but I definitely recommend making <b>at least one when you get the lighter</b>. You can also keep <b>making ones whenever you go to a significant place</b>, like a different town, country, or a place you think is cool like a festival or the beach.",
+        "a2": "The idea is that you see the lighter travel from hand to hand and from place to place. As a rule of thumb, check-in when you would expect/want other people to check-in.",
+        "q": "Should I make more than one check-in?"
+      }
+    }
+  },
+  "footer": {
+    "footerNav": "Footer navigation",
+    "tagline": "Track your lighter's journey",
+    "viewCommit": "View current commit on GitHub"
+  },
+  "home": {
+    "cta": {
+      "body": "I'm Jonas, I made this while funemployed. Want to send a lighter into the world? <aboutLink>Read the about page</aboutLink> first — you'll need to get in touch before you start printing labels.",
+      "heading": "Start a journey.",
+      "link": "About the project"
+    },
+    "errors": {
+      "like": "Like",
+      "missingDash": "Missing the dash — it should be a name, a dash, then a number.",
+      "nameTooShort": "The name before the dash is too short — it needs at least 3 letters (you typed \"{{prefix}}\").",
+      "noNumber": "Nothing after the dash — add a 2-digit number.",
+      "notFound": "We couldn't find <lighterName>{{id}}</lighterName>. Double-check the sticker — it should look like <lighterName>{{example}}</lighterName>.",
+      "numberRequired": "The part after the dash should be a number.",
+      "offMap": "That lighter's off the map.",
+      "singleDigit": "The number needs 2 digits."
+    },
+    "eyebrow": "Find it. Check in. Pass it on.",
+    "globeCaption": "20 recently active lighters — each dot is someone's story",
+    "headline": "A lighter with a history. Add yours.",
+    "howItWorks": {
+      "heading": "Here's the deal.",
+      "step1Body": "Spot a lighter with a QR sticker. Scan it, or type its ID on litroute.com. Every city, every hand it passed through — it's all there waiting for you.",
+      "step1Title": "Find it.",
+      "step2Body": "Drop a photo and a quick note. Your moment — where you were, what you saw — becomes a permanent chapter in the lighter's story.",
+      "step2Title": "Check in.",
+      "step3Body": "Hand it to a stranger. Leave it at a coffee shop, a hostel, a trailhead. You decide the next chapter.",
+      "step3Title": "Pass it on.",
+      "step4Body": "Subscribe and get an email the next time someone finds it — wherever in the world that turns out to be. Low-stakes stalking of a piece of metal.",
+      "step4Title": "Follow along."
+    },
+    "journey": {
+      "exampleLabel": "Example — not your lighter",
+      "heading": "Here's what you'll see when you scan one.",
+      "openSlotBody": "Find one, check in, and you could be here.",
+      "seeReal": "<journeyLink>See a real lighter's journey</journeyLink>",
+      "somewhere": "Somewhere new",
+      "subtext": "These are made-up check-ins to show you how it works.",
+      "yourName": "your name here"
+    },
+    "lighterAlt": "A lighter lying on its side",
+    "lighterLabel": "What's the lighter called?",
+    "stats": {
+      "activeLighters": "active lighters",
+      "checkinsLogged": "check-ins logged",
+      "freeText": "Free to use, kept alive by readers like you. <supportLink>Support the project</supportLink>",
+      "peopleCheckedIn": "people who checked in",
+      "traveledSoFar": "traveled so far"
+    },
+    "subheadline": "Find a lighter with a QR sticker. Scan it to discover everywhere it's been and everyone who held it. Leave your own note — then pass it on to the next stranger.",
+    "submit": {
+      "checking": "Checking",
+      "default": "See the route"
+    },
+    "tryExample": "try \"john-93\" to see an example"
+  },
+  "nav": {
+    "homeAriaLabel": "LitRoute home",
+    "languageLabel": "Language",
+    "mainNav": "Main navigation",
+    "mobileNav": "Mobile navigation",
+    "signIn": "Sign in",
+    "supportAriaLabel": "Support this project",
+    "toggleNav": "Toggle navigation"
+  },
+  "photoUpload": {
+    "counter": "{{count}} / {{max}} photos",
+    "dragToReorder": "Drag to reorder · click to add more",
+    "empty": {
+      "addPhotos": "Add photos",
+      "clickOrDrag": "Click anywhere or drag & drop",
+      "dropHere": "Drop here!",
+      "releaseToUpload": "Release to upload",
+      "showWhere": "Show where you found it — up to {{max}} photos"
+    },
+    "existingPhoto": "Existing photo",
+    "label": "Photos",
+    "maxReached": "Maximum {{max}} photos reached — remove one to add another.",
+    "optional": "(optional)",
+    "preview": "Preview",
+    "removePhoto": "Remove photo",
+    "tips": {
+      "heading": "Photo tips",
+      "hide": "Cover or hide the lighter's name — it's the page's password",
+      "lighter": "Lighter in hand or on a surface makes a great shot",
+      "location": "Show where you are — a landmark, a view, or your surroundings"
+    },
+    "zoneAriaAdd": "Photo upload zone — click or drag to add photos",
+    "zoneAriaFull": "Photo upload zone — maximum reached"
+  },
+  "privacy": {
+    "body": "We're working on a full policy. The short version: we store as little as possible, never sell your data, and only use your email to send you notifications you've opted into.",
+    "title": "Privacy Policy"
+  },
+  "privateRoute": {},
   "settings": {
-    "profile": {
-      "submit": {
-        "default": "Save"
-      },
-      "saved": "Saved."
-    },
-    "email": {
-      "sectionTitle": "Email address",
-      "currentEmail": "Current email",
-      "newEmailLabel": "New email address",
-      "newEmailPlaceholder": "new@example.com",
-      "pendingVerify": "Check your inbox at <strong>{{email}}</strong> to verify the change.",
-      "readyToSwitch": "<strong>{{email}}</strong> is verified and ready to become your primary email.",
-      "confirmChange": {
-        "default": "Confirm change"
-      },
-      "cancelChange": "Cancel change",
-      "resendEmail": {
-        "default": "Resend email"
-      },
-      "changeEmail": {
-        "loading": "Requesting",
-        "default": "Change email"
-      },
-      "errors": {
-        "failedRequest": "Failed to request email change.",
-        "failedVerification": "Failed to send verification email.",
-        "failedPrimary": "Failed to set primary email.",
-        "failedRemove": "Failed to remove old email.",
-        "failedCancel": "Failed to cancel email change."
-      }
-    },
-    "mfa": {
-      "totp": {
-        "label": "Authenticator app (TOTP)",
-        "active": "Active",
-        "notSetUp": "Not set up",
-        "setUp": {
-          "default": "Set up"
-        }
-      },
-      "setup": {
-        "description": "Scan the QR code with your authenticator app (e.g. Google Authenticator, Authy), or enter the secret key manually.",
-        "secretKeyLabel": "Secret key",
-        "activate": {
-          "loading": "Activating",
-          "default": "Activate"
-        },
-        "invalidCode": "Invalid code. Try again."
-      },
-      "deactivate": {
-        "description": "Enter a code from your authenticator app to confirm removal.",
-        "remove": {
-          "loading": "Removing",
-          "default": "Remove authenticator"
-        }
-      },
-      "recoveryCodes": {
-        "label": "Recovery codes",
-        "remaining": "{{unused}} of {{total}} remaining",
-        "notGenerated": "Not generated",
-        "setUpFirst": "Set up TOTP first",
-        "viewBtn": "View",
-        "generateBtn": "Generate",
-        "eachOnce": "Each code can only be used once. Store these somewhere safe.",
-        "generateNew": "Generate new codes",
-        "generateWarning": "This will invalidate all existing recovery codes. Make sure you save the new ones.",
-        "generating": {
-          "loading": "Generating"
-        },
-        "failedGenerate": "Failed to generate recovery codes."
-      },
-      "reauth": {
-        "description": "For security, confirm your identity before changing two-factor authentication settings.",
-        "confirm": {},
-        "sendCode": {
-          "default": "Send code to {{email}}"
-        },
-        "codeSent": "A verification code was sent to {{email}}."
-      }
-    },
-    "passkeys": {
-      "sectionTitle": "Passkeys",
-      "unsupported": "Your browser doesn't support passkeys.",
-      "description": "Passkeys let you sign in using your device's biometrics or PIN — no email code needed. Once registered, your browser will offer your passkey automatically when you sign in.",
-      "noPasskeys": "No passkeys registered yet.",
-      "addBtn": "Add a passkey",
-      "added": "Added {{date}}",
-      "lastUsed": "Last used {{date}}",
-      "adding": {
-        "nameLabel": "Passkey name",
-        "namePlaceholder": "e.g. Touch ID, Face ID",
-        "nameHint": "Give this passkey a name so you can identify it later.",
-        "submit": {
-          "loading": "Registering",
-          "default": "Register passkey"
-        }
-      },
-      "errors": {
-        "cancelled": "Passkey registration was cancelled.",
-        "startFailed": "Failed to start registration.",
-        "registerFailed": "Failed to register passkey.",
-        "removeFailed": "Failed to remove passkey."
-      },
-      "reauth": {
-        "description": "For security, confirm your identity before registering a passkey.",
-        "confirm": {},
-        "sendCode": {
-          "default": "Send code to {{email}}"
-        },
-        "codeSent": "A verification code was sent to {{email}}."
-      }
-    },
     "connectedAccounts": {
-      "noAccounts": "No social accounts connected.",
       "disconnect": {
-        "loading": "Disconnecting",
-        "default": "Disconnect"
+        "default": "Disconnect",
+        "loading": "Disconnecting"
       },
-      "failedDisconnect": "Failed to disconnect account."
+      "failedDisconnect": "Failed to disconnect account.",
+      "noAccounts": "No social accounts connected."
     },
     "deleteAccount": {
-      "sectionTitle": "Delete account",
-      "description": "Permanently remove all your personal information, messages, and photos. Your check-in history will be kept anonymously.",
-      "deleteBtn": "Delete my account",
       "confirmation": {
-        "title": "This will permanently:",
+        "failed": "Something went wrong. Please try again.",
         "item1": "Delete your email address and sign-in methods",
         "item2": "Remove your name and profile information",
         "item3": "Delete all photos you've uploaded to check-ins",
         "item4": "Erase all messages you've left on check-ins",
         "item5": "Unsubscribe you from all units",
         "keepAnon": "The locations and timestamps of your check-ins will be kept anonymously so the relay's travel history stays intact.",
-        "typeToConfirm": "Type <strong>DELETE</strong> to confirm. This cannot be undone.",
         "placeholder": "DELETE",
         "submit": {
-          "loading": "Deleting",
-          "default": "Confirm deletion"
+          "default": "Confirm deletion",
+          "loading": "Deleting"
         },
-        "failed": "Something went wrong. Please try again."
+        "title": "This will permanently:",
+        "typeToConfirm": "Type <strong>DELETE</strong> to confirm. This cannot be undone."
+      },
+      "deleteBtn": "Delete my account",
+      "description": "Permanently remove all your personal information, messages, and photos. Your check-in history will be kept anonymously.",
+      "sectionTitle": "Delete account"
+    },
+    "email": {
+      "cancelChange": "Cancel change",
+      "changeEmail": {
+        "default": "Change email",
+        "loading": "Requesting"
+      },
+      "confirmChange": {
+        "default": "Confirm change"
+      },
+      "currentEmail": "Current email",
+      "errors": {
+        "failedCancel": "Failed to cancel email change.",
+        "failedPrimary": "Failed to set primary email.",
+        "failedRemove": "Failed to remove old email.",
+        "failedRequest": "Failed to request email change.",
+        "failedVerification": "Failed to send verification email."
+      },
+      "newEmailLabel": "New email address",
+      "newEmailPlaceholder": "new@example.com",
+      "pendingVerify": "Check your inbox at <strong>{{email}}</strong> to verify the change.",
+      "readyToSwitch": "<strong>{{email}}</strong> is verified and ready to become your primary email.",
+      "resendEmail": {
+        "default": "Resend email"
+      },
+      "sectionTitle": "Email address"
+    },
+    "mfa": {
+      "deactivate": {
+        "description": "Enter a code from your authenticator app to confirm removal.",
+        "remove": {
+          "default": "Remove authenticator",
+          "loading": "Removing"
+        }
+      },
+      "reauth": {
+        "codeSent": "A verification code was sent to {{email}}.",
+        "confirm": {},
+        "description": "For security, confirm your identity before changing two-factor authentication settings.",
+        "sendCode": {
+          "default": "Send code to {{email}}"
+        }
+      },
+      "recoveryCodes": {
+        "eachOnce": "Each code can only be used once. Store these somewhere safe.",
+        "failedGenerate": "Failed to generate recovery codes.",
+        "generateBtn": "Generate",
+        "generateNew": "Generate new codes",
+        "generateWarning": "This will invalidate all existing recovery codes. Make sure you save the new ones.",
+        "generating": {
+          "loading": "Generating"
+        },
+        "label": "Recovery codes",
+        "notGenerated": "Not generated",
+        "remaining": "{{unused}} of {{total}} remaining",
+        "setUpFirst": "Set up TOTP first",
+        "viewBtn": "View"
+      },
+      "setup": {
+        "activate": {
+          "default": "Activate",
+          "loading": "Activating"
+        },
+        "description": "Scan the QR code with your authenticator app (e.g. Google Authenticator, Authy), or enter the secret key manually.",
+        "invalidCode": "Invalid code. Try again.",
+        "secretKeyLabel": "Secret key"
+      },
+      "totp": {
+        "active": "Active",
+        "label": "Authenticator app (TOTP)",
+        "notSetUp": "Not set up",
+        "setUp": {
+          "default": "Set up"
+        }
+      }
+    },
+    "passkeys": {
+      "addBtn": "Add a passkey",
+      "added": "Added {{date}}",
+      "adding": {
+        "nameHint": "Give this passkey a name so you can identify it later.",
+        "nameLabel": "Passkey name",
+        "namePlaceholder": "e.g. Touch ID, Face ID",
+        "submit": {
+          "default": "Register passkey",
+          "loading": "Registering"
+        }
+      },
+      "description": "Passkeys let you sign in using your device's biometrics or PIN — no email code needed. Once registered, your browser will offer your passkey automatically when you sign in.",
+      "errors": {
+        "cancelled": "Passkey registration was cancelled.",
+        "registerFailed": "Failed to register passkey.",
+        "removeFailed": "Failed to remove passkey.",
+        "startFailed": "Failed to start registration."
+      },
+      "lastUsed": "Last used {{date}}",
+      "noPasskeys": "No passkeys registered yet.",
+      "reauth": {
+        "codeSent": "A verification code was sent to {{email}}.",
+        "confirm": {},
+        "description": "For security, confirm your identity before registering a passkey.",
+        "sendCode": {
+          "default": "Send code to {{email}}"
+        }
+      },
+      "sectionTitle": "Passkeys",
+      "unsupported": "Your browser doesn't support passkeys."
+    },
+    "profile": {
+      "saved": "Saved.",
+      "submit": {
+        "default": "Save"
       }
     },
     "reauth": {
       "failedSend": "Failed to send verification code.",
-      "invalidCode": "Invalid code. Please try again.",
-      "incorrectPassword": "Incorrect password. Please try again."
-    }
-  },
-  "userDetail": {
-    "admin": "Admin",
-    "contributorGuide": "Contributor guide",
-    "signOut": "Sign out",
-    "subscribedUnits": "Subscribed Units",
-    "noSubscriptions": "You're not subscribed to any units yet.",
-    "checkins_one": "{{count}} check-in",
-    "checkins_other": "{{count}} check-ins"
-  },
-  "userForm": {
-    "title": "My Info",
-    "submit": {
-      "default": "Update"
-    }
-  },
-  "emailConfirm": {
-    "checkingLink": "Checking your verification link",
-    "invalid": {
-      "title": "Invalid link",
-      "body": "This email confirmation link is invalid or has expired. <requestNewLink>Request a new one</requestNewLink>."
-    },
-    "confirm": {
-      "title": "Confirm your email",
-      "body": "Confirm <strong>{{email}}</strong> as your email address.",
-      "submit": {
-        "default": "Confirm email address"
-      },
-      "failed": "Verification failed. Please try again."
+      "incorrectPassword": "Incorrect password. Please try again.",
+      "invalidCode": "Invalid code. Please try again."
     }
   },
   "socialProviders": {
     "orContinueWith": "or continue with"
-  },
-  "errorPage": {
-    "backToHome": "Back to Home",
-    "404": {
-      "headline": "The trail ends here",
-      "description": "This page doesn't exist or may have moved. The lighter you're looking for is off the map."
-    },
-    "403csrf": {
-      "headline": "Session expired",
-      "description": "Your form session timed out. Go back and try again."
-    },
-    "403": {
-      "headline": "You're not allowed here",
-      "description": "You don't have permission to access this page."
-    },
-    "500": {
-      "headline": "Something went wrong",
-      "description": "We track these errors automatically. Try refreshing — if the problem persists, come back later."
-    }
-  },
-  "privateRoute": {},
-  "about": {
-    "header": "For people who leave things behind on purpose.",
-    "subheader": "A lighter travels from hand to hand. Each owner checks in — a photo, a location, a message. This is where you follow the journey.",
-    "faqTitle": "FAQ",
-    "aboutTitle": "About the project",
-    "supportHeading": "Support this project",
-    "qa": {
-      "why": {
-        "q": "Why?",
-        "a": "Because I wanted to. I'm funemployed, and I thought: what if a lighter could tell you where it had been?"
-      },
-      "how": {
-        "q": "How?",
-        "a": "Built with Django and React. Open source — <githubLink>GitHub repo</githubLink>. PRs welcome after opening an issue."
-      },
-      "who": {
-        "q": "Who?",
-        "a": "My name is Jonas. You can <emailLink>send me an email</emailLink> or reach me via <mastodonLink>@jvacek@fosstodon.org</mastodonLink>"
-      },
-      "followAlong": {
-        "q": "Where can I follow along?",
-        "a": "On <instagramLink>Instagram (@lit_route)</instagramLink>, on <redditLink>Reddit (r/litroute)</redditLink>, and on <discordLink>Discord</discordLink>."
-      },
-      "secure": {
-        "q": "Is it secure?",
-        "a1": "Storing as little as possible is a design goal, not an afterthought. We don't store passwords at all — login is via a magic code sent to your email, so there's nothing to leak. The EXIF data on images is stripped, and your location is whatever you type in manually.",
-        "a2": "Don't believe me? The code is open for everyone to see. You can even run your own LitRoute, just please call it something else."
-      },
-      "money": {
-        "q": "Will you try to make money off of this?",
-        "a1": "Honestly, I don't know. I'm not planning on it. I'd much rather keep funding this from my own pocket and tips.",
-        "a2": "This is my little personal project that I want to work on purely for fun, and when you start making money off of something it can quickly become a source of stress, so I'd rather avoid that.",
-        "a3": "Either way, your personal identifiable information will never be sold or given to anyone."
-      },
-      "help": {
-        "q": "Is there any way I can help?",
-        "a1": "Sure! Even if you don't code, I'm looking for people who would be happy to buy their own lighters and register them into the system. I'm not at the stage where I can make this self-service, so just reach out to me using the contact info above.",
-        "a2": "If you do code, I'm happy to accept pull requests, just make sure to open an issue first so we can discuss it!",
-        "a3": "You can also help by translating LitRoute into your language — no coding needed. Translations are managed on <weblateLink>Weblate</weblateLink>."
-      },
-      "translate": {
-        "q": "Is it available in other languages?",
-        "a": "The interface is currently available in English and French. Translations are community-managed through <weblateLink>Weblate</weblateLink> — if you'd like to bring LitRoute to a new language, contributions are very welcome."
-      }
-    }
   },
   "support": {
     "header": "Support this project.",
@@ -515,88 +526,77 @@
     "body1": "LitRoute is a one-person project. There are no ads, no subscriptions, and no investors — just server costs, email delivery, and storage coming out of my own pocket. That includes the lighters themselves: each one is bought and registered by hand before it can start its journey.",
     "body2": "If you've enjoyed following a journey here, a small contribution goes a long way.",
     "donateCta": "Tip",
-    "kofiLabel": "Ko-fi",
-    "kofiDescription": "One-time tip, no account needed",
-    "liberapayLabel": "Liberapay",
-    "liberapayDescription": "Recurring weekly or monthly",
-    "githubLabel": "GitHub Sponsors",
     "githubDescription": "Sponsor directly on GitHub",
+    "githubLabel": "GitHub Sponsors",
+    "kofiDescription": "One-time tip, no account needed",
+    "kofiLabel": "Ko-fi",
+    "liberapayDescription": "Recurring weekly or monthly",
+    "liberapayLabel": "Liberapay",
     "otherWaysHeading": "Or help without spending:",
-    "weblateLabel": "Translate",
+    "weblateCta": "Contribute",
     "weblateDescription": "Help bring LitRoute to your language on Weblate",
-    "weblateCta": "Contribute"
+    "weblateLabel": "Translate"
   },
   "terms": {
-    "title": "Terms of Service",
-    "body": "Full terms are coming soon. The basics: be kind, don't abuse the platform, and don't use it for anything illegal. This is a small personal project run for fun."
+    "body": "Full terms are coming soon. The basics: be kind, don't abuse the platform, and don't use it for anything illegal. This is a small personal project run for fun.",
+    "title": "Terms of Service"
   },
-  "privacy": {
-    "title": "Privacy Policy",
-    "body": "We're working on a full policy. The short version: we store as little as possible, never sell your data, and only use your email to send you notifications you've opted into."
+  "unit": {
+    "cannotEdit": "Cannot edit or delete after 6 hours",
+    "checkinBtn": "New check-in",
+    "currentLocation": "Current location",
+    "deleteBtn": "Delete",
+    "deleteConfirm": "Delete this check-in?",
+    "deleteError": "Could not delete this check-in.",
+    "editBtn": "Edit",
+    "gettingStarted": {
+      "body": "You're the first one here. Whoever finds it next will be glad you did.",
+      "cta": "Create the first check-in",
+      "heading": "This lighter's just getting started."
+    },
+    "goToPhoto": "Go to photo {{index}}",
+    "nextPhoto": "Next photo",
+    "noCheckinsYet": "No check-ins yet.",
+    "notFound": {
+      "body1": "We couldn't find <strong>{{identifier}}</strong>.",
+      "body2": "The name on the sticker should look like <handwriting>EMILY-07</handwriting> — check for typos and try again.",
+      "cta": "Try another name",
+      "heading": "That lighter's off the map."
+    },
+    "origin": "Origin",
+    "passedOn": "You've passed this lighter on — its journey continues.",
+    "photoAlt": "check-in photo {{index}} of {{total}}",
+    "placeNotGiven": "Place not given",
+    "prevPhoto": "Previous photo",
+    "resetView": "Reset view",
+    "statsFollowers": "followers",
+    "statsKmTraveled": "km traveled",
+    "statsStops": "stops",
+    "status": {
+      "currentlyIn": "Currently in {{place}}",
+      "lastSeenDaysAgo_one": "Last seen {{count}} day ago in {{place}}",
+      "lastSeenDaysAgo_other": "Last seen {{count}} days ago in {{place}}",
+      "lastSeenYesterday": "Last seen yesterday in {{place}}"
+    },
+    "subscribe": "Subscribe",
+    "supportPrompt": "LitRoute is free and built by one person. If this journey made you smile, consider <supportLink>supporting it</supportLink>",
+    "travelLog": "Travel log",
+    "unsubscribe": "Unsubscribe",
+    "verifiedBanner": "Your email is confirmed — you're now subscribed!"
   },
-  "faq": {
-    "lighter": {
-      "giveToWhom": {
-        "q": "Who should I give the lighter to?",
-        "a1": "Anyone you want. It's your lighter, <b>you decide</b>. I recommend giving it to someone who you think will enjoy silliness, and <b>who can help the lighter travel as far as possible</b>; someone who you think will come across more people with a similar spirit. Maybe someone who's been having a rough time lately?",
-        "a2": "Otherwise, maybe you can also <b>try leaving it in a busy place</b> like at a bar, a club smoking room, airport lounges, or any other place you think like-minded people might end up in. It's a bit of a risk though, because it might get thrown away by someone who doesn't know what it is, or they won't be curious enough to check the site."
-      },
-      "multipleCheckins": {
-        "q": "Should I make more than one check-in?",
-        "a1": "Make as many check-ins as you want, but I definitely recommend making <b>at least one when you get the lighter</b>. You can also keep <b>making ones whenever you go to a significant place</b>, like a different town, country, or a place you think is cool like a festival or the beach.",
-        "a2": "The idea is that you see the lighter travel from hand to hand and from place to place. As a rule of thumb, check-in when you would expect/want other people to check-in."
-      },
-      "anythingDo": {
-        "q": "Anything I should do with the lighter?",
-        "a1": "If you can, please <b>top up the lighter</b> before passing it on. That way it will travel that little bit further.",
-        "a2": "You can also doodle on it, or decorate it in any way you want."
-      },
-      "lightDied": {
-        "q": "What do I do if the lighter died?",
-        "a": "If you can, please refill it. If you can't, please pass it on to someone else."
-      },
-      "cantSeeAll": {
-        "q": "Why can I not see all the lighters?",
-        "a1": "It's an arbitrary choice I made, but I feel like I'd like to <b>keep the experience special and personal</b> to those who have actually had the lighters in their hands. Hopefully this will also encourage you to be more personal with your check-ins as you won't worry about the whole world seeing your messages.",
-        "a2": "Want to write a little love-letter to your crush which they get to read when they check the lighter's history? Go ahead, no one will see it but them (and the people who they will pass the lighter to, so watch out lmao)."
-      }
-    }
+  "userDetail": {
+    "admin": "Admin",
+    "checkins_one": "{{count}} check-in",
+    "checkins_other": "{{count}} check-ins",
+    "contributorGuide": "Contributor guide",
+    "noSubscriptions": "You're not subscribed to any units yet.",
+    "signOut": "Sign out",
+    "subscribedUnits": "Subscribed Units"
   },
-  "contributorGuide": {
-    "header": "Adding & distributing lighters",
-    "subheader": "A practical guide for contributors: how to register a new unit, label the lighter, and send it on its way.",
-    "openAdmin": "Open admin panel",
-    "greeting": "Hey — thank you for being here.",
-    "greetingBody1": "Honestly, LitRoute only works because people like you are willing to buy lighters, label them, and trust strangers to keep them moving. That's the whole thing. Without that, it's just a website.",
-    "greetingBody2": "I started this because I wanted to see how far a lighter could travel, and every time I get a notification from one of them I still find it kind of magical. I hope you do too. If you ever have feedback, ideas, or just want to share how one of your lighters is doing — please reach out. It genuinely means a lot.",
-    "stepsTitle": "Step by step",
-    "passingOnTitle": "Passing it on",
-    "passingOnSubtext": "The same questions recipients will have — useful to know before you hand the lighter over.",
-    "footerText": "Something unclear or missing? <aboutLink>Visit the about page</aboutLink> or get in touch.",
-    "steps": {
-      "createUnit": {
-        "q": "Create the unit",
-        "a": "In the admin panel, go to <b>Backend › Units</b> and click <b>Add unit</b>. Use a first name and a number as the identifier (e.g. <code>john-93</code>, <code>leila-23</code>). At least three characters before the dash, at least two digits after. The identifier becomes part of the URL, so keep it short and readable.",
-        "tip": "Pick names with one obvious spelling — avoid ambiguous ones like Steven vs. Stephen or Jeffrey vs. Jeffery. If someone has to guess to find the URL, you've already lost them."
-      },
-      "makeLabel": {
-        "q": "Make the label",
-        "a": "Write the unit's name in <b>all caps</b> and the main domain on the label — e.g. <b>JOHN-93</b> and <b>LITROUTE.COM</b>. A QR code pointing to the unit URL makes it even easier for recipients to check in without having to type anything.",
-        "tip": "Also add a short nudge so people know what to do: <em>\"Scan me, tag me, pass me on\"</em> or <em>\"Check in. Keep me moving.\"</em>"
-      },
-      "attachLabel": {
-        "q": "Attach the label",
-        "a": "Stick the label to the lighter in a way that will last — clear packing tape over the top works well. The label needs to survive being pocketed and passed around, so make sure the edges are properly sealed. Orient the text so it runs along the <b>length</b> of the lighter, not across it — that way someone can read the whole line without having to rotate it halfway through.",
-        "tip": "Consider doodling or drawing on the lighter too. A lighter with a face or a little character is harder to throw away — give it a personality and people will want to keep it going."
-      },
-      "firstCheckin": {
-        "q": "Make the first check-in",
-        "a": "Visit your unit's page and make the first check-in yourself. This seeds the journey and gives the next person something to see when they scan the code. You were automatically subscribed when you created the unit, so you'll get an email every time someone checks in."
-      },
-      "handOff": {
-        "q": "Hand it off",
-        "a": "Give the lighter to someone and let it travel. You don't need to do anything else — just watch the notifications come in."
-      }
-    }
+  "userForm": {
+    "submit": {
+      "default": "Update"
+    },
+    "title": "My Info"
   }
 }
