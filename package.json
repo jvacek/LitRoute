@@ -83,6 +83,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@maptiler/client": "^3.0.1",
     "@marsidev/react-turnstile": "^1.1.0",
     "@simplewebauthn/browser": "^13.3.0",
     "cobe": "^2.0.1",

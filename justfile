@@ -73,6 +73,12 @@ webpack-reset:
     @rm -rf .webpack_cache
     @docker compose restart node
 
+# node-reinstall: Drop and recreate the node container + node_modules volume (use after adding npm packages).
+node-reinstall:
+    @echo "Reinstalling node_modules..."
+    @docker compose rm -f -s -v node
+    @docker compose up -d node
+
 # generate-favicons: Render PNG/ICO variants from the SVG source, then collect into staticfiles.
 generate-favicons:
     node scripts/generate-favicons.mjs

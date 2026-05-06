@@ -198,9 +198,13 @@
         "loading": "Locating",
         "default": "Use my location"
       },
-      "privacyHint": "Exact location set — nudge the pin if you would rather not share your precise position.",
+      "searchPlaceholder": "Search for a place…",
+      "locationSet": "Location set",
+      "privacyHint": {
+        "title": "Your exact location will be shared",
+        "body": "Your device's GPS coordinates were used. Move the pin to a nearby spot if you'd rather not share your precise position."
+      },
       "dismiss": "Dismiss",
-      "selectedLocation": "Selected: {{location}}",
       "placeLabel": "Place",
       "placePlaceholder": "e.g. \"Grande Place, Brussels\"",
       "messageLabel": "Message",

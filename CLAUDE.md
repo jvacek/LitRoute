@@ -225,6 +225,5 @@ npm install                 # sync from package-lock.json
 After adding npm packages, the node container needs its volume refreshed. If running in Docker:
 
 ```bash
-docker compose rm -f -v node   # remove container + anonymous node_modules volume
-just up                         # recreate with fresh install
+just node-reinstall
 ```

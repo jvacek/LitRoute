@@ -1,5 +1,10 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { Turnstile } from '@marsidev/react-turnstile';
+import {
+  config as maptilerConfig,
+  geocoding,
+  type GeocodingFeature,
+} from '@maptiler/client';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactMap, { Layer, Source } from 'react-map-gl/maplibre';
@@ -81,10 +86,16 @@ export default function CheckinForm({
   const [showPrivacyHint, setShowPrivacyHint] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
   const [anonymousName, setAnonymousName] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<GeocodingFeature[]>([]);
+  const [searchOpen, setSearchOpen] = useState(false);
   const mapRef = useRef<MapRef>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
   const showTurnstile =
     mode === 'create' && !isAuthenticated && !!config?.turnstileSiteKey;
   const showNameField = mode === 'create' && !isAuthenticated;
+
+  maptilerConfig.apiKey = maptilerKey;
 
   const pickedLatLng: [number, number] | null = location
     ? (location.split(',').map(Number) as [number, number])
@@ -94,13 +105,58 @@ export default function CheckinForm({
     (img) => !removedImageIds.includes(img.id),
   );
 
+  // Debounced geocoding search
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setSearchOpen(false);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await geocoding.forward(searchQuery, { limit: 5 });
+        setSearchResults(res.features);
+        setSearchOpen(res.features.length > 0);
+      } catch {
+        // silent — map pin-click still works
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  function handleSelectResult(feature: GeocodingFeature) {
+    const [lng, lat] = feature.center as [number, number];
+    setLocation(`${lat},${lng}`);
+    const country = feature.context?.find((c: { id: string }) =>
+      c.id.startsWith('country.'),
+    )?.text;
+    const placeName = country
+      ? `${feature.text}, ${country}`
+      : (feature.text ?? '');
+    setPlace(placeName);
+    setSearchQuery(feature.place_name ?? placeName);
+    setSearchOpen(false);
+    mapRef.current?.flyTo({ center: [lng, lat], zoom: 12, duration: 1000 });
+  }
+
   function handleGeolocate() {
     if (!navigator.geolocation) return;
     setGeolocating(true);
+    setShowPrivacyHint(true);
     navigator.geolocation.getCurrentPosition(
       ({ coords: { latitude: lat, longitude: lng } }) => {
         setLocation(`${lat},${lng}`);
-        setShowPrivacyHint(true);
         setGeolocating(false);
         mapRef.current?.flyTo({ center: [lng, lat], zoom: 15, duration: 1000 });
       },
@@ -112,6 +168,7 @@ export default function CheckinForm({
           ],
         }));
         setGeolocating(false);
+        setShowPrivacyHint(false);
       },
     );
   }
@@ -264,29 +321,70 @@ export default function CheckinForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Map */}
+      {/* Location */}
       <div>
         <label className="mb-2 block text-sm font-medium text-char">
           {t('checkin.form.locationLabel')}
           {isCreate && <span className="text-ember"> *</span>}
         </label>
-        <div className="mb-2 flex items-center gap-3">
-          <p className="text-xs text-smoke">
-            {isCreate
-              ? t('checkin.form.clickToDrop')
-              : t('checkin.form.clickToMove')}
-          </p>
-          <button
-            type="button"
-            onClick={handleGeolocate}
-            disabled={geolocating}
-            className="rounded-btn bg-amber px-3 py-1 text-xs font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
-          >
-            {geolocating
-              ? `${t('checkin.form.useMyLocation.loading')}…`
-              : t('checkin.form.useMyLocation.default')}
-          </button>
+
+        {/* Search bar + Use my location button */}
+        <div ref={searchRef} className="relative mb-2">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => searchResults.length > 0 && setSearchOpen(true)}
+              placeholder={t('checkin.form.searchPlaceholder')}
+              className="flex-1 rounded-input border border-char/15 bg-white px-4 py-2.5 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
+              autoComplete="off"
+            />
+            <button
+              type="button"
+              onClick={handleGeolocate}
+              disabled={geolocating}
+              className="shrink-0 rounded-btn bg-amber px-4 py-2.5 text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
+            >
+              {geolocating
+                ? `${t('checkin.form.useMyLocation.loading')}…`
+                : t('checkin.form.useMyLocation.default')}
+            </button>
+          </div>
+
+          {/* Autocomplete dropdown */}
+          {searchOpen && searchResults.length > 0 && (
+            <ul className="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden rounded-card border border-char/10 bg-white shadow-md">
+              {searchResults.map((feature) => (
+                <li key={feature.id as string}>
+                  <button
+                    type="button"
+                    className="w-full px-4 py-2.5 text-left text-sm text-char hover:bg-linen focus:bg-linen focus:outline-none"
+                    onClick={() => handleSelectResult(feature)}
+                  >
+                    <span className="font-medium">{feature.text}</span>
+                    {feature.place_name &&
+                      feature.place_name !== feature.text && (
+                        <span className="ml-1 text-smoke">
+                          {feature.place_name.slice(
+                            (feature.text?.length ?? 0) + 2,
+                          )}
+                        </span>
+                      )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
+
+        <p className="mb-2 text-xs text-smoke">
+          {isCreate
+            ? t('checkin.form.clickToDrop')
+            : t('checkin.form.clickToMove')}
+        </p>
+
+        {/* Map */}
         <div className="overflow-hidden rounded-card border border-char/10">
           <ReactMap
             ref={mapRef}
@@ -318,24 +416,37 @@ export default function CheckinForm({
             </Source>
           </ReactMap>
         </div>
-        {showPrivacyHint && (
-          <div className="mt-2 flex items-start justify-between gap-2 rounded-card border border-amber/30 bg-amber/10 px-3 py-2">
-            <p className="text-xs text-char">{t('checkin.form.privacyHint')}</p>
-            <button
-              type="button"
-              onClick={() => setShowPrivacyHint(false)}
-              className="shrink-0 text-smoke hover:text-char"
-              aria-label={t('checkin.form.dismiss')}
-            >
-              &#x2715;
-            </button>
-          </div>
-        )}
+
         {location && (
-          <p className="mt-1 text-xs text-smoke">
-            {t('checkin.form.selectedLocation', { location })}
+          <p className="mt-1.5 text-xs font-medium text-amber">
+            &#x2713; {t('checkin.form.locationSet')}
           </p>
         )}
+
+        {/* Privacy warning — shown as soon as geolocation is triggered */}
+        {showPrivacyHint && (
+          <div className="mt-2 rounded-card border border-amber/40 bg-amber/10 px-4 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-char">
+                  &#9888;&#xFE0E; {t('checkin.form.privacyHint.title')}
+                </p>
+                <p className="text-sm text-char/80">
+                  {t('checkin.form.privacyHint.body')}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowPrivacyHint(false)}
+                className="mt-0.5 shrink-0 p-1 text-smoke hover:text-char"
+                aria-label={t('checkin.form.dismiss')}
+              >
+                &#x2715;
+              </button>
+            </div>
+          </div>
+        )}
+
         {errors.location && (
           <p className="mt-1 text-xs text-ember">{errors.location.join(' ')}</p>
         )}
