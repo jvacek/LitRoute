@@ -17,7 +17,7 @@ import { useConfig } from '../lib/useConfig';
 import PhotoUpload from './PhotoUpload';
 
 const MAX_IMAGES = 5;
-// Must match LOCATION_CLAIM_MAX_DRIFT_METERS in config/constants.py
+// Fallback pin-nudge boundary when no game config is passed in
 const GPS_NUDGE_RADIUS_M = 50;
 
 function haversineM(
@@ -360,9 +360,9 @@ export default function CheckinForm({
       setSubmitting(true);
       setErrors({});
       navigator.geolocation.getCurrentPosition(
-        async ({ coords: { latitude: lat, longitude: lng } }) => {
+        async ({ coords: { latitude: lat, longitude: lng, accuracy } }) => {
           try {
-            const token = await requestLocationClaim(lat, lng, 0);
+            const token = await requestLocationClaim(lat, lng, accuracy);
             setConfirmStep({
               gpsLat: lat,
               gpsLng: lng,
