@@ -115,7 +115,7 @@
     "statsStops": "arrêts",
     "statsFollowers": "abonnés",
     "checkinBtn": "Nouvel enregistrement",
-    "passedOn": "Vous avez passé ce briquet — son voyage continue.",
+    "passedOn": "Vous l'avez transmis à quelqu'un d'autre — son voyage continue.",
     "subscribe": "S'abonner",
     "unsubscribe": "Se désabonner",
     "travelLog": "Journal de voyage",
@@ -129,7 +129,7 @@
     "supportPrompt": "LitRoute est gratuit et fait par une seule personne. Si ce voyage vous a fait sourire, pensez à <supportLink>le soutenir</supportLink>",
     "gettingStarted": {
       "heading": "Ce briquet commence tout juste.",
-      "body": "Vous êtes la première personne ici. Celui ou celle qui le trouvera ensuite sera content que vous soyez passé.",
+      "body": "Vous êtes la première personne ici. La prochaine sera contente que vous soyez passé.",
       "cta": "Créer le premier enregistrement"
     },
     "status": {
@@ -180,13 +180,13 @@
     },
     "checkedIn": "Enregistrement confirmé",
     "guestEmailTitle": "Vous faites maintenant partie du voyage.",
-    "guestEmailTagline": "Une petite flamme peut aller loin.",
+    "guestEmailTagline": "Une petite flamme, ça voyage.",
     "guestEmailSubtitle": "Laissez votre e-mail pour suivre — nous vous préviendrons quand ce briquet s'enregistrera ailleurs.",
     "guestEmailPlaceholder": "votre@email.com",
     "guestEmailSubmit": "Me prévenir",
     "guestEmailSentTitle": "Vérifiez votre boîte de réception.",
     "guestEmailSent": "Nous vous avons envoyé un lien à confirmer — appuyez dessus et vous êtes sur la liste.",
-    "guestEmailSentBack": "Retour au briquet",
+    "guestEmailSentBack": "Retour à l'Unit",
     "guestEmailSkip": "Passer pour l'instant"
   },
   "emailConfirm": {
@@ -218,18 +218,5 @@
     "weblateLabel": "Traduire",
     "weblateDescription": "Aidez à traduire LitRoute dans votre langue sur Weblate",
     "weblateCta": "Contribuer"
-  },
-  "auth": {
-    "email": {
-      "title": "Connexion",
-      "emailLabel": "Adresse e-mail",
-      "submit": {
-        "default": "Envoyer le code",
-        "loading": "Envoi"
-      },
-      "passkey": {
-        "default": "Se connecter avec une clé d'accès"
-      }
-    }
   }
 }
