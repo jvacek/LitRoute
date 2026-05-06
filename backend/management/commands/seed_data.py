@@ -170,7 +170,11 @@ class Command(BaseCommand):
             while identifier != "john-93" and Unit.objects.filter(identifier=identifier).exists():
                 identifier = _random_identifier(random.randint(0, 9999))  # noqa: S311
 
-            unit = Unit.objects.create(identifier=identifier, created_by=user)
+            unit = Unit.objects.create(
+                identifier=identifier,
+                created_by=user,
+                admin_only_checkin=identifier == "john-93",
+            )
             unit.subscribers.add(user)
             created_units += [identifier]
 
