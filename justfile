@@ -73,6 +73,10 @@ webpack-reset:
     @rm -rf .webpack_cache
     @docker compose restart node
 
+# webpack-rebuild [file]: Force webpack to rebuild on macOS when host file events aren't reaching the node container (Rancher Desktop / Docker Desktop virtiofs). Defaults to the React entry — pass a relative project path to invalidate just that file.
+webpack-rebuild file="flamerelay/static/js/project.tsx":
+    @docker compose exec -T node touch /app/{{file}}
+
 # node-reinstall: Drop and recreate the node container + node_modules volume (use after adding npm packages).
 node-reinstall:
     @echo "Reinstalling node_modules..."
