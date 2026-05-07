@@ -1,6 +1,7 @@
 import os
 import re
 import unicodedata
+from datetime import timedelta
 from uuid import uuid4
 
 from django.contrib.gis.db.models import PointField
@@ -103,8 +104,6 @@ class Game(models.Model):
 
     @property
     def end_time(self):
-        from datetime import timedelta  # noqa: PLC0415
-
         return self.start_time + timedelta(hours=self.allowed_time)
 
 

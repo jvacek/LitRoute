@@ -10,6 +10,7 @@ from config.constants import (
     EMAIL_TASK_MAX_RETRIES,
     EMAIL_TASK_RETRY_BACKOFF_MAX_SECONDS,
     EMAIL_TASK_RETRY_BACKOFF_SECONDS,
+    GAME_LEADERBOARD_CACHE_KEY_PREFIX,
 )
 
 
@@ -29,8 +30,6 @@ def unit_distance_cache_key(identifier: str) -> str:
 
 
 def game_leaderboard_cache_key(game_id: int) -> str:
-    from config.constants import GAME_LEADERBOARD_CACHE_KEY_PREFIX  # noqa: PLC0415
-
     return f"{GAME_LEADERBOARD_CACHE_KEY_PREFIX}:{game_id}"
 
 
