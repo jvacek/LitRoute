@@ -538,4 +538,11 @@ class GuestVerifyView(View):
                 user.save(update_fields=["name"])
         checkins.update(created_by=user, edit_token=None)
 
+        cache_keys = [STATS_CACHE_KEY]
+        if unit.game_id:
+            from backend.services import game_leaderboard_cache_key  # noqa: PLC0415
+
+            cache_keys.append(game_leaderboard_cache_key(unit.game_id))
+        cache.delete_many(cache_keys)
+
         return HttpResponseRedirect(f"/unit/{unit_identifier}/?verified=1")
