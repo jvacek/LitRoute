@@ -27,9 +27,19 @@
         "maxPhotos": "Maximum {{max}} photos par enregistrement.",
         "svgNotSupported": "Seules les images matricielles (JPEG, PNG, WebP, etc.) sont prises en charge. Les fichiers SVG ne peuvent pas être téléversés."
       },
+      "gpsDeniedModal": {
+        "body": "Votre navigateur ou votre appareil bloque l'accès à la localisation. Pour vous enregistrer ici, vous devez l'autoriser.",
+        "close": "Fermer",
+        "step1": "Touchez l'icône de cadenas ou d'info à côté de l'adresse de ce site et réglez Localisation sur <strong>Autoriser</strong>.",
+        "step2": "Si cela ne suffit pas, ouvrez les réglages <strong>Confidentialité → Localisation</strong> de votre appareil et assurez-vous que votre navigateur est autorisé.",
+        "step3": "Rechargez cette page une fois terminé.",
+        "title": "Nous ne voyons pas votre position",
+        "tryAgain": "Réessayer"
+      },
       "gpsNotice": "Cette unité nécessite votre position en temps réel. Elle sera capturée lorsque vous appuyez sur Enregistrement.",
       "gpsNudgeHint": "Déplacez votre repère si vous préférez ne pas partager votre position exacte.",
       "locationLabel": "Position",
+      "locationSet": "Position définie",
       "messageLabel": "Message",
       "messagePlaceholder": "Où l'avez-vous trouvé ? Où êtes-vous ? Quelle est la suite pour ce briquet ?",
       "nameLabel": "Votre nom (optionnel)",
@@ -37,6 +47,11 @@
       "passedOnNote": "Dès que quelqu'un s'enregistre après vous, le briquet passe au suivant — vous ne pourrez plus ajouter d'enregistrements.",
       "placeLabel": "Lieu",
       "placePlaceholder": "p. ex. « Grande Place, Bruxelles »",
+      "privacyHint": {
+        "body": "Les coordonnées GPS de votre appareil ont été utilisées. Déplacez le repère vers un endroit proche si vous préférez ne pas partager votre position exacte.",
+        "title": "Votre position exacte sera partagée"
+      },
+      "searchPlaceholder": "Rechercher un lieu…",
       "submit": {
         "create": "S'enregistrer",
         "creating": "Envoi",
@@ -217,6 +232,31 @@
     "signIn": "Se connecter",
     "supportAriaLabel": "Soutenir ce projet",
     "toggleNav": "Afficher/masquer la navigation"
+  },
+  "photoUpload": {
+    "counter": "{{count}} / {{max}} photos",
+    "dragToReorder": "Glissez pour réorganiser · cliquez pour en ajouter",
+    "empty": {
+      "addPhotos": "Ajouter des photos",
+      "clickOrDrag": "Cliquez n'importe où ou glissez-déposez",
+      "dropHere": "Déposez ici !",
+      "releaseToUpload": "Relâchez pour téléverser",
+      "showWhere": "Montrez où vous l'avez trouvé — jusqu'à {{max}} photos"
+    },
+    "existingPhoto": "Photo existante",
+    "label": "Photos",
+    "maxReached": "Maximum de {{max}} photos atteint — retirez-en une pour en ajouter une autre.",
+    "optional": "(facultatif)",
+    "preview": "Aperçu",
+    "removePhoto": "Retirer la photo",
+    "tips": {
+      "heading": "Conseils photo",
+      "hide": "Couvrez ou masquez le nom du briquet — c'est le mot de passe de la page",
+      "lighter": "Le briquet en main ou posé sur une surface fait une belle photo",
+      "location": "Montrez où vous êtes — un point de repère, une vue, ou ce qui vous entoure"
+    },
+    "zoneAriaAdd": "Zone de téléversement — cliquez ou glissez pour ajouter des photos",
+    "zoneAriaFull": "Zone de téléversement — maximum atteint"
   },
   "supportSection": {
     "body1": "LitRoute est un projet solo. Pas de pub, pas d'abonnements, pas d'investisseurs — juste les coûts de serveur, d'envoi d'e-mails et de stockage qui viennent de ma poche. Y compris les briquets eux-mêmes : chacun est acheté et enregistré à la main avant de pouvoir commencer son voyage.",

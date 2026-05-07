@@ -27,9 +27,19 @@
         "maxPhotos": "Maximaal {{max}} foto's per check-in.",
         "svgNotSupported": "Alleen rasterafbeeldingen (JPEG, PNG, WebP, enz.) worden ondersteund. SVG-bestanden kunnen niet worden geüpload."
       },
+      "gpsDeniedModal": {
+        "body": "Je browser of apparaat blokkeert de locatietoegang. Om hier in te checken moet je het toestaan.",
+        "close": "Sluiten",
+        "step1": "Tik op het slot- of info-icoon naast het adres van deze site en zet Locatie op <strong>Toestaan</strong>.",
+        "step2": "Helpt dat niet? Open dan op je apparaat de instellingen voor <strong>Privacy → Locatie</strong> en zorg dat je browser is toegestaan.",
+        "step3": "Laad deze pagina opnieuw als je klaar bent.",
+        "title": "We zien je locatie niet",
+        "tryAgain": "Opnieuw proberen"
+      },
       "gpsNotice": "Deze eenheid vereist je realtime locatie. Deze wordt vastgelegd wanneer je op Inchecken tikt.",
       "gpsNudgeHint": "Verplaats je speld als je je exacte locatie liever niet deelt.",
       "locationLabel": "Locatie",
+      "locationSet": "Locatie ingesteld",
       "messageLabel": "Bericht",
       "messagePlaceholder": "Waar heb je hem gevonden? Waar ben je? Wat is het volgende voor deze aansteker?",
       "nameLabel": "Je naam (optioneel)",
@@ -37,6 +47,11 @@
       "passedOnNote": "Zodra iemand anders na jou incheckt, gaat de aansteker verder — je kunt dan geen check-ins meer toevoegen.",
       "placeLabel": "Plaats",
       "placePlaceholder": "bijv. \"Grote Markt, Brussel\"",
+      "privacyHint": {
+        "body": "De GPS-coördinaten van je apparaat zijn gebruikt. Verplaats de speld naar een nabijgelegen plek als je je exacte positie liever niet deelt.",
+        "title": "Je exacte locatie wordt gedeeld"
+      },
+      "searchPlaceholder": "Zoek een plaats…",
       "submit": {
         "create": "Inchecken",
         "creating": "Versturen",
@@ -217,6 +232,31 @@
     "signIn": "Aanmelden",
     "supportAriaLabel": "Dit project steunen",
     "toggleNav": "Navigatie aan/uit"
+  },
+  "photoUpload": {
+    "counter": "{{count}} / {{max}} foto's",
+    "dragToReorder": "Sleep om te herschikken · klik om er meer toe te voegen",
+    "empty": {
+      "addPhotos": "Foto's toevoegen",
+      "clickOrDrag": "Klik ergens of sleep & laat los",
+      "dropHere": "Laat hier los!",
+      "releaseToUpload": "Loslaten om te uploaden",
+      "showWhere": "Laat zien waar je hem vond — maximaal {{max}} foto's"
+    },
+    "existingPhoto": "Bestaande foto",
+    "label": "Foto's",
+    "maxReached": "Maximum van {{max}} foto's bereikt — verwijder er een om een andere toe te voegen.",
+    "optional": "(optioneel)",
+    "preview": "Voorbeeld",
+    "removePhoto": "Foto verwijderen",
+    "tips": {
+      "heading": "Foto-tips",
+      "hide": "Bedek of verberg de naam van de aansteker — dat is het wachtwoord van de pagina",
+      "lighter": "De aansteker in de hand of op een oppervlak geeft een mooie foto",
+      "location": "Laat zien waar je bent — een herkenningspunt, een uitzicht of je omgeving"
+    },
+    "zoneAriaAdd": "Foto-uploadzone — klik of sleep om foto's toe te voegen",
+    "zoneAriaFull": "Foto-uploadzone — maximum bereikt"
   },
   "supportSection": {
     "body1": "LitRoute is een eenmansproject. Geen reclame, geen abonnementen, geen investeerders — alleen serverkosten, e-mailbezorging en opslag uit eigen zak. De aanstekers zelf ook: elke aansteker wordt met de hand gekocht en geregistreerd voordat hij aan zijn reis kan beginnen.",
