@@ -149,8 +149,8 @@ class Command(BaseCommand):
             help="Seed a Distance game with red/green/blue teams (--units units per team).",
         )
 
-    def _populate_unit_checkins(self, unit, user, n_checkins, now):
-        current_city = random.choice(CITIES)  # noqa: S311
+    def _populate_unit_checkins(self, unit, user, n_checkins, now, start_city=None):
+        current_city = start_city or random.choice(CITIES)  # noqa: S311
         # Spread check-ins across the last 30 days, oldest first
         step = timedelta(days=30) / max(n_checkins, 1)
         created = 0
@@ -185,6 +185,11 @@ class Command(BaseCommand):
         game = Game.objects.create(mode=Game.Modes.DISTANCE, name=DISTANCE_GAME_NAME)
         self.stdout.write(f"Created Distance game (id={game.id}, name={game.name!r})")
 
+        # All units share a starting city — Distance is a race outward from a
+        # common origin, so seeded data should reflect that on the map.
+        start_city = random.choice(CITIES)  # noqa: S311
+        self.stdout.write(f"Distance start city: {start_city[2]}")
+
         created_units = []
         created_checkins = 0
         for team_name, prefix, color in DISTANCE_TEAMS:
@@ -200,16 +205,12 @@ class Command(BaseCommand):
                 )
                 unit.subscribers.add(user)
                 created_units.append(identifier)
-                created_checkins += self._populate_unit_checkins(unit, user, n_checkins, now)
+                created_checkins += self._populate_unit_checkins(unit, user, n_checkins, now, start_city=start_city)
         return created_units, created_checkins
 
     def handle(self, *args, **options):
         n_units = options["units"]
         n_checkins = options["checkins"]
-
-        if not User.objects.filter(is_superuser=True).exists():
-            User.objects.create_superuser(username="admin", email="admin@test.com", password="DCBA432!")  # noqa: S106
-            self.stdout.write(self.style.WARNING("Created superuser admin@test.com (password: DCBA432!)"))
 
         if options["email"]:
             try:
