@@ -34,6 +34,12 @@ class TestHaversine:
     def test_symmetry(self):
         assert _haversine_m(LAT, LNG, 51.51, -0.13) == pytest.approx(_haversine_m(51.51, -0.13, LAT, LNG), rel=1e-9)
 
+    def test_antipodal_does_not_raise(self):
+        # FP error can push sqrt(a) above 1 for near-antipodal points; the
+        # clamp must keep asin in domain. Expected ≈ π · earth_radius.
+        d = _haversine_m(0.0, 0.0, 0.0, 180.0)
+        assert d == pytest.approx(20_015_000, rel=0.01)
+
 
 class TestIssueLocationClaim:
     @pytest.fixture
