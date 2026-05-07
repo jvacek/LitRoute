@@ -11,8 +11,15 @@ from django.utils import timezone
 from geopy.distance import geodesic
 from PIL import Image, ImageDraw
 
-from backend.models import CheckIn, CheckInImage, Unit
+from backend.models import CheckIn, CheckInImage, Game, Team, Unit
 from flamerelay.users.models import User
+
+DISTANCE_TEAMS = [
+    ("red", "red", "#c94c35"),  # ember
+    ("green", "gre", "#3f8a4a"),
+    ("blue", "blu", "#3b6ea5"),
+]
+DISTANCE_GAME_NAME = "Seeded Distance Game"
 
 CITIES = [
     (48.8566, 2.3522, "Paris, France"),
@@ -133,13 +140,76 @@ class Command(BaseCommand):
     help = "Seed the database with realistic sample units and check-ins."
 
     def add_arguments(self, parser):
-        parser.add_argument("--units", type=int, default=1, help="Number of units to create")
+        parser.add_argument("--units", type=int, default=1, help="Number of units to create (per team if --distance)")
         parser.add_argument("--checkins", type=int, default=7, help="Check-ins per unit")
         parser.add_argument("--email", type=str, default=None, help="Use this user as creator (by email)")
+        parser.add_argument(
+            "--distance",
+            action="store_true",
+            help="Seed a Distance game with red/green/blue teams (--units units per team).",
+        )
+
+    def _populate_unit_checkins(self, unit, user, n_checkins, now):
+        current_city = random.choice(CITIES)  # noqa: S311
+        # Spread check-ins across the last 30 days, oldest first
+        step = timedelta(days=30) / max(n_checkins, 1)
+        created = 0
+        for j in range(n_checkins):
+            lat, lng, place_name = current_city
+            checkin = CheckIn.objects.create(
+                unit=unit,
+                created_by=user,
+                location=Point(lng, lat),
+                place=place_name,
+                message=random.choice(MESSAGES),  # noqa: S311
+                date_created=now - timedelta(days=30) + step * j,
+            )
+            n_images = random.randint(1, 3)  # noqa: S311
+            for k in range(n_images):
+                CheckInImage.objects.create(checkin=checkin, image=_make_image(j * 3 + k), order=k)
+            created += 1
+            candidates = _nearby_cities(lat, lng) or CITIES
+            current_city = random.choice(candidates)  # noqa: S311
+        return created
+
+    def _delete_units(self, qs):
+        """Delete units in `qs` after first removing all their check-ins, to avoid
+        on_delete PROTECT/CASCADE issues from CheckIn → Unit and Unit → Game FKs."""
+        CheckIn.objects.filter(unit__in=qs).delete()
+        qs.delete()
+
+    def _seed_distance_game(self, user, n_units, n_checkins, now):
+        existing_games = Game.objects.filter(name=DISTANCE_GAME_NAME)
+        self._delete_units(Unit.objects.filter(game__in=existing_games))
+        existing_games.delete()
+        game = Game.objects.create(mode=Game.Modes.DISTANCE, name=DISTANCE_GAME_NAME)
+        self.stdout.write(f"Created Distance game (id={game.id}, name={game.name!r})")
+
+        created_units = []
+        created_checkins = 0
+        for team_name, prefix, color in DISTANCE_TEAMS:
+            team, _ = Team.objects.update_or_create(name=team_name, defaults={"color": color})
+            for i in range(1, n_units + 1):
+                identifier = f"{prefix}-{i:02d}"
+                self._delete_units(Unit.objects.filter(identifier=identifier))
+                unit = Unit.objects.create(
+                    identifier=identifier,
+                    created_by=user,
+                    team=team,
+                    game=game,
+                )
+                unit.subscribers.add(user)
+                created_units.append(identifier)
+                created_checkins += self._populate_unit_checkins(unit, user, n_checkins, now)
+        return created_units, created_checkins
 
     def handle(self, *args, **options):
         n_units = options["units"]
         n_checkins = options["checkins"]
+
+        if not User.objects.filter(is_superuser=True).exists():
+            User.objects.create_superuser(username="admin", email="admin@test.com", password="DCBA432!")  # noqa: S106
+            self.stdout.write(self.style.WARNING("Created superuser admin@test.com (password: DCBA432!)"))
 
         if options["email"]:
             try:
@@ -155,45 +225,28 @@ class Command(BaseCommand):
             user = User.objects.create_user(email="seed@example.com")
             self.stdout.write(f"Created user {user.email}")
 
-        self.stdout.write(f"Seeding as {user} ({n_units} units * {n_checkins} check-ins each)")
-
         now = timezone.now()
         created_units = []
         created_checkins = 0
 
-        for i in range(n_units):
-            identifier = "john-93" if i == 0 else _random_identifier(i)
-            if Unit.objects.filter(identifier=identifier).exists():
-                existing = Unit.objects.get(identifier=identifier)
-                existing.checkin_set.all().delete()
-                existing.delete()
-            while identifier != "john-93" and Unit.objects.filter(identifier=identifier).exists():
-                identifier = _random_identifier(random.randint(0, 9999))  # noqa: S311
+        if options["distance"]:
+            self.stdout.write(
+                f"Seeding Distance game as {user} "
+                f"({len(DISTANCE_TEAMS)} teams * {n_units} units * {n_checkins} check-ins each)"
+            )
+            created_units, created_checkins = self._seed_distance_game(user, n_units, n_checkins, now)
+        else:
+            self.stdout.write(f"Seeding as {user} ({n_units} units * {n_checkins} check-ins each)")
+            for i in range(n_units):
+                identifier = "john-93" if i == 0 else _random_identifier(i)
+                self._delete_units(Unit.objects.filter(identifier=identifier))
+                while identifier != "john-93" and Unit.objects.filter(identifier=identifier).exists():
+                    identifier = _random_identifier(random.randint(0, 9999))  # noqa: S311
 
-            unit = Unit.objects.create(identifier=identifier, created_by=user)
-            unit.subscribers.add(user)
-            created_units += [identifier]
-
-            current_city = random.choice(CITIES)  # noqa: S311
-            # Spread check-ins across the last 30 days, oldest first
-            step = timedelta(days=30) / max(n_checkins, 1)
-
-            for j in range(n_checkins):
-                lat, lng, place_name = current_city
-                checkin = CheckIn.objects.create(
-                    unit=unit,
-                    created_by=user,
-                    location=Point(lng, lat),
-                    place=place_name,
-                    message=random.choice(MESSAGES),  # noqa: S311
-                    date_created=now - timedelta(days=30) + step * j,
-                )
-                n_images = random.randint(1, 3)  # noqa: S311
-                for k in range(n_images):
-                    CheckInImage.objects.create(checkin=checkin, image=_make_image(j * 3 + k), order=k)
-                created_checkins += 1
-                candidates = _nearby_cities(lat, lng) or CITIES
-                current_city = random.choice(candidates)  # noqa: S311
+                unit = Unit.objects.create(identifier=identifier, created_by=user)
+                unit.subscribers.add(user)
+                created_units.append(identifier)
+                created_checkins += self._populate_unit_checkins(unit, user, n_checkins, now)
 
         from django.core.cache import cache  # noqa: PLC0415
 
