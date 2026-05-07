@@ -3,15 +3,24 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { apiFetch } from '../api';
 import Countdown from '../components/Countdown';
+import JourneyMap from '../components/JourneyMap';
 import TeamBadge from '../components/TeamBadge';
 import { humanizeHours } from '../lib/duration';
 import { getGameConfig } from '../lib/gameConfig';
 import { formatKm, formatNumber } from '../lib/numbers';
+import { useConfig } from '../lib/useConfig';
 import ErrorPage from './ErrorPage';
 
 interface TeamRef {
   name: string;
   color: string;
+}
+
+interface JourneyPoint {
+  lng: number;
+  lat: number;
+  date: string;
+  after_end: boolean;
 }
 
 interface IndividualEntry {
@@ -23,6 +32,7 @@ interface IndividualEntry {
   distance_km: number;
   checkin_count: number;
   team: TeamRef | null;
+  journey: JourneyPoint[];
 }
 
 interface TeamEntry {
@@ -56,6 +66,8 @@ export default function GameLeaderboard() {
   const { gameId = '' } = useParams<{ gameId: string }>();
   const [searchParams] = useSearchParams();
   const fromIdentifier = searchParams.get('from');
+  const appConfig = useConfig();
+  const maptilerKey = appConfig?.maptilerKey ?? '';
   const [data, setData] = useState<LeaderboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -191,6 +203,18 @@ export default function GameLeaderboard() {
               </div>
             ))}
           </div>
+        </section>
+      )}
+
+      {data.individual.length > 0 && maptilerKey && (
+        <section className="mt-8">
+          <h2 className="font-heading text-xl font-bold text-char">
+            {t('game.leaderboard.mapTitle')}
+          </h2>
+          <p className="mb-3 mt-1 text-sm text-char/60">
+            {t('game.leaderboard.mapDescription')}
+          </p>
+          <JourneyMap entries={data.individual} maptilerKey={maptilerKey} />
         </section>
       )}
 
