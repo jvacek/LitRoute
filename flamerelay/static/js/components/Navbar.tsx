@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 import { useAuth } from '../AuthContext';
+import { IS_LOCAL } from '../env';
 import logoUrl from '../../images/favicons/litroute.svg';
 import LanguagePicker from './LanguagePicker';
 
@@ -10,9 +11,10 @@ export default function Navbar() {
   const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const headerBg = IS_LOCAL ? 'bg-ember' : 'bg-parchment';
 
   return (
-    <header className="sticky top-0 z-50 border-b border-char/8 bg-parchment">
+    <header className={`sticky top-0 z-50 border-b border-char/8 ${headerBg}`}>
       <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
         {/* Brand */}
         <Link
@@ -56,7 +58,9 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="border-t border-char/8 bg-parchment px-6 pb-4 md:hidden">
+        <div
+          className={`border-t border-char/8 ${headerBg} px-6 pb-4 md:hidden`}
+        >
           <nav
             className="flex flex-col gap-1 pt-2"
             aria-label={t('nav.mobileNav')}

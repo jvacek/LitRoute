@@ -12,14 +12,25 @@
     <meta name="description"
           content="Track a lighter's journey across the world." />
     <meta name="author" content="Jonas Vacek" />
-    <link rel="icon"
-          href="{% static 'images/favicons/favicon-32x32.png' %}"
-          type="image/png" />
-    <link rel="icon"
-          href="{% static 'images/favicons/litroute.svg' %}"
-          type="image/svg+xml" />
-    <link rel="apple-touch-icon"
-          href="{% static 'images/favicons/apple-touch-icon.png' %}" />
+    {% if IS_LOCAL %}
+      <link rel="icon"
+            href="{% static 'images/favicons/local-favicon-32x32.png' %}"
+            type="image/png" />
+      <link rel="icon"
+            href="{% static 'images/favicons/local-litroute.svg' %}"
+            type="image/svg+xml" />
+      <link rel="apple-touch-icon"
+            href="{% static 'images/favicons/local-apple-touch-icon.png' %}" />
+    {% else %}
+      <link rel="icon"
+            href="{% static 'images/favicons/favicon-32x32.png' %}"
+            type="image/png" />
+      <link rel="icon"
+            href="{% static 'images/favicons/litroute.svg' %}"
+            type="image/svg+xml" />
+      <link rel="apple-touch-icon"
+            href="{% static 'images/favicons/apple-touch-icon.png' %}" />
+    {% endif %}
     <link rel="manifest" href="{% static 'images/favicons/site.webmanifest' %}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
