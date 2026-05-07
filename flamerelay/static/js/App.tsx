@@ -18,6 +18,7 @@ import CheckinCreate from './pages/CheckinCreate';
 import CheckinEdit from './pages/CheckinEdit';
 import EmailConfirm from './pages/EmailConfirm';
 import ErrorPage from './pages/ErrorPage';
+import GameLeaderboard from './pages/GameLeaderboard';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Privacy from './pages/Privacy';
@@ -99,6 +100,10 @@ export default function App() {
               <Route
                 path="/unit/:identifier/checkin/:checkinId"
                 element={<CheckinEdit />}
+              />
+              <Route
+                path="/game/:gameId/leaderboard/"
+                element={<GameLeaderboard />}
               />
               <Route
                 path="/profile/"

@@ -21,7 +21,11 @@ import {
 } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { apiFetch } from '../api';
+import GameIntroModal from '../components/GameIntroModal';
+import TeamBadge from '../components/TeamBadge';
 import { getEditToken } from '../lib/editTokens';
+import { getGameConfig } from '../lib/gameConfig';
+import { formatKm, formatNumber } from '../lib/numbers';
 import i18n from '../i18n';
 import { useConfig } from '../lib/useConfig';
 
@@ -49,6 +53,22 @@ interface CheckInData {
   within_edit_grace_period: boolean;
 }
 
+interface GameData {
+  id: number;
+  name: string;
+  mode: string;
+  allowed_time: number;
+  max_gps_drift: number;
+  shelf_life: number;
+  start_time: string;
+  end_time: string;
+}
+
+interface TeamRef {
+  name: string;
+  color: string;
+}
+
 interface UnitData {
   identifier: string;
   checkin_count: number;
@@ -56,6 +76,11 @@ interface UnitData {
   distance_traveled_km: number;
   is_subscribed: boolean;
   can_check_in: boolean | null;
+  is_location_gps_enforced: boolean;
+  team: TeamRef | null;
+  game: GameData | null;
+  game_rank: number | null;
+  game_total: number | null;
 }
 
 function parseLatLng(loc: GeoPoint): [number, number] {
@@ -450,6 +475,7 @@ export default function Unit() {
   const [visibleIds, setVisibleIds] = useState<Set<number>>(new Set());
   const [focusedCheckinId, setFocusedCheckinId] = useState<number | null>(null);
   const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
+  const [showGameModal, setShowGameModal] = useState(false);
   const timelineRefs = useRef<Map<number, HTMLLIElement>>(new Map());
   const observerRef = useRef<IntersectionObserver | null>(null);
   const wasScrolledRef = useRef(false);
@@ -479,6 +505,12 @@ export default function Unit() {
             ? (checkinData as CheckInData[])
             : (checkinData as { results: CheckInData[] }).results,
         );
+        if (
+          unitData.game &&
+          !sessionStorage.getItem(`game-intro-seen-${unitData.game.id}`)
+        ) {
+          setShowGameModal(true);
+        }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -701,11 +733,11 @@ export default function Unit() {
               </div>
 
               {/* Stats */}
-              <div className="my-6 flex gap-6 border-t border-white/10 pt-5">
+              <div className="my-6 flex flex-wrap gap-6 border-t border-white/10 pt-5">
                 {unit.distance_traveled_km > 0 && (
                   <div>
                     <div className="font-heading text-2xl font-bold text-white">
-                      {unit.distance_traveled_km.toLocaleString()}
+                      {formatKm(unit.distance_traveled_km)}
                     </div>
                     <div className="mt-0.5 text-xs uppercase tracking-wide text-white/40">
                       {t('unit.statsKmTraveled')}
@@ -714,7 +746,7 @@ export default function Unit() {
                 )}
                 <div>
                   <div className="font-heading text-2xl font-bold text-white">
-                    {stopsCount}
+                    {formatNumber(stopsCount)}
                   </div>
                   <div className="mt-0.5 text-xs uppercase tracking-wide text-white/40">
                     {t('unit.statsStops')}
@@ -722,12 +754,37 @@ export default function Unit() {
                 </div>
                 <div>
                   <div className="font-heading text-2xl font-bold text-white">
-                    {unit.subscriber_count}
+                    {formatNumber(unit.subscriber_count)}
                   </div>
                   <div className="mt-0.5 text-xs uppercase tracking-wide text-white/40">
                     {t('unit.statsFollowers')}
                   </div>
                 </div>
+                {unit.game && unit.game_rank != null && (
+                  <div>
+                    <div className="font-heading text-2xl font-bold text-white">
+                      #{unit.game_rank}
+                    </div>
+                    <div className="mt-0.5 text-xs uppercase tracking-wide text-white/40">
+                      {t('unit.game.rankLabel', {
+                        total: formatNumber(unit.game_total ?? 0),
+                      })}
+                    </div>
+                  </div>
+                )}
+                {unit.team && (
+                  <div>
+                    <div className="flex h-8 items-center">
+                      <TeamBadge
+                        name={unit.team.name}
+                        color={unit.team.color}
+                      />
+                    </div>
+                    <div className="mt-0.5 text-xs uppercase tracking-wide text-white/40">
+                      {t('unit.statsTeam')}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* CTAs */}
@@ -759,6 +816,15 @@ export default function Unit() {
                     : t('unit.subscribe')}
                 </button>
               </div>
+
+              {unit.game && getGameConfig(unit.game.mode)?.hasLeaderboard && (
+                <Link
+                  to={`/game/${unit.game.id}/leaderboard/?from=${encodeURIComponent(unit.identifier)}`}
+                  className="mt-4 inline-block text-sm font-medium text-amber hover:text-white"
+                >
+                  {t('unit.game.leaderboardLink')}
+                </Link>
+              )}
             </div>
 
             {/* Right: latest check-in photo */}
@@ -990,6 +1056,17 @@ export default function Unit() {
             ✕
           </button>
         </div>
+      )}
+
+      {showGameModal && unit.game && (
+        <GameIntroModal
+          game={unit.game}
+          fromIdentifier={unit.identifier}
+          onDismiss={() => {
+            sessionStorage.setItem(`game-intro-seen-${unit.game!.id}`, '1');
+            setShowGameModal(false);
+          }}
+        />
       )}
     </>
   );
