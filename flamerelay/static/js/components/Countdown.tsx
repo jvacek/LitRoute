@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
 
@@ -26,10 +27,57 @@ function diff(targetMs: number): Parts {
   return { expired: false, days, hours, minutes, seconds };
 }
 
+const CONFETTI_COLORS = ['#e8a030', '#c94c35', '#3f8a4a', '#3b6ea5', '#d4a017'];
+const PARTICLES_PER_EMITTER = 14;
+
+interface Particle {
+  dx: number;
+  peakY: number;
+  fallY: number;
+  rot: number;
+  delay: number;
+  duration: number;
+  color: string;
+  width: number;
+  height: number;
+}
+
+// Build a fan of particles for one corner. `direction` is +1 for the
+// left emitter (particles fly right) and -1 for the right emitter.
+// Launch angle is ~30° above horizontal — the trajectory waypoint at the
+// keyframe peak is (dx/2, peakY), so peakY = (dx/2) * tan(30°) ≈ dx*0.289.
+// A small per-particle jitter keeps the fan from looking mechanical.
+const TAN_30 = Math.tan((30 * Math.PI) / 180);
+
+function buildParticles(direction: 1 | -1): Particle[] {
+  return Array.from({ length: PARTICLES_PER_EMITTER }, () => {
+    const spread = 220 + Math.random() * 260; // 220–480px inward
+    const angleJitter = 0.85 + Math.random() * 0.3; // ±15% angle variation
+    const peak = -(spread / 2) * TAN_30 * angleJitter;
+    const fall = 60 + Math.random() * 140; // 60–200px below origin
+    return {
+      dx: direction * spread,
+      peakY: peak,
+      fallY: fall,
+      rot: (Math.random() * 720 - 360) * direction,
+      delay: Math.random() * 0.35,
+      duration: 1.8 + Math.random() * 0.9,
+      color:
+        CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)],
+      width: 6 + Math.random() * 4,
+      height: 10 + Math.random() * 6,
+    };
+  });
+}
+
 export default function Countdown({ endTime }: Props) {
   const { t } = useTranslation();
   const targetMs = new Date(endTime).getTime();
   const [parts, setParts] = useState<Parts>(() => diff(targetMs));
+  // Generated once per mount so the burst plays exactly when the celebration
+  // card appears, and the random scatter is stable across re-renders.
+  const leftParticles = useMemo(() => buildParticles(1), []);
+  const rightParticles = useMemo(() => buildParticles(-1), []);
 
   useEffect(() => {
     const id = setInterval(() => setParts(diff(targetMs)), 1000);
@@ -44,12 +92,62 @@ export default function Countdown({ endTime }: Props) {
   });
 
   if (parts.expired) {
+    // The animations are CSS-keyframe based and play on mount. Whether the
+    // user loaded into the expired state directly or watched the timer flip
+    // here mid-session, this branch mounts fresh and the animation fires.
     return (
-      <div className="rounded-card border border-char/10 bg-parchment px-5 py-4 text-center">
-        <div className="font-heading text-2xl font-bold text-ember">
-          {t('game.countdown.ended')}
+      <div className="celebration-card relative overflow-hidden rounded-card border border-amber/40 bg-gradient-to-br from-parchment to-amber/10 px-5 py-6 text-center">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+        >
+          <div className="confetti-emitter left">
+            {leftParticles.map((p, i) => (
+              <span
+                key={`l-${i}`}
+                className="confetti-particle"
+                style={
+                  {
+                    '--dx': `${p.dx}px`,
+                    '--peak-y': `${p.peakY}px`,
+                    '--fall-y': `${p.fallY}px`,
+                    '--rot': `${p.rot}deg`,
+                    animationDelay: `${p.delay}s`,
+                    animationDuration: `${p.duration}s`,
+                    backgroundColor: p.color,
+                    width: `${p.width}px`,
+                    height: `${p.height}px`,
+                  } as CSSProperties
+                }
+              />
+            ))}
+          </div>
+          <div className="confetti-emitter right">
+            {rightParticles.map((p, i) => (
+              <span
+                key={`r-${i}`}
+                className="confetti-particle"
+                style={
+                  {
+                    '--dx': `${p.dx}px`,
+                    '--peak-y': `${p.peakY}px`,
+                    '--fall-y': `${p.fallY}px`,
+                    '--rot': `${p.rot}deg`,
+                    animationDelay: `${p.delay}s`,
+                    animationDuration: `${p.duration}s`,
+                    backgroundColor: p.color,
+                    width: `${p.width}px`,
+                    height: `${p.height}px`,
+                  } as CSSProperties
+                }
+              />
+            ))}
+          </div>
         </div>
-        <div className="mt-1 text-xs uppercase tracking-wide text-char/60">
+        <div className="font-heading celebration-headline relative text-2xl font-bold text-amber">
+          🎉 {t('game.countdown.ended')}
+        </div>
+        <div className="relative mt-1 text-xs uppercase tracking-wide text-char/60">
           {t('game.countdown.endedOn', { date: endDate })}
         </div>
       </div>
