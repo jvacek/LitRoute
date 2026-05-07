@@ -122,7 +122,7 @@ def compute_game_leaderboard(game) -> dict:
     if cached is not None:
         return cached
 
-    latest_qs = CheckIn.objects.filter(unit=OuterRef("pk")).order_by("-date_created")
+    latest_qs = CheckIn.objects.filter(unit=OuterRef("pk")).order_by("-date_created", "-pk")
     latest_place = latest_qs.values("place")[:1]
     latest_name = latest_qs.annotate(display_name=Coalesce("created_by__name", "anonymous_name")).values(
         "display_name"
