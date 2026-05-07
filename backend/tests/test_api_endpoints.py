@@ -9,7 +9,7 @@ from django.core.cache import cache
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from backend.factories import UnitFactory
+from backend.factories import GameFactory, UnitFactory
 from backend.location_token import issue_location_claim
 from backend.models import CheckIn, Game
 from config.constants import CHECKIN_DELETE_GRACE_PERIOD_HOURS, CHECKIN_EDIT_GRACE_PERIOD_HOURS, STATS_CACHE_KEY
@@ -246,6 +246,20 @@ class TestCheckInPartialUpdate:
         )
         assert res.status_code == 403  # noqa: PLR2004
 
+    def test_location_is_read_only(self, client, unit, user):
+        checkin = make_checkin(unit, user, location=LONDON)
+        client.force_authenticate(user=user)
+        paris_payload = {"type": "Point", "coordinates": [2.3522, 48.8566]}
+        res = client.patch(
+            f"/api/units/{unit.identifier}/checkins/{checkin.pk}/",
+            {"location": paris_payload},
+            format="json",
+        )
+        assert res.status_code == 200  # noqa: PLR2004
+        coords = res.json()["location"]["coordinates"]
+        assert coords[0] == pytest.approx(-0.1278, abs=0.001)  # still London lng
+        assert coords[1] == pytest.approx(51.5074, abs=0.001)  # still London lat
+
 
 # ── CheckIn Destroy ────────────────────────────────────────────────────────────
 
@@ -368,7 +382,7 @@ class TestUnitGameField:
         assert res.json()["game"] is None
 
     def test_game_fields_when_game_attached(self, client, db):
-        game = Game.objects.create(mode=Game.Modes.RACE)
+        game = Game.objects.create(mode=Game.Modes.RACE, name="Race A")
         unit = UnitFactory.create(game=game)
         res = client.get(f"/api/units/{unit.identifier}/")
         data = res.json()["game"]
@@ -382,13 +396,16 @@ class TestUnitGameField:
 
 
 class TestLocationClaimView:
-    def test_anon_returns_403(self, client, db):
+    def test_anon_returns_token(self, client, db):
+        # Anonymous users can claim a location so GPS-enforced anonymous check-ins work.
+        # The token binds user_id=None; authenticated tokens are not interchangeable.
         res = client.post(
             "/api/location-claim/",
             {"lat": 51.5, "lng": -0.1, "accuracy": 10.0},
             format="json",
         )
-        assert res.status_code == 403  # noqa: PLR2004
+        assert res.status_code == 200  # noqa: PLR2004
+        assert isinstance(res.json().get("token"), str)
 
     def test_missing_fields_returns_400(self, client, user):
         client.force_authenticate(user=user)
@@ -412,7 +429,7 @@ class TestLocationClaimView:
 class TestCheckInCreateGpsEnforced:
     @pytest.fixture
     def gps_unit(self, db):
-        game = Game.objects.create(mode=Game.Modes.RACE)
+        game = Game.objects.create(mode=Game.Modes.RACE, name="GPS Race")
         return UnitFactory.create(game=game)
 
     def test_missing_token_returns_400(self, client, gps_unit, user):
@@ -472,3 +489,182 @@ class TestCheckInCreateGpsEnforced:
                 format="json",
             )
         assert res.status_code == 400  # noqa: PLR2004
+
+    def test_anon_missing_token_returns_400(self, client, gps_unit):
+        res = client.post(
+            f"/api/units/{gps_unit.identifier}/checkins/",
+            {"location": LONDON_PAYLOAD},
+            format="json",
+        )
+        assert res.status_code == 400  # noqa: PLR2004
+        assert "location_token" in res.json()
+
+    def test_anon_valid_token_creates_checkin(self, client, gps_unit):
+        token = issue_location_claim(51.5074, -0.1278, 10.0, None)
+        with (
+            patch("backend.models.send_email_to_subscribers_task.apply_async"),
+            patch("backend.models.send_thank_you_email_task.apply_async"),
+        ):
+            res = client.post(
+                f"/api/units/{gps_unit.identifier}/checkins/",
+                {"location": LONDON_PAYLOAD, "location_token": token},
+                format="json",
+            )
+        assert res.status_code == 201  # noqa: PLR2004
+
+    def test_anon_authed_token_rejected(self, client, gps_unit, user):
+        # A token minted for an authenticated user must not be accepted anonymously.
+        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id)
+        with (
+            patch("backend.models.send_email_to_subscribers_task.apply_async"),
+            patch("backend.models.send_thank_you_email_task.apply_async"),
+        ):
+            res = client.post(
+                f"/api/units/{gps_unit.identifier}/checkins/",
+                {"location": LONDON_PAYLOAD, "location_token": token},
+                format="json",
+            )
+        assert res.status_code == 400  # noqa: PLR2004
+
+
+# ── Game Leaderboard ───────────────────────────────────────────────────────────
+
+
+class TestGameLeaderboard:
+    @pytest.fixture(autouse=True)
+    def _clear_cache(self):
+        cache.clear()
+        yield
+        cache.clear()
+
+    def test_returns_404_for_missing_game(self, client, db):
+        res = client.get("/api/games/9999/leaderboard/")
+        assert res.status_code == 404  # noqa: PLR2004
+
+    def test_returns_200_for_valid_game(self, client, db):
+        game = Game.objects.create(mode=Game.Modes.DISTANCE, name="Spring Challenge")
+        res = client.get(f"/api/games/{game.id}/leaderboard/")
+        assert res.status_code == 200  # noqa: PLR2004
+        data = res.json()
+        assert data["game"]["id"] == game.id
+        assert data["game"]["mode"] == "distance"
+        assert data["game"]["name"] == "Spring Challenge"
+        assert data["individual"] == []
+        assert data["teams"] is None
+
+    def test_individual_entries_sorted_by_distance(self, client, user, db):
+        game = GameFactory.create(mode=Game.Modes.DISTANCE)
+        unit_a = UnitFactory.create(game=game)
+        unit_b = UnitFactory.create(game=game)
+        # unit_a: London → Paris (~344 km). unit_b: London only (0 km).
+        make_checkin(unit_a, user, location=LONDON)
+        other = UserFactory.create()
+        make_checkin(unit_a, other, location=PARIS)
+        make_checkin(unit_b, user, location=LONDON)
+
+        res = client.get(f"/api/games/{game.id}/leaderboard/")
+        data = res.json()
+        ids = [r["identifier"] for r in data["individual"]]
+        assert ids[0] == unit_a.identifier
+        assert ids[1] == unit_b.identifier
+        assert data["individual"][0]["rank"] == 1
+        assert data["individual"][0]["distance_km"] > 0
+        assert data["individual"][1]["distance_km"] == 0
+        assert "place" in data["individual"][0]
+
+    def test_teams_section_null_when_no_units_have_team(self, client, user, db):
+        game = GameFactory.create(mode=Game.Modes.DISTANCE)
+        UnitFactory.create(game=game)
+        res = client.get(f"/api/games/{game.id}/leaderboard/")
+        assert res.json()["teams"] is None
+
+    def test_teams_section_aggregates_correctly(self, client, user, db):
+        from backend.models import Team  # noqa: PLC0415
+
+        team_blue = Team.objects.create(name="blue", color="#3b6ea5")
+        team_red = Team.objects.create(name="red", color="#c94c35")
+        game = GameFactory.create(mode=Game.Modes.DISTANCE)
+        unit_a = UnitFactory.create(game=game, team=team_blue)
+        unit_b = UnitFactory.create(game=game, team=team_blue)
+        unit_c = UnitFactory.create(game=game, team=team_red)
+        make_checkin(unit_a, user, location=LONDON)
+        make_checkin(unit_a, UserFactory.create(), location=PARIS)
+        make_checkin(unit_b, user, location=LONDON)
+        make_checkin(unit_c, user, location=LONDON)
+
+        res = client.get(f"/api/games/{game.id}/leaderboard/")
+        teams = res.json()["teams"]
+        assert teams is not None
+        assert {t["team"]["name"] for t in teams} == {"blue", "red"}
+        blue = next(t for t in teams if t["team"]["name"] == "blue")
+        assert blue["team"]["color"] == "#3b6ea5"
+        assert blue["lighter_count"] == 2  # noqa: PLR2004
+        assert blue["distance_km"] > 0
+        assert blue["rank"] == 1
+        # ignored teams: unit_c (red) — only unit, 0 km
+        _ = unit_b, unit_c
+
+    def test_distance_mode_sort_by_distance_km(self, client, db):
+        game = Game.objects.create(mode=Game.Modes.DISTANCE, name="D")
+        res = client.get(f"/api/games/{game.id}/leaderboard/")
+        assert res.json()["game"]["sort_by"] == "distance_km"
+
+    def test_hot_potato_sorted_by_checkin_count(self, client, user, db):
+        game = GameFactory.create(mode=Game.Modes.HOT_POTATO)
+        unit_a = UnitFactory.create(game=game)
+        unit_b = UnitFactory.create(game=game)
+        # unit_a: 3 check-ins, all at the same spot — 0 km traveled
+        for _ in range(3):
+            make_checkin(unit_a, UserFactory.create(), location=LONDON)
+        # unit_b: London → Paris — ~344 km but only 2 check-ins
+        make_checkin(unit_b, UserFactory.create(), location=LONDON)
+        make_checkin(unit_b, UserFactory.create(), location=PARIS)
+
+        res = client.get(f"/api/games/{game.id}/leaderboard/")
+        data = res.json()
+        assert data["game"]["sort_by"] == "checkin_count"
+        ids = [r["identifier"] for r in data["individual"]]
+        assert ids[0] == unit_a.identifier  # more check-ins → rank 1
+        assert data["individual"][0]["rank"] == 1
+        assert data["individual"][0]["checkin_count"] == 3  # noqa: PLR2004
+        assert data["individual"][1]["checkin_count"] == 2  # noqa: PLR2004
+
+    def test_unit_endpoint_includes_game_rank_on_first_call(self, client, user, db):
+        game = GameFactory.create(mode=Game.Modes.DISTANCE)
+        unit = UnitFactory.create(game=game)
+        # Cold cache — no prior leaderboard fetch.
+        res = client.get(f"/api/units/{unit.identifier}/")
+        body = res.json()
+        assert body["game_rank"] == 1
+        assert body["game_total"] == 1
+
+
+# ── Distance Game: time limit is informational only ────────────────────────────
+
+
+class TestDistanceGameTimeLimit:
+    def test_checkin_not_blocked_after_distance_time_limit(self, client, db):
+        """Once the Distance game time limit elapses, the lighter is out of the
+        running but check-ins are NOT blocked — the journey continues."""
+        game = GameFactory.create(mode=Game.Modes.DISTANCE, allowed_time=1)  # 1 hour
+        unit = UnitFactory.create(game=game)
+        token_user = UserFactory.create()
+        # Place the first check-in well past the allowed_time (10 hours ago).
+        first = make_checkin(unit, token_user, location=LONDON)
+        first.date_created = timezone.now() - timedelta(hours=10)
+        first.save()
+
+        # Now another user attempts a check-in. It must succeed.
+        next_user = UserFactory.create()
+        token = issue_location_claim(48.8566, 2.3522, 10.0, next_user.id)
+        client.force_authenticate(user=next_user)
+        with (
+            patch("backend.models.send_email_to_subscribers_task.apply_async"),
+            patch("backend.models.send_thank_you_email_task.apply_async"),
+        ):
+            res = client.post(
+                f"/api/units/{unit.identifier}/checkins/",
+                {"location": {"type": "Point", "coordinates": [2.3522, 48.8566]}, "location_token": token},
+                format="json",
+            )
+        assert res.status_code == 201  # noqa: PLR2004

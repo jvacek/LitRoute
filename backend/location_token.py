@@ -9,7 +9,7 @@ from config.constants import LOCATION_CLAIM_MAX_DRIFT_METERS, LOCATION_CLAIM_TTL
 _SALT = "location-claim"
 
 
-def issue_location_claim(lat: float, lng: float, accuracy: float, user_id: int) -> str:
+def issue_location_claim(lat: float, lng: float, accuracy: float, user_id: int | None) -> str:
     return signing.dumps(
         {"lat": lat, "lng": lng, "accuracy": accuracy, "user_id": user_id},
         salt=_SALT,
@@ -18,7 +18,7 @@ def issue_location_claim(lat: float, lng: float, accuracy: float, user_id: int) 
 
 def verify_location_claim(
     token: str,
-    user_id: int,
+    user_id: int | None,
     submitted_lat: float,
     submitted_lng: float,
     max_drift: int = LOCATION_CLAIM_MAX_DRIFT_METERS,

@@ -12,7 +12,7 @@ from django.core import signing
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
-from django.db.models import Count
+from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views import View
@@ -27,12 +27,12 @@ from rest_framework.mixins import (
     UpdateModelMixin,
 )
 from rest_framework.parsers import JSONParser
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
-from backend.models import CheckIn, CheckInImage, Unit
+from backend.models import CheckIn, CheckInImage, Game, Unit
 from config.constants import (
     CHECKIN_DELETE_GRACE_PERIOD_HOURS,
     CHECKIN_EDIT_GRACE_PERIOD_HOURS,
@@ -179,7 +179,7 @@ class GlobePinsView(APIView):
 
 
 class LocationClaimView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     parser_classes = [JSONParser]
 
     @extend_schema(
@@ -208,8 +208,24 @@ class LocationClaimView(APIView):
                 {"detail": "lat, lng, and accuracy are required numeric fields."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        token = issue_location_claim(lat, lng, accuracy, request.user.id)
+        user_id = request.user.id if request.user.is_authenticated else None
+        token = issue_location_claim(lat, lng, accuracy, user_id)
         return Response({"token": token})
+
+
+class GameLeaderboardView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk: int):
+        from backend.services import compute_game_leaderboard  # noqa: PLC0415
+
+        game = get_object_or_404(Game, pk=pk)
+        return Response(compute_game_leaderboard(game))
+
+
+_game_unit_count_sq = (
+    Unit.objects.filter(game_id=OuterRef("game_id")).values("game_id").annotate(c=Count("id")).values("c")
+)
 
 
 class UnitViewSet(RetrieveModelMixin, GenericViewSet):
@@ -219,6 +235,7 @@ class UnitViewSet(RetrieveModelMixin, GenericViewSet):
     queryset = Unit.objects.select_related("game").annotate(
         checkin_count=Count("checkin", distinct=True),
         subscriber_count=Count("subscribers", distinct=True),
+        game_total=Subquery(_game_unit_count_sq),
     )
 
     def get_permissions(self):
@@ -269,11 +286,27 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         headers = self.get_success_headers(data)
         return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def perform_create(self, serializer):  # noqa: C901, PLR0912
+    def perform_create(self, serializer):  # noqa: C901, PLR0912, PLR0915
         from backend.location_token import verify_location_claim  # noqa: PLC0415
-        from backend.services import unit_distance_cache_key  # noqa: PLC0415
+        from backend.services import game_leaderboard_cache_key, unit_distance_cache_key  # noqa: PLC0415
 
         unit = get_object_or_404(Unit, identifier=self.kwargs["identifier"])
+
+        if unit.is_gps_location_enforced:
+            token = self.request.data.get("location_token")
+            if not token:
+                raise ValidationError({"location_token": "Required for this unit."})
+            point = serializer.validated_data.get("location")
+            try:
+                lat, lng = point.y, point.x
+            except (AttributeError, TypeError) as exc:
+                raise ValidationError({"location": "Invalid location format."}) from exc
+            max_drift = unit.game.max_gps_drift if unit.game else LOCATION_CLAIM_MAX_DRIFT_METERS
+            user_id = self.request.user.id if self.request.user.is_authenticated else None
+            try:
+                verify_location_claim(token, user_id, lat, lng, max_drift)
+            except ValueError as exc:
+                raise ValidationError({"location_token": str(exc)}) from exc
 
         if self.request.user.is_authenticated:
             if unit.admin_only_checkin and not (self.request.user.is_superuser or self.request.user.is_staff):
@@ -285,20 +318,6 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
                     "its journey moves on. You can still follow along by subscribing."
                 )
                 raise PermissionDenied(msg)
-            if unit.is_gps_location_enforced:
-                token = self.request.data.get("location_token")
-                if not token:
-                    raise ValidationError({"location_token": "Required for this unit."})
-                point = serializer.validated_data.get("location")
-                try:
-                    lat, lng = point.y, point.x
-                except (AttributeError, TypeError) as exc:
-                    raise ValidationError({"location": "Invalid location format."}) from exc
-                max_drift = unit.game.max_gps_drift if unit.game else LOCATION_CLAIM_MAX_DRIFT_METERS
-                try:
-                    verify_location_claim(token, self.request.user.id, lat, lng, max_drift)
-                except ValueError as exc:
-                    raise ValidationError({"location_token": str(exc)}) from exc
             checkin = serializer.save(created_by=self.request.user, unit=unit)
             unit.subscribers.add(self.request.user)
         else:
@@ -312,7 +331,10 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
             else:
                 logger.warning("CLOUDFLARE_TURNSTILE_SECRET_KEY is not set — anonymous check-in captcha is disabled")
             checkin = serializer.save(created_by=None, unit=unit, edit_token=uuid.uuid4())
-        cache.delete_many([unit_distance_cache_key(unit.identifier), STATS_CACHE_KEY, GLOBE_PINS_CACHE_KEY])
+        cache_keys = [unit_distance_cache_key(unit.identifier), STATS_CACHE_KEY, GLOBE_PINS_CACHE_KEY]
+        if unit.game_id:
+            cache_keys.append(game_leaderboard_cache_key(unit.game_id))
+        cache.delete_many(cache_keys)
 
         image_files = self.request.FILES.getlist("images")
         if len(image_files) > CHECKIN_MAX_IMAGES:
@@ -383,9 +405,18 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
                 msg = f"Cannot edit check-ins after {CHECKIN_EDIT_GRACE_PERIOD_HOURS} hours."
                 raise PermissionDenied(msg)
 
-        response = super().partial_update(request, *args, **kwargs)
+        super().partial_update(request, *args, **kwargs)
         self._update_checkin_images(checkin, request)
-        return response
+
+        unit = checkin.unit
+        if unit.game_id:
+            from backend.services import game_leaderboard_cache_key  # noqa: PLC0415
+
+            cache.delete(game_leaderboard_cache_key(unit.game_id))
+
+        checkin.refresh_from_db()
+        serializer = self.get_serializer(checkin)
+        return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         checkin = self.get_object()
@@ -401,11 +432,16 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         return super().destroy(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
-        from backend.services import unit_distance_cache_key  # noqa: PLC0415
+        from backend.services import game_leaderboard_cache_key, unit_distance_cache_key  # noqa: PLC0415
 
-        unit_identifier = instance.unit.identifier
+        unit = instance.unit
+        unit_identifier = unit.identifier
+        game_id = unit.game_id
         super().perform_destroy(instance)
-        cache.delete_many([unit_distance_cache_key(unit_identifier), STATS_CACHE_KEY, GLOBE_PINS_CACHE_KEY])
+        cache_keys = [unit_distance_cache_key(unit_identifier), STATS_CACHE_KEY, GLOBE_PINS_CACHE_KEY]
+        if game_id:
+            cache_keys.append(game_leaderboard_cache_key(game_id))
+        cache.delete_many(cache_keys)
 
 
 class GuestSubscribeView(APIView):

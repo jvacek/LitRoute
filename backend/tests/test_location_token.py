@@ -58,6 +58,20 @@ class TestVerifyLocationClaim:
         with pytest.raises(ValueError, match="different user"):
             verify_location_claim(token, USER_ID + 1, LAT, LNG)
 
+    def test_anon_token_passes_with_none_user_id(self):
+        token = issue_location_claim(LAT, LNG, ACCURACY, None)
+        verify_location_claim(token, None, LAT, LNG)  # no exception
+
+    def test_anon_token_rejected_for_authed_user(self):
+        token = issue_location_claim(LAT, LNG, ACCURACY, None)
+        with pytest.raises(ValueError, match="different user"):
+            verify_location_claim(token, USER_ID, LAT, LNG)
+
+    def test_authed_token_rejected_for_anon(self):
+        token = issue_location_claim(LAT, LNG, ACCURACY, USER_ID)
+        with pytest.raises(ValueError, match="different user"):
+            verify_location_claim(token, None, LAT, LNG)
+
     def test_tampered_token_raises(self, token):
         bad = token[:-4] + "xxxx"
         with pytest.raises(ValueError, match="Invalid location claim"):

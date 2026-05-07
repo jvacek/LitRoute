@@ -4,7 +4,7 @@ from django.utils import timezone
 from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
 
-from backend.models import CheckIn, CheckInImage, Game, Unit
+from backend.models import CheckIn, CheckInImage, Game, Team, Unit
 from config.constants import CHECKIN_EDIT_GRACE_PERIOD_HOURS
 
 
@@ -44,6 +44,10 @@ class CheckInSerializer(serializers.ModelSerializer):
             "images",
         ]
 
+    def update(self, instance, validated_data):
+        validated_data.pop("location", None)
+        return super().update(instance, validated_data)
+
     def get_created_by_username(self, obj: CheckIn) -> str | None:
         return obj.created_by.username if obj.created_by_id else None
 
@@ -57,15 +61,26 @@ class CheckInSerializer(serializers.ModelSerializer):
 
 
 class GameSerializer(serializers.ModelSerializer):
+    end_time = serializers.DateTimeField(read_only=True)
+
     class Meta:
         model = Game
         fields = [
             "id",
+            "name",
             "mode",
             "allowed_time",
             "max_gps_drift",
             "shelf_life",
+            "start_time",
+            "end_time",
         ]
+
+
+class TeamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = ["name", "color"]
 
 
 class UnitSerializer(serializers.ModelSerializer):
@@ -75,7 +90,10 @@ class UnitSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
     can_check_in = serializers.SerializerMethodField()
     is_location_gps_enforced = serializers.SerializerMethodField()
+    team = TeamSerializer(read_only=True)
     game = GameSerializer(read_only=True)
+    game_rank = serializers.SerializerMethodField()
+    game_total = serializers.SerializerMethodField()
 
     class Meta:
         model = Unit
@@ -91,6 +109,8 @@ class UnitSerializer(serializers.ModelSerializer):
             "can_check_in",
             "is_location_gps_enforced",
             "game",
+            "game_rank",
+            "game_total",
         ]
 
     def get_distance_traveled_km(self, obj: Unit) -> float:
@@ -114,3 +134,19 @@ class UnitSerializer(serializers.ModelSerializer):
 
     def get_is_location_gps_enforced(self, obj: Unit) -> bool:
         return obj.is_gps_location_enforced
+
+    def get_game_rank(self, obj: Unit) -> int | None:
+        if not obj.game_id:
+            return None
+        from backend.services import compute_game_leaderboard  # noqa: PLC0415
+
+        data = compute_game_leaderboard(obj.game)
+        for entry in data["individual"]:
+            if entry["identifier"] == obj.identifier:
+                return entry["rank"]
+        return None
+
+    def get_game_total(self, obj: Unit) -> int | None:
+        if not obj.game_id:
+            return None
+        return obj.game_total

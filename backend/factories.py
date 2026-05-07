@@ -19,6 +19,7 @@ class GameFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Game
 
+    name = factory.Sequence(lambda n: f"Test Game {n}")
     mode = Game.Modes.RELAY
 
 

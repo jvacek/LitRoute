@@ -39,6 +39,12 @@ def _normalize_for_url_check(value: str) -> str:
 
 class Team(models.Model):
     name = models.SlugField(max_length=32, unique=True)
+    color = models.CharField(
+        max_length=7,
+        default="#7b8fa1",  # smoke
+        validators=[RegexValidator(r"^#[0-9a-fA-F]{6}$", "Enter a 6-digit hex colour like #c94c35.")],
+        help_text="Hex colour used for the team pill on the leaderboard, e.g. #c94c35.",
+    )
 
     def __str__(self):
         return self.name
@@ -51,15 +57,25 @@ class Game(models.Model):
         HOT_POTATO = "hot_potato", "Hot Potato"
         DISTANCE = "distance", "Distance"
 
+    name = models.CharField(
+        max_length=100,
+        help_text="Display name shown on the leaderboard and intro modal.",
+    )
+
     mode = models.CharField(
         max_length=20,
         choices=Modes.choices,
         default=Modes.RELAY,
     )
 
+    start_time = models.DateTimeField(
+        default=timezone.now,
+        help_text="When the game starts. End time is start_time + allowed_time hours.",
+    )
+
     allowed_time = models.PositiveIntegerField(
         default=DISTANCE_DEFAULT_ALLOWED_TIME,
-        help_text="Time limit for the game in hours. (Distance mode)",
+        help_text="Total game duration in hours.",
     )
 
     max_gps_drift = models.PositiveIntegerField(
@@ -76,7 +92,7 @@ class Game(models.Model):
     # goal_shape = models.MultiPolygonField()
 
     def __str__(self):
-        return f"{self.get_mode_display()} + {self.id}"
+        return f"{self.name} ({self.get_mode_display()})"
 
     def is_gps_enforced(self) -> bool:
         return self.mode in (
@@ -84,6 +100,12 @@ class Game(models.Model):
             self.Modes.HOT_POTATO,
             self.Modes.DISTANCE,
         )
+
+    @property
+    def end_time(self):
+        from datetime import timedelta  # noqa: PLC0415
+
+        return self.start_time + timedelta(hours=self.allowed_time)
 
 
 class CaseInsensitiveCharField(CaseInsensitiveFieldMixin, models.CharField):
