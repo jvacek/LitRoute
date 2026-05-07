@@ -95,6 +95,9 @@ class Game(models.Model):
     def __str__(self):
         return f"{self.name} ({self.get_mode_display()})"
 
+    def get_absolute_url(self) -> str:
+        return f"/game/{self.pk}/leaderboard/"
+
     @property
     def is_gps_enforced(self) -> bool:
         return self.mode in (
