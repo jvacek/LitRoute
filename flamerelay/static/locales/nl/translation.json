@@ -148,10 +148,14 @@
       "distanceHeader": "Afstand",
       "individualTab": "Aanstekers",
       "lighterCountHeader": "Aanstekers",
+      "lightersDescriptionByCheckins": "Elke rij is één aansteker, gerangschikt op het aantal ontvangen check-ins.",
+      "lightersDescriptionByDistance": "Elke rij is één aansteker, gerangschikt op de totale afgelegde afstand.",
       "noEntries": "Nog geen check-ins.",
       "placeHeader": "Laatst gezien",
       "rankHeader": "#",
       "teamHeader": "Team",
+      "teamsDescriptionByCheckins": "Teams worden gerangschikt op het totale aantal check-ins dat al hun aanstekers samen hebben ontvangen.",
+      "teamsDescriptionByDistance": "Teams worden gerangschikt op de totale afstand die al hun aanstekers samen hebben afgelegd.",
       "teamsTab": "Teams",
       "title": "Ranglijst — {{name}}"
     },
@@ -282,8 +286,9 @@
     "deleteError": "Kon deze check-in niet verwijderen.",
     "editBtn": "Bewerken",
     "game": {
-      "leaderboardLink": "Bekijk de ranglijst →",
-      "rankLabel": "van {{total}}"
+      "leaderboardLink": "Naar de ranglijst",
+      "rankLabel": "van {{total}}",
+      "showRules": "Toon spelregels"
     },
     "gettingStarted": {
       "body": "Jij bent de eerste hier. Wie hem hierna vindt, zal blij zijn dat jij langskwam.",

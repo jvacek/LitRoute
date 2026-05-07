@@ -148,10 +148,14 @@
       "distanceHeader": "Distance",
       "individualTab": "Briquets",
       "lighterCountHeader": "Briquets",
+      "lightersDescriptionByCheckins": "Chaque ligne est un briquet, classé selon le nombre de passages reçus.",
+      "lightersDescriptionByDistance": "Chaque ligne est un briquet, classé selon la distance totale parcourue.",
       "noEntries": "Aucun check-in pour l'instant.",
       "placeHeader": "Dernière position",
       "rankHeader": "#",
       "teamHeader": "Équipe",
+      "teamsDescriptionByCheckins": "Les équipes sont classées selon le total des passages reçus par tous leurs briquets.",
+      "teamsDescriptionByDistance": "Les équipes sont classées selon la distance totale parcourue par tous leurs briquets.",
       "teamsTab": "Équipes",
       "title": "Classement — {{name}}"
     },
@@ -282,8 +286,9 @@
     "deleteError": "Impossible de supprimer cet enregistrement.",
     "editBtn": "Modifier",
     "game": {
-      "leaderboardLink": "Voir le classement →",
-      "rankLabel": "sur {{total}}"
+      "leaderboardLink": "Aller au classement",
+      "rankLabel": "sur {{total}}",
+      "showRules": "Voir les règles"
     },
     "gettingStarted": {
       "body": "Vous êtes la première personne ici. La prochaine sera contente que vous soyez passé.",

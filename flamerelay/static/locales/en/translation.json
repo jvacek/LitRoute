@@ -319,10 +319,14 @@
       "distanceHeader": "Distance",
       "individualTab": "Lighters",
       "lighterCountHeader": "Lighters",
+      "lightersDescriptionByCheckins": "Each row is one lighter, ranked by how many check-ins it has received.",
+      "lightersDescriptionByDistance": "Each row is one lighter, ranked by the total distance it has travelled.",
       "noEntries": "No check-ins yet.",
       "placeHeader": "Last seen",
       "rankHeader": "#",
       "teamHeader": "Team",
+      "teamsDescriptionByCheckins": "Teams are scored by the total check-ins received across all of their lighters.",
+      "teamsDescriptionByDistance": "Teams are scored by the total distance travelled across all of their lighters.",
       "teamsTab": "Teams",
       "title": "Leaderboard — {{name}}"
     },
@@ -618,8 +622,9 @@
     "deleteError": "Could not delete this check-in.",
     "editBtn": "Edit",
     "game": {
-      "leaderboardLink": "View game leaderboard →",
-      "rankLabel": "of {{total}}"
+      "leaderboardLink": "Go to leaderboard",
+      "rankLabel": "of {{total}}",
+      "showRules": "Show rules"
     },
     "gettingStarted": {
       "body": "You're the first one here. Whoever finds it next will be glad you did.",

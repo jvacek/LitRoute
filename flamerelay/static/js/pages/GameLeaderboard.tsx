@@ -97,6 +97,12 @@ export default function GameLeaderboard() {
   const scoreHeader = isByCheckins
     ? t('game.leaderboard.checkinsHeader')
     : t('game.leaderboard.distanceHeader');
+  const teamsDescription = isByCheckins
+    ? t('game.leaderboard.teamsDescriptionByCheckins')
+    : t('game.leaderboard.teamsDescriptionByDistance');
+  const lightersDescription = isByCheckins
+    ? t('game.leaderboard.lightersDescriptionByCheckins')
+    : t('game.leaderboard.lightersDescriptionByDistance');
   const getRowScore = (row: IndividualEntry) =>
     isByCheckins
       ? formatNumber(row.checkin_count)
@@ -127,9 +133,10 @@ export default function GameLeaderboard() {
 
       {data.teams && data.teams.length > 0 && (
         <section className="mt-8">
-          <h2 className="mb-3 font-heading text-xl font-bold text-char">
+          <h2 className="font-heading text-xl font-bold text-char">
             {t('game.leaderboard.teamsTab')}
           </h2>
+          <p className="mb-3 mt-1 text-sm text-char/60">{teamsDescription}</p>
           <div
             role="table"
             className="grid grid-cols-[auto_1fr_auto_auto] overflow-hidden rounded-card border border-char/10 bg-parchment"
@@ -185,9 +192,12 @@ export default function GameLeaderboard() {
         <p className="mt-8 text-char/60">{t('game.leaderboard.noEntries')}</p>
       ) : (
         <section className="mt-8">
-          <h2 className="mb-3 font-heading text-xl font-bold text-char">
+          <h2 className="font-heading text-xl font-bold text-char">
             {t('game.leaderboard.individualTab')}
           </h2>
+          <p className="mb-3 mt-1 text-sm text-char/60">
+            {lightersDescription}
+          </p>
           <div
             role="table"
             className="grid grid-cols-[auto_1fr_auto_auto] overflow-hidden rounded-card border border-char/10 bg-parchment"
