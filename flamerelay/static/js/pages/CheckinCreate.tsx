@@ -149,7 +149,7 @@ export default function CheckinCreate() {
 
   const [guestCheckinId, setGuestCheckinId] = useState<number | null>(null);
   const [notFound, setNotFound] = useState(false);
-  const [isLocationGpsEnforced, setIsLocationGpsEnforced] = useState(false);
+  const [isGpsEnforced, setIsGpsEnforced] = useState(false);
   const [gpsDriftAllowanceM, setGpsDriftAllowanceM] = useState(500);
   const [gameTimeWarning, setGameTimeWarning] = useState<string | null>(null);
   const [team, setTeam] = useState<TeamRef | null>(null);
@@ -162,7 +162,7 @@ export default function CheckinCreate() {
       }
       if (r.ok) {
         const data = (await r.json()) as {
-          is_location_gps_enforced: boolean;
+          is_gps_enforced: boolean;
           team: TeamRef | null;
           game: {
             name: string;
@@ -172,7 +172,7 @@ export default function CheckinCreate() {
             end_time: string;
           } | null;
         };
-        setIsLocationGpsEnforced(data.is_location_gps_enforced ?? false);
+        setIsGpsEnforced(data.is_gps_enforced ?? false);
         setTeam(data.team ?? null);
         if (data.game?.max_gps_drift != null) {
           setGpsDriftAllowanceM(data.game.max_gps_drift);
@@ -253,7 +253,7 @@ export default function CheckinCreate() {
         mode="create"
         unitUrl={unitUrl}
         maptilerKey={maptilerKey}
-        isLocationGpsEnforced={isLocationGpsEnforced}
+        isGpsEnforced={isGpsEnforced}
         gpsDriftAllowanceM={gpsDriftAllowanceM}
         onSubmit={handleSubmit}
       />

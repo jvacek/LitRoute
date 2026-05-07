@@ -109,10 +109,9 @@ interface CheckinFormProps {
   initialData?: CheckinFormInitialData;
   unitUrl: string;
   maptilerKey: string;
-  isLocationGpsEnforced?: boolean;
+  isGpsEnforced?: boolean;
   gpsDriftAllowanceM?: number;
   onSubmit: (data: FormData) => Promise<Record<string, string[]> | null>;
-  onSuccess?: (checkinId: number, editToken?: string) => void;
 }
 
 export default function CheckinForm({
@@ -120,10 +119,9 @@ export default function CheckinForm({
   initialData,
   unitUrl,
   maptilerKey,
-  isLocationGpsEnforced = false,
+  isGpsEnforced = false,
   gpsDriftAllowanceM = GPS_NUDGE_RADIUS_M,
   onSubmit,
-  onSuccess,
 }: CheckinFormProps) {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
@@ -333,8 +331,6 @@ export default function CheckinForm({
       if (errs) {
         setErrors(errs);
         setConfirmStep(null);
-      } else if (onSuccess) {
-        // onSuccess handled by parent
       }
     } catch (err) {
       console.error(err);
@@ -348,13 +344,9 @@ export default function CheckinForm({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (isLocationGpsEnforced) {
+    if (isGpsEnforced) {
       if (!navigator.geolocation) {
-        setErrors({
-          location: [
-            'Location access is required for this unit. Please allow location access in your browser and try again.',
-          ],
-        });
+        setErrors({ location: [t('checkin.form.errors.gpsRequired')] });
         return;
       }
       setSubmitting(true);
@@ -372,18 +364,14 @@ export default function CheckinForm({
             });
           } catch {
             setErrors({
-              location: ['Location verification failed. Please try again.'],
+              location: [t('checkin.form.errors.gpsVerificationFailed')],
             });
           } finally {
             setSubmitting(false);
           }
         },
         () => {
-          setErrors({
-            location: [
-              'Location access is required for this unit. Please allow location access in your browser and try again.',
-            ],
-          });
+          setErrors({ location: [t('checkin.form.errors.gpsRequired')] });
           setSubmitting(false);
         },
         { timeout: 15_000 },
@@ -424,11 +412,7 @@ export default function CheckinForm({
 
     try {
       const errs = await onSubmit(data);
-      if (errs) {
-        setErrors(errs);
-      } else if (onSuccess) {
-        // onSuccess handled by parent; nothing to do here
-      }
+      if (errs) setErrors(errs);
     } catch (err) {
       console.error(err);
       setErrors({ non_field_errors: [t('common.unexpectedError')] });
@@ -483,11 +467,47 @@ export default function CheckinForm({
           {isCreate && <span className="text-ember"> *</span>}
         </label>
 
-        {isLocationGpsEnforced ? (
-          <div className="rounded-card border border-amber/40 bg-amber/10 px-4 py-3 text-sm text-char">
-            This unit requires your real-time location. It will be captured when
-            you tap <strong>Check in</strong>.
-          </div>
+        {isGpsEnforced ? (
+          <>
+            <div className="mb-2 rounded-card border border-amber/40 bg-amber/10 px-4 py-3 text-sm text-char">
+              {t('checkin.form.gpsNotice')}
+            </div>
+            {/* Search bar for place-name lookup — no geolocate button, no map */}
+            <div ref={searchRef} className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => searchResults.length > 0 && setSearchOpen(true)}
+                placeholder={t('checkin.form.searchPlaceholder')}
+                className="w-full rounded-input border border-char/15 bg-white px-4 py-2.5 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
+                autoComplete="off"
+              />
+              {searchOpen && searchResults.length > 0 && (
+                <ul className="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden rounded-card border border-char/10 bg-white shadow-md">
+                  {searchResults.map((feature) => (
+                    <li key={feature.id as string}>
+                      <button
+                        type="button"
+                        className="w-full px-4 py-2.5 text-left text-sm text-char hover:bg-linen focus:bg-linen focus:outline-none"
+                        onClick={() => handleSelectResult(feature)}
+                      >
+                        <span className="font-medium">{feature.text}</span>
+                        {feature.place_name &&
+                          feature.place_name !== feature.text && (
+                            <span className="ml-1 text-smoke">
+                              {feature.place_name.slice(
+                                (feature.text?.length ?? 0) + 2,
+                              )}
+                            </span>
+                          )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </>
         ) : (
           <>
             {/* Search bar + Use my location button */}
@@ -794,9 +814,7 @@ export default function CheckinForm({
               </Marker>
             </ReactMap>
           </div>
-          <p className="text-xs text-smoke">
-            Nudge your pin if you&apos;d rather not share your exact location.
-          </p>
+          <p className="text-xs text-smoke">{t('checkin.form.gpsNudgeHint')}</p>
           <div className="flex gap-3">
             <button
               type="button"
@@ -804,7 +822,7 @@ export default function CheckinForm({
               disabled={submitting}
               className="rounded-btn bg-amber px-[22px] py-[9px] text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
             >
-              {submitting ? `${t('common.saving')}…` : 'Confirm'}
+              {submitting ? `${t('common.saving')}…` : t('common.confirm')}
             </button>
             <button
               type="button"

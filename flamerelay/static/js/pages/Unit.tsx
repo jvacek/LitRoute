@@ -76,7 +76,7 @@ interface UnitData {
   distance_traveled_km: number;
   is_subscribed: boolean;
   can_check_in: boolean | null;
-  is_location_gps_enforced: boolean;
+  is_gps_enforced: boolean;
   team: TeamRef | null;
   game: GameData | null;
   game_rank: number | null;
