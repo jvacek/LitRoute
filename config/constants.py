@@ -36,5 +36,10 @@ DISTANCE_DEFAULT_ALLOWED_TIME = 60 * 24  # 60 days in hours — Distance mode de
 HOT_POTATO_SHELF_LIFE = 24 * 5  # hours (5 days) — Hot Potato mode default
 HOT_POTATO_MIN_DISTANCE_METERS = 1000
 
+# Game-mode check-ins must populate a real place and (for anon users) a real
+# signing name — at least this many Unicode letters or digits — so leaderboard
+# rows aren't junk like "..." or "ab". Mirrored on the frontend.
+MIN_GAME_REQUIRED_WORD_CHARS = 3
+
 GAME_LEADERBOARD_CACHE_TTL = 5 * 60  # 5 minutes
 GAME_LEADERBOARD_CACHE_KEY_PREFIX = "game:leaderboard"

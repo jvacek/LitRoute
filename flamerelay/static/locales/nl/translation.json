@@ -25,7 +25,13 @@
         "gpsVerificationFailed": "Locatieverificatie mislukt. Probeer het opnieuw.",
         "locationRequired": "Klik op de kaart om je locatie in te stellen.",
         "maxPhotos": "Maximaal {{max}} foto's per check-in.",
+        "nameRequired": "Vul een naam van minstens 3 letters in zodat je check-in meetelt voor de ranglijst.",
+        "placeRequired": "Vul een plaats van minstens 3 letters in zodat je check-in meetelt voor de ranglijst.",
         "svgNotSupported": "Alleen rasterafbeeldingen (JPEG, PNG, WebP, enz.) worden ondersteund. SVG-bestanden kunnen niet worden geüpload."
+      },
+      "gameRequiredNote": {
+        "anon": "Plaats en je naam zijn verplicht zodat je check-in meetelt voor de ranglijst.",
+        "auth": "Plaats is verplicht zodat je check-in meetelt voor de ranglijst."
       },
       "gpsDeniedModal": {
         "body": "Je browser of apparaat blokkeert de locatietoegang. Om hier in te checken moet je het toestaan.",
@@ -43,6 +49,7 @@
       "messageLabel": "Bericht",
       "messagePlaceholder": "Waar heb je hem gevonden? Waar ben je? Wat is het volgende voor deze aansteker?",
       "nameLabel": "Je naam (optioneel)",
+      "nameLabelRequired": "Je naam",
       "namePlaceholder": "Hoe moeten we dit ondertekenen?",
       "passedOnNote": "Zodra iemand anders na jou incheckt, gaat de aansteker verder — je kunt dan geen check-ins meer toevoegen.",
       "placeLabel": "Plaats",

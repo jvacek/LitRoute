@@ -496,7 +496,7 @@ class TestCheckInCreateGpsEnforced:
         ):
             res = client.post(
                 f"/api/units/{gps_unit.identifier}/checkins/",
-                {"location": LONDON_PAYLOAD, "location_token": token},
+                {"location": LONDON_PAYLOAD, "location_token": token, "place": "London"},
                 format="json",
             )
         assert res.status_code == 201  # noqa: PLR2004
@@ -536,20 +536,13 @@ class TestCheckInCreateGpsEnforced:
     def test_replay_returns_400(self, client, gps_unit, user):
         token = issue_location_claim(51.5074, -0.1278, 10.0, user.id, unit_identifier=gps_unit.identifier)
         client.force_authenticate(user=user)
+        body = {"location": LONDON_PAYLOAD, "location_token": token, "place": "London"}
         with (
             patch("backend.models.send_email_to_subscribers_task.apply_async"),
             patch("backend.models.send_thank_you_email_task.apply_async"),
         ):
-            first = client.post(
-                f"/api/units/{gps_unit.identifier}/checkins/",
-                {"location": LONDON_PAYLOAD, "location_token": token},
-                format="json",
-            )
-            second = client.post(
-                f"/api/units/{gps_unit.identifier}/checkins/",
-                {"location": LONDON_PAYLOAD, "location_token": token},
-                format="json",
-            )
+            first = client.post(f"/api/units/{gps_unit.identifier}/checkins/", body, format="json")
+            second = client.post(f"/api/units/{gps_unit.identifier}/checkins/", body, format="json")
         assert first.status_code == 201  # noqa: PLR2004
         assert second.status_code == 400  # noqa: PLR2004
         assert "already used" in str(second.json())
@@ -586,7 +579,12 @@ class TestCheckInCreateGpsEnforced:
         ):
             res = client.post(
                 f"/api/units/{gps_unit.identifier}/checkins/",
-                {"location": LONDON_PAYLOAD, "location_token": token},
+                {
+                    "location": LONDON_PAYLOAD,
+                    "location_token": token,
+                    "place": "London",
+                    "anonymous_name": "Alice",
+                },
                 format="json",
             )
         assert res.status_code == 201  # noqa: PLR2004
@@ -604,6 +602,84 @@ class TestCheckInCreateGpsEnforced:
                 format="json",
             )
         assert res.status_code == 400  # noqa: PLR2004
+
+    def test_auth_missing_place_returns_400(self, client, gps_unit, user):
+        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id, unit_identifier=gps_unit.identifier)
+        client.force_authenticate(user=user)
+        res = client.post(
+            f"/api/units/{gps_unit.identifier}/checkins/",
+            {"location": LONDON_PAYLOAD, "location_token": token},
+            format="json",
+        )
+        assert res.status_code == 400  # noqa: PLR2004
+        assert "place" in res.json()
+
+    def test_auth_junk_place_rejected(self, client, gps_unit, user):
+        # Punctuation-only place doesn't satisfy the word-character minimum.
+        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id, unit_identifier=gps_unit.identifier)
+        client.force_authenticate(user=user)
+        res = client.post(
+            f"/api/units/{gps_unit.identifier}/checkins/",
+            {"location": LONDON_PAYLOAD, "location_token": token, "place": "..."},
+            format="json",
+        )
+        assert res.status_code == 400  # noqa: PLR2004
+        assert "place" in res.json()
+
+    def test_auth_unicode_place_accepted(self, client, gps_unit, user):
+        # Mirrors the frontend regex /[\p{L}\p{N}]/gu — non-ASCII letters count.
+        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id, unit_identifier=gps_unit.identifier)
+        client.force_authenticate(user=user)
+        with (
+            patch("backend.models.send_email_to_subscribers_task.apply_async"),
+            patch("backend.models.send_thank_you_email_task.apply_async"),
+        ):
+            res = client.post(
+                f"/api/units/{gps_unit.identifier}/checkins/",
+                {"location": LONDON_PAYLOAD, "location_token": token, "place": "東京都"},
+                format="json",
+            )
+        assert res.status_code == 201  # noqa: PLR2004
+
+    def test_anon_missing_anonymous_name_returns_400(self, client, gps_unit):
+        token = issue_location_claim(51.5074, -0.1278, 10.0, None, unit_identifier=gps_unit.identifier)
+        res = client.post(
+            f"/api/units/{gps_unit.identifier}/checkins/",
+            {"location": LONDON_PAYLOAD, "location_token": token, "place": "London"},
+            format="json",
+        )
+        assert res.status_code == 400  # noqa: PLR2004
+        assert "anonymous_name" in res.json()
+
+    def test_anon_junk_anonymous_name_rejected(self, client, gps_unit):
+        token = issue_location_claim(51.5074, -0.1278, 10.0, None, unit_identifier=gps_unit.identifier)
+        res = client.post(
+            f"/api/units/{gps_unit.identifier}/checkins/",
+            {
+                "location": LONDON_PAYLOAD,
+                "location_token": token,
+                "place": "London",
+                "anonymous_name": "ab",
+            },
+            format="json",
+        )
+        assert res.status_code == 400  # noqa: PLR2004
+        assert "anonymous_name" in res.json()
+
+    def test_non_gps_unit_does_not_require_place(self, client, user, db):
+        # Plain (no game) unit — game-mode required-fields validation must not fire.
+        plain_unit = UnitFactory.create()
+        client.force_authenticate(user=user)
+        with (
+            patch("backend.models.send_email_to_subscribers_task.apply_async"),
+            patch("backend.models.send_thank_you_email_task.apply_async"),
+        ):
+            res = client.post(
+                f"/api/units/{plain_unit.identifier}/checkins/",
+                {"location": LONDON_PAYLOAD},
+                format="json",
+            )
+        assert res.status_code == 201  # noqa: PLR2004
 
 
 # ── Game Leaderboard ───────────────────────────────────────────────────────────

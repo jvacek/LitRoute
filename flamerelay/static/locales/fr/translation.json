@@ -25,7 +25,13 @@
         "gpsVerificationFailed": "La vérification de localisation a échoué. Veuillez réessayer.",
         "locationRequired": "Cliquez sur la carte pour définir votre position.",
         "maxPhotos": "Maximum {{max}} photos par enregistrement.",
+        "nameRequired": "Ajoutez un nom d'au moins 3 lettres pour que votre enregistrement compte au classement.",
+        "placeRequired": "Ajoutez un lieu d'au moins 3 lettres pour que votre enregistrement compte au classement.",
         "svgNotSupported": "Seules les images matricielles (JPEG, PNG, WebP, etc.) sont prises en charge. Les fichiers SVG ne peuvent pas être téléversés."
+      },
+      "gameRequiredNote": {
+        "anon": "Le lieu et votre nom sont requis pour que votre enregistrement compte au classement.",
+        "auth": "Le lieu est requis pour que votre enregistrement compte au classement."
       },
       "gpsDeniedModal": {
         "body": "Votre navigateur ou votre appareil bloque l'accès à la localisation. Pour vous enregistrer ici, vous devez l'autoriser.",
@@ -43,6 +49,7 @@
       "messageLabel": "Message",
       "messagePlaceholder": "Où l'avez-vous trouvé ? Où êtes-vous ? Quelle est la suite pour ce briquet ?",
       "nameLabel": "Votre nom (optionnel)",
+      "nameLabelRequired": "Votre nom",
       "namePlaceholder": "Comment doit-on signer ?",
       "passedOnNote": "Dès que quelqu'un s'enregistre après vous, le briquet passe au suivant — vous ne pourrez plus ajouter d'enregistrements.",
       "placeLabel": "Lieu",

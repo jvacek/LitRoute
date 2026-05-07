@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import urllib.parse
 import urllib.request
 import uuid
@@ -39,6 +40,7 @@ from config.constants import (
     CHECKIN_MAX_IMAGES,
     GUEST_EMAIL_VERIFICATION_EXPIRY_SECONDS,
     LOCATION_CLAIM_MAX_DRIFT_METERS,
+    MIN_GAME_REQUIRED_WORD_CHARS,
     STATS_CACHE_KEY,
 )
 
@@ -51,6 +53,10 @@ from .serializers import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Unicode letters or digits, mirroring the frontend's /[\p{L}\p{N}]/gu.
+# `[^\W_]` = word character that isn't underscore = letter or digit.
+_LETTER_OR_DIGIT_RE = re.compile(r"[^\W_]")
 
 
 def _verify_turnstile(token: str, remote_ip: str = "") -> bool:
@@ -236,6 +242,30 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
     serializer_class = CheckInSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
+    def _verify_game_required_fields(self, unit: Unit, validated_data) -> None:
+        """For game-enforced units, require a real `place` (everyone) and a real
+        `anonymous_name` (anon only) so leaderboard rows can be attributed.
+        Mirrors the frontend's MIN_REQUIRED_WORD_CHARS check — savvy clients
+        could otherwise bypass it via curl."""
+        if not unit.is_gps_enforced:
+            return
+        errors: dict[str, list[str]] = {}
+        place = validated_data.get("place") or ""
+        if len(_LETTER_OR_DIGIT_RE.findall(place)) < MIN_GAME_REQUIRED_WORD_CHARS:
+            errors["place"] = [
+                f"Place is required ({MIN_GAME_REQUIRED_WORD_CHARS}+ letters or digits) "
+                "so this check-in can be attributed on the leaderboard.",
+            ]
+        if not self.request.user.is_authenticated:
+            anon_name = validated_data.get("anonymous_name") or ""
+            if len(_LETTER_OR_DIGIT_RE.findall(anon_name)) < MIN_GAME_REQUIRED_WORD_CHARS:
+                errors["anonymous_name"] = [
+                    f"Name is required ({MIN_GAME_REQUIRED_WORD_CHARS}+ letters or digits) "
+                    "so this check-in can be attributed on the leaderboard.",
+                ]
+        if errors:
+            raise ValidationError(errors)
+
     def _verify_gps_token(self, unit: Unit, request_data, validated_location) -> None:
         from backend.location_token import verify_location_claim  # noqa: PLC0415
 
@@ -319,6 +349,7 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         unit = get_object_or_404(Unit, identifier=self.kwargs["identifier"])
         if unit.is_gps_enforced:
             self._verify_gps_token(unit, self.request.data, serializer.validated_data.get("location"))
+        self._verify_game_required_fields(unit, serializer.validated_data)
 
         checkin = self._save_checkin_record(unit, serializer)
         invalidate_checkin_caches(unit.identifier, unit.game_id)

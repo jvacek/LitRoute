@@ -110,7 +110,13 @@
         "gpsVerificationFailed": "Location verification failed. Please try again.",
         "locationRequired": "Please click the map to set your location.",
         "maxPhotos": "Maximum {{max}} photos per check-in.",
+        "nameRequired": "Please add a name with at least 3 letters so your check-in counts on the leaderboard.",
+        "placeRequired": "Please add a place with at least 3 letters so your check-in counts on the leaderboard.",
         "svgNotSupported": "Only raster images (JPEG, PNG, WebP, etc.) are supported. SVG files cannot be uploaded."
+      },
+      "gameRequiredNote": {
+        "anon": "Place and your name are required so your check-in counts on the leaderboard.",
+        "auth": "Place is required so your check-in counts on the leaderboard."
       },
       "gpsDeniedModal": {
         "body": "Your browser or device is blocking location access. To check in here, you'll need to allow it.",
@@ -128,6 +134,7 @@
       "messageLabel": "Message",
       "messagePlaceholder": "Where did you find it? Where are you? What's next for this lighter?",
       "nameLabel": "Your name (optional)",
+      "nameLabelRequired": "Your name",
       "namePlaceholder": "How should we sign this?",
       "passedOnNote": "Once someone else checks in after you, the lighter moves on — you won't be able to add more check-ins.",
       "placeLabel": "Place",
