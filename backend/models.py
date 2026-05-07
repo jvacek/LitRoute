@@ -95,6 +95,7 @@ class Game(models.Model):
     def __str__(self):
         return f"{self.name} ({self.get_mode_display()})"
 
+    @property
     def is_gps_enforced(self) -> bool:
         return self.mode in (
             self.Modes.RACE,
@@ -161,8 +162,8 @@ class Unit(models.Model):
         return f"/unit/{self.identifier}/"
 
     @property
-    def is_gps_location_enforced(self) -> bool:
-        return self.game.is_gps_enforced() if self.game else False
+    def is_gps_enforced(self) -> bool:
+        return self.game.is_gps_enforced if self.game else False
 
     def can_user_check_in(self, user) -> bool:
         if not user or not getattr(user, "pk", None):

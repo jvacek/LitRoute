@@ -89,7 +89,7 @@ class UnitSerializer(serializers.ModelSerializer):
     distance_traveled_km = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
     can_check_in = serializers.SerializerMethodField()
-    is_location_gps_enforced = serializers.SerializerMethodField()
+    is_gps_enforced = serializers.SerializerMethodField()
     team = TeamSerializer(read_only=True)
     game = GameSerializer(read_only=True)
     game_rank = serializers.SerializerMethodField()
@@ -107,7 +107,7 @@ class UnitSerializer(serializers.ModelSerializer):
             "distance_traveled_km",
             "is_subscribed",
             "can_check_in",
-            "is_location_gps_enforced",
+            "is_gps_enforced",
             "game",
             "game_rank",
             "game_total",
@@ -132,19 +132,15 @@ class UnitSerializer(serializers.ModelSerializer):
             return True
         return obj.can_user_check_in(request.user)
 
-    def get_is_location_gps_enforced(self, obj: Unit) -> bool:
-        return obj.is_gps_location_enforced
+    def get_is_gps_enforced(self, obj: Unit) -> bool:
+        return obj.is_gps_enforced
 
     def get_game_rank(self, obj: Unit) -> int | None:
         if not obj.game_id:
             return None
-        from backend.services import compute_game_leaderboard  # noqa: PLC0415
+        from backend.services import get_cached_game_rank  # noqa: PLC0415
 
-        data = compute_game_leaderboard(obj.game)
-        for entry in data["individual"]:
-            if entry["identifier"] == obj.identifier:
-                return entry["rank"]
-        return None
+        return get_cached_game_rank(obj.game_id, obj.identifier)
 
     def get_game_total(self, obj: Unit) -> int | None:
         if not obj.game_id:
