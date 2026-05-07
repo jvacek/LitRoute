@@ -84,9 +84,9 @@ class TeamSerializer(serializers.ModelSerializer):
 
 
 class LocationClaimRequestSerializer(serializers.Serializer):
-    lat = serializers.FloatField()
-    lng = serializers.FloatField()
-    accuracy = serializers.FloatField()
+    lat = serializers.FloatField(min_value=-90, max_value=90)
+    lng = serializers.FloatField(min_value=-180, max_value=180)
+    accuracy = serializers.FloatField(min_value=0)
     unit_identifier = serializers.CharField(max_length=200)
 
 

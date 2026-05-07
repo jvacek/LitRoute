@@ -436,6 +436,15 @@ class TestLocationClaimView:
         )
         assert res.status_code == 400  # noqa: PLR2004
 
+    def test_out_of_range_coords_returns_400(self, client, user, unit):
+        client.force_authenticate(user=user)
+        res = client.post(
+            "/api/location-claim/",
+            {"lat": 999.0, "lng": -0.1, "accuracy": 10.0, "unit_identifier": unit.identifier},
+            format="json",
+        )
+        assert res.status_code == 400  # noqa: PLR2004
+
     def test_returns_token_string(self, client, user, unit):
         client.force_authenticate(user=user)
         res = client.post(
