@@ -60,6 +60,13 @@
     "confirm": "Confirmer",
     "confirming": "Confirmation",
     "connectedAccounts": "Comptes connectés",
+    "duration": {
+      "and": "et",
+      "day_one": "{{count}} jour",
+      "day_other": "{{count}} jours",
+      "hour_one": "{{count}} heure",
+      "hour_other": "{{count}} heures"
+    },
     "loading": "Chargement",
     "nameLabel": "Nom",
     "namePlaceholder": "Votre nom",
@@ -94,6 +101,54 @@
   },
   "footer": {
     "tagline": "Suivez le voyage de votre briquet"
+  },
+  "game": {
+    "countdown": {
+      "days": "Jours",
+      "ended": "Jeu terminé",
+      "endedOn": "Terminé le {{date}}",
+      "endsIn": "Le jeu se termine dans",
+      "endsOn": "Se termine le {{date}}",
+      "hours": "Heures",
+      "minutes": "Min",
+      "seconds": "Sec"
+    },
+    "distance": {
+      "name": "Distance",
+      "rules": "Ce briquet participe à un jeu de distance qui dure {{duration}}. Transmettez-le, faites-le photographier dans de nouveaux lieux et accumulez les kilomètres. Votre position est vérifiée par GPS. Le briquet ayant parcouru le plus de kilomètres à la fin du jeu gagne.",
+      "timeAlmostUp": "Moins de {{minutes}} min avant la fin du jeu !",
+      "timeExpired": "Le jeu de distance est terminé — les résultats sont définitifs. Le voyage du briquet peut continuer."
+    },
+    "hot_potato": {
+      "name": "Patate chaude",
+      "rules": "Transmettez ce briquet avant qu'il n'expire ! Vous avez {{shelfLife}} heures."
+    },
+    "leaderboard": {
+      "byPerson": "par {{name}}",
+      "checkinsHeader": "Passages",
+      "distanceHeader": "Distance",
+      "individualTab": "Briquets",
+      "lighterCountHeader": "Briquets",
+      "noEntries": "Aucun check-in pour l'instant.",
+      "placeHeader": "Dernière position",
+      "rankHeader": "#",
+      "teamHeader": "Équipe",
+      "teamsTab": "Équipes",
+      "title": "Classement — {{name}}"
+    },
+    "modal": {
+      "gotIt": "Compris",
+      "title": "Jeu spécial",
+      "viewLeaderboard": "Voir le classement"
+    },
+    "race": {
+      "name": "Course",
+      "rules": "Atteignez la destination le plus vite possible. Position vérifiée par GPS."
+    },
+    "relay": {
+      "name": "Relais",
+      "rules": "Transmettez ce briquet à la prochaine personne. Pas de limite de temps."
+    }
   },
   "home": {
     "cta": {
@@ -182,6 +237,10 @@
     "deleteConfirm": "Supprimer cet enregistrement ?",
     "deleteError": "Impossible de supprimer cet enregistrement.",
     "editBtn": "Modifier",
+    "game": {
+      "leaderboardLink": "Voir le classement →",
+      "rankLabel": "sur {{total}}"
+    },
     "gettingStarted": {
       "body": "Vous êtes la première personne ici. La prochaine sera contente que vous soyez passé.",
       "cta": "Créer le premier enregistrement",
@@ -205,6 +264,7 @@
     "statsFollowers": "abonnés",
     "statsKmTraveled": "km parcourus",
     "statsStops": "arrêts",
+    "statsTeam": "équipe",
     "status": {
       "currentlyIn": "Actuellement à {{place}}",
       "lastSeenDaysAgo_one": "Vu pour la dernière fois il y a {{count}} jour à {{place}}",

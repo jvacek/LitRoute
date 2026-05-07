@@ -151,6 +151,13 @@
     "confirm": "Confirm",
     "confirming": "Confirming",
     "connectedAccounts": "Connected accounts",
+    "duration": {
+      "and": "and",
+      "day_one": "{{count}} day",
+      "day_other": "{{count}} days",
+      "hour_one": "{{count}} hour",
+      "hour_other": "{{count}} hours"
+    },
     "loading": "Loading",
     "nameLabel": "Name",
     "namePlaceholder": "Your name",
@@ -271,6 +278,54 @@
     "footerNav": "Footer navigation",
     "tagline": "Track your lighter's journey",
     "viewCommit": "View current commit on GitHub"
+  },
+  "game": {
+    "countdown": {
+      "days": "Days",
+      "ended": "Game over",
+      "endedOn": "Ended {{date}}",
+      "endsIn": "Game ends in",
+      "endsOn": "Ends {{date}}",
+      "hours": "Hours",
+      "minutes": "Min",
+      "seconds": "Sec"
+    },
+    "distance": {
+      "name": "Distance",
+      "rules": "This lighter is part of a Distance game running for {{duration}}. Pass it along, get it photographed in new places, and rack up kilometres. Your location is verified by GPS. The lighter that has travelled the most when the timer hits zero wins.",
+      "timeAlmostUp": "Less than {{minutes}} min left before the game ends!",
+      "timeExpired": "The Distance game is over — results are final. The lighter's journey can still continue."
+    },
+    "hot_potato": {
+      "name": "Hot Potato",
+      "rules": "Pass this lighter before it expires! You have {{shelfLife}} hours."
+    },
+    "leaderboard": {
+      "byPerson": "by {{name}}",
+      "checkinsHeader": "Check-ins",
+      "distanceHeader": "Distance",
+      "individualTab": "Lighters",
+      "lighterCountHeader": "Lighters",
+      "noEntries": "No check-ins yet.",
+      "placeHeader": "Last seen",
+      "rankHeader": "#",
+      "teamHeader": "Team",
+      "teamsTab": "Teams",
+      "title": "Leaderboard — {{name}}"
+    },
+    "modal": {
+      "gotIt": "Got it",
+      "title": "Special game",
+      "viewLeaderboard": "View leaderboard"
+    },
+    "race": {
+      "name": "Race",
+      "rules": "Reach the destination as fast as possible. Your location is verified by GPS."
+    },
+    "relay": {
+      "name": "Relay",
+      "rules": "Pass this lighter to the next person. No time limit."
+    }
   },
   "home": {
     "cta": {
@@ -549,6 +604,10 @@
     "deleteConfirm": "Delete this check-in?",
     "deleteError": "Could not delete this check-in.",
     "editBtn": "Edit",
+    "game": {
+      "leaderboardLink": "View game leaderboard →",
+      "rankLabel": "of {{total}}"
+    },
     "gettingStarted": {
       "body": "You're the first one here. Whoever finds it next will be glad you did.",
       "cta": "Create the first check-in",
@@ -572,6 +631,7 @@
     "statsFollowers": "followers",
     "statsKmTraveled": "km traveled",
     "statsStops": "stops",
+    "statsTeam": "team",
     "status": {
       "currentlyIn": "Currently in {{place}}",
       "lastSeenDaysAgo_one": "Last seen {{count}} day ago in {{place}}",

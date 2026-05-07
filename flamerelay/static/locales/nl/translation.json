@@ -60,6 +60,13 @@
     "confirm": "Bevestigen",
     "confirming": "Bevestigen",
     "connectedAccounts": "Gekoppelde accounts",
+    "duration": {
+      "and": "en",
+      "day_one": "{{count}} dag",
+      "day_other": "{{count}} dagen",
+      "hour_one": "{{count}} uur",
+      "hour_other": "{{count}} uur"
+    },
     "loading": "Laden",
     "nameLabel": "Naam",
     "namePlaceholder": "Je naam",
@@ -94,6 +101,54 @@
   },
   "footer": {
     "tagline": "Volg de reis van je aansteker"
+  },
+  "game": {
+    "countdown": {
+      "days": "Dagen",
+      "ended": "Spel voorbij",
+      "endedOn": "Geëindigd op {{date}}",
+      "endsIn": "Het spel eindigt over",
+      "endsOn": "Eindigt op {{date}}",
+      "hours": "Uur",
+      "minutes": "Min",
+      "seconds": "Sec"
+    },
+    "distance": {
+      "name": "Afstand",
+      "rules": "Deze aansteker doet mee aan een afstandsspel dat {{duration}} duurt. Geef hem door, laat hem op nieuwe plekken fotograferen en stapel kilometers op. Je locatie wordt via GPS geverifieerd. De aansteker met de meeste kilometers aan het einde wint.",
+      "timeAlmostUp": "Minder dan {{minutes}} min voor het spel eindigt!",
+      "timeExpired": "Het afstandsspel is voorbij — de uitslag staat vast. De reis van de aansteker kan nog doorgaan."
+    },
+    "hot_potato": {
+      "name": "Hete aardappel",
+      "rules": "Geef deze aansteker door voor hij vervalt! Je hebt {{shelfLife}} uur."
+    },
+    "leaderboard": {
+      "byPerson": "door {{name}}",
+      "checkinsHeader": "Check-ins",
+      "distanceHeader": "Afstand",
+      "individualTab": "Aanstekers",
+      "lighterCountHeader": "Aanstekers",
+      "noEntries": "Nog geen check-ins.",
+      "placeHeader": "Laatst gezien",
+      "rankHeader": "#",
+      "teamHeader": "Team",
+      "teamsTab": "Teams",
+      "title": "Ranglijst — {{name}}"
+    },
+    "modal": {
+      "gotIt": "Begrepen",
+      "title": "Speciaal spel",
+      "viewLeaderboard": "Bekijk de ranglijst"
+    },
+    "race": {
+      "name": "Race",
+      "rules": "Bereik het doel zo snel mogelijk. Locatie geverifieerd via GPS."
+    },
+    "relay": {
+      "name": "Estafette",
+      "rules": "Geef deze aansteker door aan de volgende persoon. Geen tijdslimiet."
+    }
   },
   "home": {
     "cta": {
@@ -182,6 +237,10 @@
     "deleteConfirm": "Deze check-in verwijderen?",
     "deleteError": "Kon deze check-in niet verwijderen.",
     "editBtn": "Bewerken",
+    "game": {
+      "leaderboardLink": "Bekijk de ranglijst →",
+      "rankLabel": "van {{total}}"
+    },
     "gettingStarted": {
       "body": "Jij bent de eerste hier. Wie hem hierna vindt, zal blij zijn dat jij langskwam.",
       "cta": "Maak de eerste check-in",
@@ -205,6 +264,7 @@
     "statsFollowers": "volgers",
     "statsKmTraveled": "km afgelegd",
     "statsStops": "stops",
+    "statsTeam": "team",
     "status": {
       "currentlyIn": "Op dit moment in {{place}}",
       "lastSeenDaysAgo_one": "{{count}} dag geleden voor het laatst gezien in {{place}}",
