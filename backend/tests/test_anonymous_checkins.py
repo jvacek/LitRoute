@@ -376,6 +376,20 @@ class TestGuestVerifyView:
         addr = EmailAddress.objects.get(email="verified@example.com")
         assert addr.verified is True
 
+    def test_valid_token_logs_user_in(self, client, unit):
+        """Without an authenticated session after verify, the visitor would
+        end up locked out — created_by is set so the anon-isOwn branch no
+        longer matches, and they have no session for the auth-owner branch."""
+        checkin = make_anon_checkin(unit)
+        token = make_verify_token("loggedin@example.com", unit.identifier, checkin.pk)
+        client.get(f"/api/guest-verify/?token={token}")
+        # /api/account/ is IsAuthenticated-protected; reaching it confirms the
+        # session is now bound to the verified user.
+        me_res = client.get("/api/account/")
+        assert me_res.status_code == 200  # noqa: PLR2004
+        user = get_user_model().objects.get(email="loggedin@example.com")
+        assert me_res.json()["username"] == user.username
+
     def test_expired_token_returns_400(self, client, unit):
         checkin = make_anon_checkin(unit)
         token = make_verify_token("old@example.com", unit.identifier, checkin.pk)

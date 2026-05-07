@@ -474,7 +474,8 @@ class GuestSubscribeView(APIView):
 class GuestVerifyView(View):
     def get(self, request):
         from allauth.account.models import EmailAddress  # noqa: PLC0415
-        from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseRedirect  # noqa: PLC0415
+        from allauth.account.utils import perform_login  # noqa: PLC0415
+        from django.http import HttpResponseBadRequest, HttpResponseForbidden  # noqa: PLC0415
 
         if not ratelimit.consume(request, action="guest_verify"):
             return HttpResponseForbidden("Too many attempts. Please try again later.")
@@ -519,4 +520,13 @@ class GuestVerifyView(View):
             cache_keys.append(game_leaderboard_cache_key(unit.game_id))
         cache.delete_many(cache_keys)
 
-        return HttpResponseRedirect(f"/unit/{unit_identifier}/?verified=1")
+        # Establish a Django session so the user lands on the unit page already
+        # signed in. Without this, the check-in is claimed in the DB but the
+        # browser is still anonymous — so neither isAnonOwned nor the auth
+        # owner branch matches and the visitor loses access to the check-in.
+        return perform_login(
+            request,
+            user,
+            email=email,
+            redirect_url=f"/unit/{unit_identifier}/?verified=1",
+        )
