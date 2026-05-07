@@ -90,6 +90,16 @@ class LocationClaimResponseSerializer(serializers.Serializer):
     token = serializers.CharField()
 
 
+class JourneyPointSerializer(serializers.Serializer):
+    lng = serializers.FloatField()
+    lat = serializers.FloatField()
+    date = serializers.CharField()
+    # True when the check-in happened after the game's end_time. The journey
+    # still includes these so the route stays continuous on the map; the
+    # frontend renders post-end points/segments in a different colour.
+    after_end = serializers.BooleanField()
+
+
 class LeaderboardIndividualEntrySerializer(serializers.Serializer):
     rank = serializers.IntegerField()
     # Null for every row except the one matching the ?from=<identifier> query
@@ -100,6 +110,7 @@ class LeaderboardIndividualEntrySerializer(serializers.Serializer):
     distance_km = serializers.FloatField()
     checkin_count = serializers.IntegerField()
     team = TeamSerializer(allow_null=True)
+    journey = JourneyPointSerializer(many=True)
 
 
 class LeaderboardTeamEntrySerializer(serializers.Serializer):

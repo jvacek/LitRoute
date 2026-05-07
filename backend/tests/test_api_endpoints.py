@@ -488,7 +488,7 @@ class TestCheckInCreateGpsEnforced:
         ):
             res = client.post(
                 f"/api/units/{gps_unit.identifier}/checkins/",
-                {"location": LONDON_PAYLOAD},
+                {"location": LONDON_PAYLOAD, "place": "London"},
                 format="json",
             )
         assert res.status_code == 400  # noqa: PLR2004
@@ -518,10 +518,11 @@ class TestCheckInCreateGpsEnforced:
         ):
             res = client.post(
                 f"/api/units/{gps_unit.identifier}/checkins/",
-                {"location": LONDON_PAYLOAD, "location_token": token},
+                {"location": LONDON_PAYLOAD, "location_token": token, "place": "London"},
                 format="json",
             )
         assert res.status_code == 400  # noqa: PLR2004
+        assert "different user" in str(res.json())
 
     def test_token_wrong_unit_returns_400(self, client, gps_unit, user, db):
         other_game = Game.objects.create(mode=Game.Modes.RACE, name="Other GPS Race")
@@ -534,7 +535,7 @@ class TestCheckInCreateGpsEnforced:
         ):
             res = client.post(
                 f"/api/units/{gps_unit.identifier}/checkins/",
-                {"location": LONDON_PAYLOAD, "location_token": token},
+                {"location": LONDON_PAYLOAD, "location_token": token, "place": "London"},
                 format="json",
             )
         assert res.status_code == 400  # noqa: PLR2004
@@ -564,7 +565,11 @@ class TestCheckInCreateGpsEnforced:
             res = client.post(
                 f"/api/units/{gps_unit.identifier}/checkins/",
                 # ~666 m north — beyond the default 500 m drift
-                {"location": {"type": "Point", "coordinates": [-0.1278, 51.5134]}, "location_token": token},
+                {
+                    "location": {"type": "Point", "coordinates": [-0.1278, 51.5134]},
+                    "location_token": token,
+                    "place": "London",
+                },
                 format="json",
             )
         assert res.status_code == 400  # noqa: PLR2004
@@ -572,7 +577,7 @@ class TestCheckInCreateGpsEnforced:
     def test_anon_missing_token_returns_400(self, client, gps_unit):
         res = client.post(
             f"/api/units/{gps_unit.identifier}/checkins/",
-            {"location": LONDON_PAYLOAD},
+            {"location": LONDON_PAYLOAD, "place": "London", "anonymous_name": "Alice"},
             format="json",
         )
         assert res.status_code == 400  # noqa: PLR2004
@@ -833,6 +838,86 @@ class TestGameLeaderboard:
         second_ids = {r["identifier"] for r in second["individual"]}
         assert first_ids == {unit_a.identifier, None}
         assert second_ids == {unit_b.identifier, None}
+
+    def test_journey_returns_ordered_points_with_after_end_flag(self, client, user, db):
+        """Each individual entry includes a chronologically-ordered list of
+        check-in coordinates + datetimes. Points dated after `game.end_time`
+        are flagged with `after_end=True` so the frontend can colour them
+        differently while keeping the route continuous."""
+        start = timezone.now() - timedelta(hours=10)
+        # allowed_time=2h → end_time = start + 2h, so the third check-in below
+        # falls outside the game window.
+        game = GameFactory.create(mode=Game.Modes.DISTANCE, start_time=start, allowed_time=2)
+        unit = UnitFactory.create(game=game)
+        in_game_a = make_checkin(unit, user, location=LONDON)
+        CheckIn.objects.filter(pk=in_game_a.pk).update(date_created=start + timedelta(minutes=10))
+        in_game_b = make_checkin(unit, user, location=PARIS)
+        CheckIn.objects.filter(pk=in_game_b.pk).update(date_created=start + timedelta(minutes=90))
+        late = make_checkin(unit, user, location=LONDON)
+        CheckIn.objects.filter(pk=late.pk).update(date_created=start + timedelta(hours=5))
+
+        res = client.get(f"/api/games/{game.id}/leaderboard/?from={unit.identifier}")
+        entry = res.json()["individual"][0]
+        journey = entry["journey"]
+        assert len(journey) == 3  # noqa: PLR2004
+        assert journey[0]["date"] < journey[1]["date"] < journey[2]["date"]
+        # PostGIS Point.x = lng, .y = lat
+        assert journey[0]["lng"] == pytest.approx(LONDON.x)
+        assert journey[0]["lat"] == pytest.approx(LONDON.y)
+        assert [p["after_end"] for p in journey] == [False, False, True]
+
+    def test_journey_present_even_when_identifier_hidden(self, client, user, db):
+        """Privacy filter only nulls `identifier` — journey data stays so the
+        map can render every unit's route."""
+        game = GameFactory.create(mode=Game.Modes.DISTANCE)
+        unit = UnitFactory.create(game=game)
+        make_checkin(unit, user, location=LONDON)
+        make_checkin(unit, user, location=PARIS)
+
+        res = client.get(f"/api/games/{game.id}/leaderboard/")
+        entry = res.json()["individual"][0]
+        assert entry["identifier"] is None
+        assert len(entry["journey"]) == 2  # noqa: PLR2004
+
+    def test_checkins_after_end_time_excluded_from_score(self, client, user, db):
+        """Once the game ends, new check-ins must not change the leaderboard."""
+        game = GameFactory.create(
+            mode=Game.Modes.DISTANCE,
+            start_time=timezone.now() - timedelta(days=2),
+            allowed_time=24,  # ended ~24h ago
+        )
+        unit = UnitFactory.create(game=game)
+        a = make_checkin(unit, user, location=LONDON)
+        CheckIn.objects.filter(pk=a.pk).update(date_created=timezone.now() - timedelta(days=1, hours=12))
+        b = make_checkin(unit, user, location=PARIS)
+        CheckIn.objects.filter(pk=b.pk).update(date_created=timezone.now() - timedelta(days=1, hours=6))
+        # Post-game return to London — must NOT count toward score (would
+        # roughly double the distance if it leaked in).
+        after = make_checkin(unit, user, location=LONDON)
+        CheckIn.objects.filter(pk=after.pk).update(date_created=timezone.now())
+
+        res = client.get(f"/api/games/{game.id}/leaderboard/?from={unit.identifier}").json()
+        row = res["individual"][0]
+        assert row["checkin_count"] == 2  # noqa: PLR2004
+        # London→Paris is ~344 km; round-trip would be ~688.
+        assert row["distance_km"] < 400  # noqa: PLR2004
+
+    def test_pre_start_checkins_still_count(self, client, user, db):
+        """Per spec: pre-start check-ins are included in leaderboard distance."""
+        game = GameFactory.create(
+            mode=Game.Modes.DISTANCE,
+            start_time=timezone.now() - timedelta(hours=1),  # started 1h ago
+        )
+        unit = UnitFactory.create(game=game)
+        # Pre-start check-in — still counts.
+        pre = make_checkin(unit, user, location=LONDON)
+        CheckIn.objects.filter(pk=pre.pk).update(date_created=timezone.now() - timedelta(days=5))
+        make_checkin(unit, user, location=PARIS)  # post-start, in-window
+
+        res = client.get(f"/api/games/{game.id}/leaderboard/?from={unit.identifier}").json()
+        row = res["individual"][0]
+        assert row["checkin_count"] == 2  # noqa: PLR2004
+        assert row["distance_km"] > 300  # noqa: PLR2004
 
     def test_hot_potato_sorted_by_checkin_count(self, client, user, db):
         game = GameFactory.create(mode=Game.Modes.HOT_POTATO)

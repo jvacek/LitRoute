@@ -43,41 +43,33 @@ def distance_traveled_in_km(unit) -> float:
     return round(total_distance, 2)
 
 
-def _fetch_unit_distances(units_list: list) -> dict[str, float]:
-    """Return a mapping of unit identifier → distance_km, using cache + one DB fallback."""
-    from django.core.cache import cache  # noqa: PLC0415
+def _fetch_unit_journeys(unit_ids: list[int], game_end_time) -> dict[int, list[dict]]:
+    """Return a mapping of unit_id → ordered journey points for the given units.
 
-    from config.constants import UNIT_DISTANCE_CACHE_TTL  # noqa: PLC0415
-
+    Each point is `{lng, lat, date, after_end}` where `after_end` flags check-ins
+    that happened after the game's `end_time` (still shown so the route stays
+    continuous, but the frontend can render them differently).
+    """
     from .models import CheckIn  # noqa: PLC0415
 
-    dist_keys = {unit_distance_cache_key(u.identifier): u.identifier for u in units_list}
-    cached_dists: dict = cache.get_many(dist_keys.keys()) if dist_keys else {}
+    if not unit_ids:
+        return {}
 
-    missing_ids = {ident for key, ident in dist_keys.items() if key not in cached_dists}
-    computed_dists: dict[str, float] = {}
-    if missing_ids:
-        checkins_by_unit: dict[str, list] = {}
-        for ident, loc in (
-            CheckIn.objects.filter(unit__identifier__in=missing_ids)
-            .order_by("unit__identifier", "date_created")
-            .values_list("unit__identifier", "location")
-        ):
-            checkins_by_unit.setdefault(ident, []).append(loc)
-        to_cache: dict[str, float] = {}
-        for ident in missing_ids:
-            pts = [(p.y, p.x) for p in checkins_by_unit.get(ident, [])]
-            dist_val = round(sum(distance(pts[i], pts[i + 1]).km for i in range(len(pts) - 1)), 2)
-            computed_dists[ident] = dist_val
-            to_cache[unit_distance_cache_key(ident)] = dist_val
-        if to_cache:
-            cache.set_many(to_cache, UNIT_DISTANCE_CACHE_TTL)
-
-    result: dict[str, float] = {}
-    for u in units_list:
-        key = unit_distance_cache_key(u.identifier)
-        result[u.identifier] = cached_dists[key] if key in cached_dists else computed_dists.get(u.identifier, 0.0)
-    return result
+    journeys: dict[int, list[dict]] = {uid: [] for uid in unit_ids}
+    for unit_id, location, date_created in (
+        CheckIn.objects.filter(unit_id__in=unit_ids)
+        .order_by("unit_id", "date_created")
+        .values_list("unit_id", "location", "date_created")
+    ):
+        journeys[unit_id].append(
+            {
+                "lng": location.x,
+                "lat": location.y,
+                "date": date_created.isoformat(),
+                "after_end": date_created > game_end_time,
+            }
+        )
+    return journeys
 
 
 def _aggregate_teams(rows: list[dict], mode: str) -> list[dict] | None:
@@ -108,9 +100,16 @@ def _aggregate_teams(rows: list[dict], mode: str) -> list[dict] | None:
 
 
 def compute_game_leaderboard(game) -> dict:
-    """Build the cached leaderboard payload for a Game, with batched distance lookups."""
+    """Build the cached leaderboard payload for a Game.
+
+    Scoring (distance, checkin_count, last seen) caps at game.end_time so the
+    leaderboard freezes once the game is over. Pre-start check-ins still
+    count — only the upper bound is enforced. The unit-page all-time
+    distance (unit_distance_cache_key) is intentionally untouched and
+    continues growing as the lighter travels.
+    """
     from django.core.cache import cache  # noqa: PLC0415
-    from django.db.models import Count, OuterRef, Subquery  # noqa: PLC0415
+    from django.db.models import Count, OuterRef, Q, Subquery  # noqa: PLC0415
     from django.db.models.functions import Coalesce  # noqa: PLC0415
 
     from config.constants import GAME_LEADERBOARD_CACHE_TTL  # noqa: PLC0415
@@ -122,7 +121,9 @@ def compute_game_leaderboard(game) -> dict:
     if cached is not None:
         return cached
 
-    latest_qs = CheckIn.objects.filter(unit=OuterRef("pk")).order_by("-date_created", "-pk")
+    cutoff = game.end_time
+
+    latest_qs = CheckIn.objects.filter(unit=OuterRef("pk"), date_created__lte=cutoff).order_by("-date_created", "-pk")
     latest_place = latest_qs.values("place")[:1]
     latest_name = latest_qs.annotate(display_name=Coalesce("created_by__name", "anonymous_name")).values(
         "display_name"
@@ -132,13 +133,33 @@ def compute_game_leaderboard(game) -> dict:
         Unit.objects.filter(game=game)
         .select_related("team")
         .annotate(
-            cc=Count("checkin", distinct=True),
+            cc=Count("checkin", distinct=True, filter=Q(checkin__date_created__lte=cutoff)),
             latest_place=Subquery(latest_place),
             latest_name=Subquery(latest_name),
         )
     )
 
-    dist_by_id = _fetch_unit_distances(units_list)
+    # Inline windowed distance calc. We can't reuse unit_distance_cache_key
+    # here because that holds all-time totals (correct for the unit page),
+    # while the leaderboard needs to freeze at game.end_time. The
+    # GAME_LEADERBOARD_CACHE_TTL (5 min) covers load.
+    checkins_by_unit: dict[str, list] = {}
+    for ident, loc in (
+        CheckIn.objects.filter(unit__game=game, date_created__lte=cutoff)
+        .order_by("unit__identifier", "date_created")
+        .values_list("unit__identifier", "location")
+    ):
+        checkins_by_unit.setdefault(ident, []).append(loc)
+
+    dist_by_id: dict[str, float] = {}
+    for u in units_list:
+        pts = [(p.y, p.x) for p in checkins_by_unit.get(u.identifier, [])]
+        dist_by_id[u.identifier] = round(
+            sum(distance(pts[i], pts[i + 1]).km for i in range(len(pts) - 1)),
+            2,
+        )
+
+    journeys_by_id = _fetch_unit_journeys([u.id for u in units_list], game.end_time)
 
     rows = [
         {
@@ -148,6 +169,7 @@ def compute_game_leaderboard(game) -> dict:
             "distance_km": dist_by_id[u.identifier],
             "checkin_count": u.cc,
             "team": {"name": u.team.name, "color": u.team.color} if u.team_id else None,
+            "journey": journeys_by_id.get(u.id, []),
         }
         for u in units_list
     ]
