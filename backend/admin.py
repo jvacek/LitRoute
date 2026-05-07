@@ -7,8 +7,9 @@ from .models import CheckIn, CheckInImage, Game, Team, Unit
 
 @admin.register(Game)
 class GameAdmin(admin.ModelAdmin):
-    list_display = ("id", "mode", "allowed_time", "max_gps_drift", "shelf_life")
+    list_display = ("id", "name", "mode", "allowed_time", "max_gps_drift", "shelf_life")
     list_filter = ("mode",)
+    search_fields = ("name",)
 
 
 class TeamAdminForm(forms.ModelForm):
