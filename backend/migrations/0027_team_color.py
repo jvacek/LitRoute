@@ -6,7 +6,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("backend", "0030_game_start_time_alter_game_allowed_time"),
+        ("backend", "0026_game_unit_game"),
     ]
 
     operations = [
