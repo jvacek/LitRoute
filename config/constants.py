@@ -29,6 +29,8 @@ CHECKIN_ANONYMOUS_NAME_MAX_LENGTH = 100
 # Game mode specifics
 LOCATION_CLAIM_TTL_SECONDS = 2 * 60  # 2 minutes
 LOCATION_CLAIM_MAX_DRIFT_METERS = 500
+# >100m accuracy generally indicates coarse network positioning rather than real GPS
+LOCATION_CLAIM_MAX_ACCURACY_METERS = 100
 
 DISTANCE_DEFAULT_ALLOWED_TIME = 60 * 24  # 60 days in hours — Distance mode default
 HOT_POTATO_SHELF_LIFE = 24 * 5  # hours (5 days) — Hot Potato mode default
