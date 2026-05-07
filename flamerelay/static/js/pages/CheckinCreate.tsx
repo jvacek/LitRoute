@@ -150,7 +150,9 @@ export default function CheckinCreate() {
   const [guestCheckinId, setGuestCheckinId] = useState<number | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [isGpsEnforced, setIsGpsEnforced] = useState(false);
-  const [gpsDriftAllowanceM, setGpsDriftAllowanceM] = useState(500);
+  const [gpsDriftAllowanceM, setGpsDriftAllowanceM] = useState<number | null>(
+    null,
+  );
   const [gameTimeWarning, setGameTimeWarning] = useState<string | null>(null);
   const [team, setTeam] = useState<TeamRef | null>(null);
 
@@ -174,9 +176,7 @@ export default function CheckinCreate() {
         };
         setIsGpsEnforced(data.is_gps_enforced ?? false);
         setTeam(data.team ?? null);
-        if (data.game?.max_gps_drift != null) {
-          setGpsDriftAllowanceM(data.game.max_gps_drift);
-        }
+        setGpsDriftAllowanceM(data.game?.max_gps_drift ?? 0);
         if (data.game?.mode === 'distance' && data.game.end_time) {
           const remainingMinutes =
             (new Date(data.game.end_time).getTime() - Date.now()) / 60_000;
@@ -235,6 +235,14 @@ export default function CheckinCreate() {
     );
   }
 
+  if (gpsDriftAllowanceM === null) {
+    return (
+      <div className="mx-auto max-w-3xl px-6 py-16 text-center text-smoke">
+        {t('common.loading')}…
+      </div>
+    );
+  }
+
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
       <h1 className="font-heading text-3xl font-bold text-char">
@@ -252,6 +260,7 @@ export default function CheckinCreate() {
       <CheckinForm
         mode="create"
         unitUrl={unitUrl}
+        unitIdentifier={identifier}
         maptilerKey={maptilerKey}
         isGpsEnforced={isGpsEnforced}
         gpsDriftAllowanceM={gpsDriftAllowanceM}

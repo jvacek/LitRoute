@@ -25,6 +25,7 @@ import GameIntroModal from '../components/GameIntroModal';
 import TeamBadge from '../components/TeamBadge';
 import { getEditToken } from '../lib/editTokens';
 import { getGameConfig } from '../lib/gameConfig';
+import { haversineKm } from '../lib/haversine';
 import { formatKm, formatNumber } from '../lib/numbers';
 import i18n from '../i18n';
 import { useConfig } from '../lib/useConfig';
@@ -93,18 +94,6 @@ function fmtDate(iso: string): string {
     month: 'short',
     year: 'numeric',
   });
-}
-
-function haversineKm(a: [number, number], b: [number, number]): number {
-  const R = 6371;
-  const dLat = ((b[0] - a[0]) * Math.PI) / 180;
-  const dLon = ((b[1] - a[1]) * Math.PI) / 180;
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((a[0] * Math.PI) / 180) *
-      Math.cos((b[0] * Math.PI) / 180) *
-      Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.asin(Math.sqrt(h));
 }
 
 function comfortZoom(

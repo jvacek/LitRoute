@@ -1,6 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { fieldErrorClass } from '../styles';
+
 import type { ExistingImage } from './CheckinForm';
 
 export interface NewImage {
@@ -464,7 +466,7 @@ export default function PhotoUpload({
 
       {/* Error */}
       {error && (
-        <p className="mt-1 text-xs text-ember" role="alert">
+        <p className={fieldErrorClass} role="alert">
           {error}
         </p>
       )}
