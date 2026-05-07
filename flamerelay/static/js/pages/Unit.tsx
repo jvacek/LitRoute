@@ -80,8 +80,6 @@ interface UnitData {
   is_gps_enforced: boolean;
   team: TeamRef | null;
   game: GameData | null;
-  game_rank: number | null;
-  game_total: number | null;
 }
 
 function parseLatLng(loc: GeoPoint): [number, number] {
@@ -505,13 +503,16 @@ export default function Unit() {
         // Rank/total are not on the unit endpoint — they live on the leaderboard,
         // which is itself cached for 5 min. Fetch async so the page renders
         // immediately and rank pops in once the second response arrives.
+        // Pass ?from=<identifier> so this unit's row returns its identifier
+        // (other rows are nulled out to prevent slug enumeration).
         if (unitData.game) {
-          fetch(`/api/games/${unitData.game.id}/leaderboard/`)
+          const url = `/api/games/${unitData.game.id}/leaderboard/?from=${encodeURIComponent(unitData.identifier)}`;
+          fetch(url)
             .then((r) => (r.ok ? r.json() : null))
             .then(
               (
                 board: {
-                  individual: { identifier: string; rank: number }[];
+                  individual: { identifier: string | null; rank: number }[];
                 } | null,
               ) => {
                 if (!board) return;
@@ -829,16 +830,27 @@ export default function Unit() {
                     ? t('unit.unsubscribe')
                     : t('unit.subscribe')}
                 </button>
-              </div>
 
-              {unit.game && getGameConfig(unit.game.mode)?.hasLeaderboard && (
-                <Link
-                  to={`/game/${unit.game.id}/leaderboard/?from=${encodeURIComponent(unit.identifier)}`}
-                  className="mt-4 inline-block text-sm font-medium text-amber hover:text-white"
-                >
-                  {t('unit.game.leaderboardLink')}
-                </Link>
-              )}
+                {unit.game && (
+                  <div className="ml-auto flex flex-wrap items-center gap-3">
+                    {getGameConfig(unit.game.mode)?.hasLeaderboard && (
+                      <Link
+                        to={`/game/${unit.game.id}/leaderboard/?from=${encodeURIComponent(unit.identifier)}`}
+                        className="rounded-btn bg-amber px-[18px] py-[7px] text-sm font-medium tracking-wide text-char transition-transform hover:-translate-y-px active:translate-y-0"
+                      >
+                        {t('unit.game.leaderboardLink')}
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowGameModal(true)}
+                      className="rounded-btn border border-white/20 bg-white/15 px-[18px] py-[7px] text-sm font-medium tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0"
+                    >
+                      {t('unit.game.showRules')}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Right: latest check-in photo */}

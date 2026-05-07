@@ -192,14 +192,40 @@ class GameLeaderboardView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
-        parameters=[OpenApiParameter("pk", int, OpenApiParameter.PATH)],
+        parameters=[
+            OpenApiParameter("pk", int, OpenApiParameter.PATH),
+            OpenApiParameter(
+                "from",
+                str,
+                OpenApiParameter.QUERY,
+                required=False,
+                description=(
+                    "Unit identifier whose row should keep its identifier in the "
+                    "response. All other rows return identifier=null so the "
+                    "public endpoint cannot be used to enumerate unit slugs."
+                ),
+            ),
+        ],
         responses=LeaderboardSerializer,
     )
     def get(self, request, pk: int):
         from backend.services import compute_game_leaderboard  # noqa: PLC0415
 
         game = get_object_or_404(Game, pk=pk)
-        return Response(compute_game_leaderboard(game))
+        data = compute_game_leaderboard(game)
+        from_identifier = request.query_params.get("from")
+        # Build a new individual list at the response boundary; the cached dict
+        # keeps full identifiers server-side. Mutating the cache would pollute
+        # subsequent callers.
+        return Response(
+            {
+                **data,
+                "individual": [
+                    {**row, "identifier": row["identifier"] if row["identifier"] == from_identifier else None}
+                    for row in data["individual"]
+                ],
+            }
+        )
 
 
 class UnitViewSet(RetrieveModelMixin, GenericViewSet):

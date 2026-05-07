@@ -16,7 +16,8 @@ interface TeamRef {
 
 interface IndividualEntry {
   rank: number;
-  identifier: string;
+  // Null for every row except the one matching the ?from=<identifier> query.
+  identifier: string | null;
   place: string;
   last_checkin_name: string;
   distance_km: number;
@@ -60,7 +61,12 @@ export default function GameLeaderboard() {
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    apiFetch(`/api/games/${gameId}/leaderboard/`)
+    // Pass ?from=<identifier> when known so that one row's identifier comes
+    // through; everyone else's identifier is nulled out by the backend.
+    const url = fromIdentifier
+      ? `/api/games/${gameId}/leaderboard/?from=${encodeURIComponent(fromIdentifier)}`
+      : `/api/games/${gameId}/leaderboard/`;
+    apiFetch(url)
       .then(async (r) => {
         if (!r.ok) {
           setNotFound(true);
@@ -73,7 +79,7 @@ export default function GameLeaderboard() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [gameId]);
+  }, [gameId, fromIdentifier]);
 
   if (notFound) return <ErrorPage code={404} />;
   if (loading || !data) {
@@ -217,7 +223,10 @@ export default function GameLeaderboard() {
               </div>
             </div>
             {data.individual.map((row) => {
-              const isFrom = fromIdentifier === row.identifier;
+              // identifier is null for every row except the ?from= one, so
+              // matching null-to-null doesn't accidentally highlight a row.
+              const isFrom =
+                row.identifier != null && fromIdentifier === row.identifier;
               const rowClass = isFrom
                 ? 'col-span-full grid grid-cols-subgrid items-baseline border-t border-char/10 bg-char text-white'
                 : 'col-span-full grid grid-cols-subgrid items-baseline border-t border-char/10';
@@ -225,7 +234,7 @@ export default function GameLeaderboard() {
               const primary = isFrom ? 'text-white' : 'text-char';
               const muted = isFrom ? 'text-white/75' : 'text-char/60';
               return (
-                <div role="row" key={row.identifier} className={rowClass}>
+                <div role="row" key={row.rank} className={rowClass}>
                   <div
                     role="cell"
                     className={`${dataCell} font-heading text-base font-bold ${rankColor}`}

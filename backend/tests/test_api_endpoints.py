@@ -717,11 +717,12 @@ class TestGameLeaderboard:
         make_checkin(unit_a, other, location=PARIS)
         make_checkin(unit_b, user, location=LONDON)
 
-        res = client.get(f"/api/games/{game.id}/leaderboard/")
+        # Pass ?from=<unit_a> so that row keeps its identifier; the other row
+        # should have identifier=null (anti-enumeration).
+        res = client.get(f"/api/games/{game.id}/leaderboard/?from={unit_a.identifier}")
         data = res.json()
-        ids = [r["identifier"] for r in data["individual"]]
-        assert ids[0] == unit_a.identifier
-        assert ids[1] == unit_b.identifier
+        assert data["individual"][0]["identifier"] == unit_a.identifier
+        assert data["individual"][1]["identifier"] is None
         assert data["individual"][0]["rank"] == 1
         assert data["individual"][0]["distance_km"] > 0
         assert data["individual"][1]["distance_km"] == 0
@@ -764,6 +765,46 @@ class TestGameLeaderboard:
         res = client.get(f"/api/games/{game.id}/leaderboard/")
         assert res.json()["game"]["sort_by"] == "distance_km"
 
+    def test_identifiers_hidden_without_from_param(self, client, user, db):
+        """Anti-enumeration: a public caller without ?from= sees no identifiers."""
+        game = GameFactory.create(mode=Game.Modes.DISTANCE)
+        unit_a = UnitFactory.create(game=game)
+        unit_b = UnitFactory.create(game=game)
+        make_checkin(unit_a, user, location=LONDON)
+        make_checkin(unit_b, user, location=LONDON)
+
+        res = client.get(f"/api/games/{game.id}/leaderboard/")
+        identifiers = [r["identifier"] for r in res.json()["individual"]]
+        assert all(i is None for i in identifiers)
+
+    def test_unknown_from_identifier_still_hides_all(self, client, user, db):
+        """A ?from=<bogus> caller still sees no identifiers — can't probe."""
+        game = GameFactory.create(mode=Game.Modes.DISTANCE)
+        unit = UnitFactory.create(game=game)
+        make_checkin(unit, user, location=LONDON)
+
+        res = client.get(f"/api/games/{game.id}/leaderboard/?from=does-not-exist")
+        identifiers = [r["identifier"] for r in res.json()["individual"]]
+        assert all(i is None for i in identifiers)
+
+    def test_from_filter_does_not_pollute_cache(self, client, user, db):
+        """Sequential calls with different ?from= values must each see only their
+        own identifier — proves the cache stores the canonical full data and the
+        filter runs at the response boundary."""
+        game = GameFactory.create(mode=Game.Modes.DISTANCE)
+        unit_a = UnitFactory.create(game=game)
+        unit_b = UnitFactory.create(game=game)
+        make_checkin(unit_a, user, location=LONDON)
+        make_checkin(unit_b, user, location=LONDON)
+
+        first = client.get(f"/api/games/{game.id}/leaderboard/?from={unit_a.identifier}").json()
+        second = client.get(f"/api/games/{game.id}/leaderboard/?from={unit_b.identifier}").json()
+
+        first_ids = {r["identifier"] for r in first["individual"]}
+        second_ids = {r["identifier"] for r in second["individual"]}
+        assert first_ids == {unit_a.identifier, None}
+        assert second_ids == {unit_b.identifier, None}
+
     def test_hot_potato_sorted_by_checkin_count(self, client, user, db):
         game = GameFactory.create(mode=Game.Modes.HOT_POTATO)
         unit_a = UnitFactory.create(game=game)
@@ -775,11 +816,12 @@ class TestGameLeaderboard:
         make_checkin(unit_b, UserFactory.create(), location=LONDON)
         make_checkin(unit_b, UserFactory.create(), location=PARIS)
 
-        res = client.get(f"/api/games/{game.id}/leaderboard/")
+        res = client.get(f"/api/games/{game.id}/leaderboard/?from={unit_a.identifier}")
         data = res.json()
         assert data["game"]["sort_by"] == "checkin_count"
-        ids = [r["identifier"] for r in data["individual"]]
-        assert ids[0] == unit_a.identifier  # more check-ins → rank 1
+        # unit_a comes back identifiable because it's the ?from= row
+        assert data["individual"][0]["identifier"] == unit_a.identifier
+        assert data["individual"][1]["identifier"] is None
         assert data["individual"][0]["rank"] == 1
         assert data["individual"][0]["checkin_count"] == 3  # noqa: PLR2004
         assert data["individual"][1]["checkin_count"] == 2  # noqa: PLR2004
@@ -810,7 +852,11 @@ class TestDistanceGameTimeLimit:
         ):
             res = client.post(
                 f"/api/units/{unit.identifier}/checkins/",
-                {"location": {"type": "Point", "coordinates": [2.3522, 48.8566]}, "location_token": token},
+                {
+                    "location": {"type": "Point", "coordinates": [2.3522, 48.8566]},
+                    "location_token": token,
+                    "place": "Paris",
+                },
                 format="json",
             )
         assert res.status_code == 201  # noqa: PLR2004

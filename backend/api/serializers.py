@@ -96,7 +96,9 @@ class LocationClaimResponseSerializer(serializers.Serializer):
 
 class LeaderboardIndividualEntrySerializer(serializers.Serializer):
     rank = serializers.IntegerField()
-    identifier = serializers.CharField()
+    # Null for every row except the one matching the ?from=<identifier> query
+    # param — keeps the public endpoint from leaking the full slug list.
+    identifier = serializers.CharField(allow_null=True)
     place = serializers.CharField(allow_blank=True)
     last_checkin_name = serializers.CharField(allow_blank=True)
     distance_km = serializers.FloatField()
