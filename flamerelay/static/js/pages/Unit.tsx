@@ -22,6 +22,7 @@ import {
 import { useAuth } from '../AuthContext';
 import { apiFetch } from '../api';
 import GameIntroModal from '../components/GameIntroModal';
+import GuestEmailCapture from '../components/GuestEmailCapture';
 import TeamBadge from '../components/TeamBadge';
 import { getEditToken } from '../lib/editTokens';
 import { getGameConfig } from '../lib/gameConfig';
@@ -465,6 +466,9 @@ export default function Unit() {
   const [focusedCheckinId, setFocusedCheckinId] = useState<number | null>(null);
   const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
   const [showGameModal, setShowGameModal] = useState(false);
+  const [claimingCheckinId, setClaimingCheckinId] = useState<number | null>(
+    null,
+  );
   const timelineRefs = useRef<Map<number, HTMLLIElement>>(new Map());
   const observerRef = useRef<IntersectionObserver | null>(null);
   const wasScrolledRef = useRef(false);
@@ -884,12 +888,14 @@ export default function Unit() {
         ) : (
           <ul className="space-y-6">
             {checkins.map((c, idx) => {
+              const isAnonOwned =
+                !isAuthenticated &&
+                !c.created_by_username &&
+                !!getEditToken(c.id);
               const isOwn =
                 (isAuthenticated &&
                   c.created_by_username === currentUsername) ||
-                (!isAuthenticated &&
-                  !c.created_by_username &&
-                  !!getEditToken(c.id));
+                isAnonOwned;
               const editUrl = `/unit/${identifier}/checkin/${c.id}`;
               const isCurrent = idx === 0;
               const isOrigin = idx === checkins.length - 1;
@@ -978,8 +984,8 @@ export default function Unit() {
                   </div>
 
                   {isOwn && (
-                    <div className="flex gap-2 border-t border-char/5 bg-linen/30 px-4 py-3">
-                      {c.within_edit_grace_period ? (
+                    <div className="flex flex-wrap items-center gap-2 border-t border-char/5 bg-linen/30 px-4 py-3">
+                      {c.within_edit_grace_period && (
                         <>
                           <Link
                             to={editUrl}
@@ -994,7 +1000,16 @@ export default function Unit() {
                             {t('unit.deleteBtn')}
                           </button>
                         </>
-                      ) : (
+                      )}
+                      {isAnonOwned && (
+                        <button
+                          onClick={() => setClaimingCheckinId(c.id)}
+                          className="rounded bg-amber/15 px-3 py-1 text-xs font-medium text-amber hover:bg-amber/25"
+                        >
+                          {t('unit.claimBtn')}
+                        </button>
+                      )}
+                      {!c.within_edit_grace_period && !isAnonOwned && (
                         <span className="text-xs text-smoke/60">
                           {t('unit.cannotEdit')}
                         </span>
@@ -1025,6 +1040,21 @@ export default function Unit() {
           </div>
         )}
       </main>
+
+      {claimingCheckinId !== null && (
+        <div
+          className="fixed inset-0 z-[2000] flex cursor-pointer items-center justify-center bg-black/60 px-4"
+          onClick={() => setClaimingCheckinId(null)}
+        >
+          <div className="cursor-default" onClick={(e) => e.stopPropagation()}>
+            <GuestEmailCapture
+              identifier={identifier}
+              checkinId={claimingCheckinId}
+              onDone={() => setClaimingCheckinId(null)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Fullscreen image modal */}
       {modalImageUrl && (

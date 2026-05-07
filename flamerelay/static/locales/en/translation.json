@@ -612,6 +612,7 @@
   "unit": {
     "cannotEdit": "Cannot edit or delete after 6 hours",
     "checkinBtn": "New check-in",
+    "claimBtn": "Claim it",
     "currentLocation": "Current location",
     "deleteBtn": "Delete",
     "deleteConfirm": "Delete this check-in?",
