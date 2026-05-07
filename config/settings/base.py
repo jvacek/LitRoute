@@ -375,6 +375,12 @@ CELERY_TASK_SEND_SENT_EVENT = True
 CELERY_WORKER_HIJACK_ROOT_LOGGER = False
 # https://docs.celeryq.dev/en/stable/userguide/configuration.html#result-expires
 CELERY_RESULT_EXPIRES = 3600
+# EMAIL
+# ------------------------------------------------------------------------------
+DEFAULT_FROM_EMAIL = "LitRoute <noreply@litroute.com>"
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+EMAIL_SUBJECT_PREFIX = ""
+ACCOUNT_EMAIL_SUBJECT_PREFIX = ""
 # django-allauth
 # ------------------------------------------------------------------------------
 ACCOUNT_ALLOW_REGISTRATION = env.bool("DJANGO_ACCOUNT_ALLOW_REGISTRATION", True)
