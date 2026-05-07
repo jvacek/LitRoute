@@ -246,7 +246,7 @@ class TestCheckInPartialUpdate:
         )
         assert res.status_code == 403  # noqa: PLR2004
 
-    def test_location_is_read_only(self, client, unit, user):
+    def test_location_patch_returns_400(self, client, unit, user):
         checkin = make_checkin(unit, user, location=LONDON)
         client.force_authenticate(user=user)
         paris_payload = {"type": "Point", "coordinates": [2.3522, 48.8566]}
@@ -255,10 +255,8 @@ class TestCheckInPartialUpdate:
             {"location": paris_payload},
             format="json",
         )
-        assert res.status_code == 200  # noqa: PLR2004
-        coords = res.json()["location"]["coordinates"]
-        assert coords[0] == pytest.approx(-0.1278, abs=0.001)  # still London lng
-        assert coords[1] == pytest.approx(51.5074, abs=0.001)  # still London lat
+        assert res.status_code == 400  # noqa: PLR2004
+        assert "location" in res.json()
 
 
 # ── CheckIn Destroy ────────────────────────────────────────────────────────────

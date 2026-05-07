@@ -426,6 +426,8 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
             raise PermissionDenied(msg)
 
     def partial_update(self, request, *args, **kwargs):
+        if "location" in request.data:
+            raise ValidationError({"location": ["Cannot be modified after creation."]})
         checkin = self.get_object()
         if not request.user.is_authenticated:
             self._check_edit_token(checkin, CHECKIN_EDIT_GRACE_PERIOD_HOURS)

@@ -44,10 +44,6 @@ class CheckInSerializer(serializers.ModelSerializer):
             "images",
         ]
 
-    def update(self, instance, validated_data):
-        validated_data.pop("location", None)
-        return super().update(instance, validated_data)
-
     def get_created_by_username(self, obj: CheckIn) -> str | None:
         return obj.created_by.username if obj.created_by_id else None
 
