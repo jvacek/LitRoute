@@ -4,7 +4,7 @@ from django.utils import timezone
 from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
 
-from backend.models import CheckIn, CheckInImage, Unit
+from backend.models import CheckIn, CheckInImage, Game, Team, Unit
 from config.constants import CHECKIN_EDIT_GRACE_PERIOD_HOURS
 
 
@@ -44,6 +44,10 @@ class CheckInSerializer(serializers.ModelSerializer):
             "images",
         ]
 
+    def update(self, instance, validated_data):
+        validated_data.pop("location", None)
+        return super().update(instance, validated_data)
+
     def get_created_by_username(self, obj: CheckIn) -> str | None:
         return obj.created_by.username if obj.created_by_id else None
 
@@ -56,12 +60,82 @@ class CheckInSerializer(serializers.ModelSerializer):
         return obj.date_created >= timezone.now() - timedelta(hours=CHECKIN_EDIT_GRACE_PERIOD_HOURS)
 
 
+class GameSerializer(serializers.ModelSerializer):
+    end_time = serializers.DateTimeField(read_only=True)
+
+    class Meta:
+        model = Game
+        fields = [
+            "id",
+            "name",
+            "mode",
+            "allowed_time",
+            "max_gps_drift",
+            "shelf_life",
+            "start_time",
+            "end_time",
+        ]
+
+
+class TeamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = ["name", "color"]
+
+
+class LocationClaimRequestSerializer(serializers.Serializer):
+    lat = serializers.FloatField()
+    lng = serializers.FloatField()
+    accuracy = serializers.FloatField()
+    unit_identifier = serializers.CharField(max_length=200)
+
+
+class LocationClaimResponseSerializer(serializers.Serializer):
+    token = serializers.CharField()
+
+
+class LeaderboardIndividualEntrySerializer(serializers.Serializer):
+    rank = serializers.IntegerField()
+    identifier = serializers.CharField()
+    place = serializers.CharField(allow_blank=True)
+    last_checkin_name = serializers.CharField(allow_blank=True)
+    distance_km = serializers.FloatField()
+    checkin_count = serializers.IntegerField()
+    team = TeamSerializer(allow_null=True)
+
+
+class LeaderboardTeamEntrySerializer(serializers.Serializer):
+    rank = serializers.IntegerField()
+    team = TeamSerializer()
+    distance_km = serializers.FloatField()
+    checkin_count = serializers.IntegerField()
+    lighter_count = serializers.IntegerField()
+
+
+class LeaderboardGameSerializer(GameSerializer):
+    sort_by = serializers.ChoiceField(choices=["distance_km", "checkin_count"])
+
+    class Meta(GameSerializer.Meta):
+        fields = [*GameSerializer.Meta.fields, "sort_by"]
+
+
+class LeaderboardSerializer(serializers.Serializer):
+    game = LeaderboardGameSerializer()
+    individual = LeaderboardIndividualEntrySerializer(many=True)
+    teams = LeaderboardTeamEntrySerializer(many=True, allow_null=True)
+
+
 class UnitSerializer(serializers.ModelSerializer):
     checkin_count = serializers.IntegerField(read_only=True)
     subscriber_count = serializers.IntegerField(read_only=True)
     distance_traveled_km = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
     can_check_in = serializers.SerializerMethodField()
+    is_gps_enforced = serializers.SerializerMethodField()
+    team = TeamSerializer(read_only=True)
+    game = GameSerializer(read_only=True)
+    game_rank = serializers.SerializerMethodField()
+    game_total = serializers.SerializerMethodField()
 
     class Meta:
         model = Unit
@@ -75,6 +149,10 @@ class UnitSerializer(serializers.ModelSerializer):
             "distance_traveled_km",
             "is_subscribed",
             "can_check_in",
+            "is_gps_enforced",
+            "game",
+            "game_rank",
+            "game_total",
         ]
 
     def get_distance_traveled_km(self, obj: Unit) -> float:
@@ -95,3 +173,18 @@ class UnitSerializer(serializers.ModelSerializer):
         if not request or not request.user.is_authenticated:
             return True
         return obj.can_user_check_in(request.user)
+
+    def get_is_gps_enforced(self, obj: Unit) -> bool:
+        return obj.is_gps_enforced
+
+    def get_game_rank(self, obj: Unit) -> int | None:
+        if not obj.game_id:
+            return None
+        from backend.services import get_cached_game_rank  # noqa: PLC0415
+
+        return get_cached_game_rank(obj.game_id, obj.identifier)
+
+    def get_game_total(self, obj: Unit) -> int | None:
+        if not obj.game_id:
+            return None
+        return obj.game_total

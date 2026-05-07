@@ -27,3 +27,8 @@ export const labelClass = 'mb-1 block text-sm font-medium text-char/70';
 // Compact inline action button used in email/social management rows.
 export const secondaryBtn =
   'rounded-btn px-2.5 py-1 text-xs font-medium transition-opacity hover:opacity-80 disabled:opacity-40';
+
+// Inline form-field error: tinted red box with red text. Bigger and harder
+// to miss than plain red text alone.
+export const fieldErrorClass =
+  'mt-1.5 rounded-card border border-ember/40 bg-ember/10 px-3 py-2 text-sm text-ember';

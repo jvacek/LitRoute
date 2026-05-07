@@ -1,6 +1,7 @@
 import os
 import re
 import unicodedata
+from datetime import timedelta
 from uuid import uuid4
 
 from django.contrib.gis.db.models import PointField
@@ -13,7 +14,13 @@ from django.utils import timezone
 from django_case_insensitive_field import CaseInsensitiveFieldMixin
 from django_resized import ResizedImageField
 
-from config.constants import CHECKIN_ANONYMOUS_NAME_MAX_LENGTH, CHECKIN_IMAGE_MAX_UPLOAD_BYTES
+from config.constants import (
+    CHECKIN_ANONYMOUS_NAME_MAX_LENGTH,
+    CHECKIN_IMAGE_MAX_UPLOAD_BYTES,
+    DISTANCE_DEFAULT_ALLOWED_TIME,
+    HOT_POTATO_SHELF_LIFE,
+    LOCATION_CLAIM_MAX_DRIFT_METERS,
+)
 from flamerelay.users.models import User
 
 from .services import send_email_to_subscribers_task, send_thank_you_email_task
@@ -33,9 +40,75 @@ def _normalize_for_url_check(value: str) -> str:
 
 class Team(models.Model):
     name = models.SlugField(max_length=32, unique=True)
+    color = models.CharField(
+        max_length=7,
+        default="#7b8fa1",  # smoke
+        validators=[RegexValidator(r"^#[0-9a-fA-F]{6}$", "Enter a 6-digit hex colour like #c94c35.")],
+        help_text="Hex colour used for the team pill on the leaderboard, e.g. #c94c35.",
+    )
 
     def __str__(self):
         return self.name
+
+
+class Game(models.Model):
+    class Modes(models.TextChoices):
+        RELAY = "relay", "Relay"
+        RACE = "race", "Race"
+        HOT_POTATO = "hot_potato", "Hot Potato"
+        DISTANCE = "distance", "Distance"
+
+    name = models.CharField(
+        max_length=100,
+        help_text="Display name shown on the leaderboard and intro modal.",
+    )
+
+    mode = models.CharField(
+        max_length=20,
+        choices=Modes.choices,
+        default=Modes.RELAY,
+    )
+
+    start_time = models.DateTimeField(
+        default=timezone.now,
+        help_text="When the game starts. End time is start_time + allowed_time hours.",
+    )
+
+    allowed_time = models.PositiveIntegerField(
+        default=DISTANCE_DEFAULT_ALLOWED_TIME,
+        help_text="Total game duration in hours.",
+    )
+
+    max_gps_drift = models.PositiveIntegerField(
+        default=LOCATION_CLAIM_MAX_DRIFT_METERS,
+        help_text="Maximum allowed GPS drift in meters for check-ins. (Distance+Race modes)",
+    )
+
+    shelf_life = models.PositiveIntegerField(
+        default=HOT_POTATO_SHELF_LIFE,
+        help_text="Time in hours before a check-in expires. (Hot Potato mode)",
+    )
+
+    # TODO implement postgis
+    # goal_shape = models.MultiPolygonField()
+
+    def __str__(self):
+        return f"{self.name} ({self.get_mode_display()})"
+
+    def get_absolute_url(self) -> str:
+        return f"/game/{self.pk}/leaderboard/"
+
+    @property
+    def is_gps_enforced(self) -> bool:
+        return self.mode in (
+            self.Modes.RACE,
+            self.Modes.HOT_POTATO,
+            self.Modes.DISTANCE,
+        )
+
+    @property
+    def end_time(self):
+        return self.start_time + timedelta(hours=self.allowed_time)
 
 
 class CaseInsensitiveCharField(CaseInsensitiveFieldMixin, models.CharField):
@@ -79,6 +152,7 @@ class Unit(models.Model):
         default=False,
         help_text="Whether only admins can check in to this unit, primarily used for demos or for disabling lighters.",
     )
+    game = models.ForeignKey(Game, on_delete=models.PROTECT, null=True, blank=True)
 
     class Meta:
         verbose_name = "Unit"
@@ -89,6 +163,10 @@ class Unit(models.Model):
 
     def get_absolute_url(self) -> str:
         return f"/unit/{self.identifier}/"
+
+    @property
+    def is_gps_enforced(self) -> bool:
+        return self.game.is_gps_enforced if self.game else False
 
     def can_user_check_in(self, user) -> bool:
         if not user or not getattr(user, "pk", None):

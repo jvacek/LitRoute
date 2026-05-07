@@ -4,6 +4,11 @@ All endpoints are under `/api/`. The **live Swagger UI at `/api/docs/`** is the 
 
 The router is in `config/api_router.py`. All routes are registered as manual `path()` entries — the DRF router has no registered viewsets, so the browsable API root (`/api/`) is empty. `/api/docs/` is the only complete reference.
 
+## Testing
+
+- **Every API endpoint must have at least one test in `backend/tests/test_api_endpoints.py`**. Cover: happy path, auth requirement, and key error cases.
+- Unit/crypto logic lives in `backend/tests/test_location_token.py` (or a similar per-module file) — keep it separate from endpoint tests.
+
 ## Notable endpoints
 
 - `POST /api/auth/code/request/` — unified sign-in / sign-up. Creates the account if it doesn't exist, then triggers allauth's magic-code flow. Always returns `{"detail": "Code sent."}` regardless of whether the email was registered (anti-enumeration). Rate-limited via allauth's `ratelimit.consume()`. See `flamerelay/users/api/views.py::RequestCodeView`.

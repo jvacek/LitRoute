@@ -1,5 +1,3 @@
-import logging
-
 from anymail.exceptions import AnymailRequestsAPIError
 from celery import Task, shared_task
 from celery.utils.log import get_task_logger
@@ -10,7 +8,15 @@ from config.constants import (
     EMAIL_TASK_MAX_RETRIES,
     EMAIL_TASK_RETRY_BACKOFF_MAX_SECONDS,
     EMAIL_TASK_RETRY_BACKOFF_SECONDS,
+    GAME_LEADERBOARD_CACHE_KEY_PREFIX,
+    GLOBE_PINS_CACHE_KEY,
+    GLOBE_PINS_CACHE_TTL,
+    GLOBE_PINS_COUNT,
+    STATS_CACHE_KEY,
+    STATS_CACHE_TTL,
 )
+
+logger = get_task_logger(__name__)
 
 
 class EmailTask(Task):
@@ -21,11 +27,12 @@ class EmailTask(Task):
     retry_jitter = True
 
 
-logger = logging.getLogger(__name__)
-
-
 def unit_distance_cache_key(identifier: str) -> str:
     return f"unit:distance:{identifier}"
+
+
+def game_leaderboard_cache_key(game_id: int) -> str:
+    return f"{GAME_LEADERBOARD_CACHE_KEY_PREFIX}:{game_id}"
 
 
 def distance_traveled_in_km(unit) -> float:
@@ -34,6 +41,144 @@ def distance_traveled_in_km(unit) -> float:
     pts = [(p.y, p.x) for p in checkins.values_list("location", flat=True)]
     total_distance = sum(distance(pts[i], pts[i + 1]).km for i in range(len(pts) - 1))
     return round(total_distance, 2)
+
+
+def _fetch_unit_distances(units_list: list) -> dict[str, float]:
+    """Return a mapping of unit identifier → distance_km, using cache + one DB fallback."""
+    from django.core.cache import cache  # noqa: PLC0415
+
+    from config.constants import UNIT_DISTANCE_CACHE_TTL  # noqa: PLC0415
+
+    from .models import CheckIn  # noqa: PLC0415
+
+    dist_keys = {unit_distance_cache_key(u.identifier): u.identifier for u in units_list}
+    cached_dists: dict = cache.get_many(dist_keys.keys()) if dist_keys else {}
+
+    missing_ids = {ident for key, ident in dist_keys.items() if key not in cached_dists}
+    computed_dists: dict[str, float] = {}
+    if missing_ids:
+        checkins_by_unit: dict[str, list] = {}
+        for ident, loc in (
+            CheckIn.objects.filter(unit__identifier__in=missing_ids)
+            .order_by("unit__identifier", "date_created")
+            .values_list("unit__identifier", "location")
+        ):
+            checkins_by_unit.setdefault(ident, []).append(loc)
+        to_cache: dict[str, float] = {}
+        for ident in missing_ids:
+            pts = [(p.y, p.x) for p in checkins_by_unit.get(ident, [])]
+            dist_val = round(sum(distance(pts[i], pts[i + 1]).km for i in range(len(pts) - 1)), 2)
+            computed_dists[ident] = dist_val
+            to_cache[unit_distance_cache_key(ident)] = dist_val
+        if to_cache:
+            cache.set_many(to_cache, UNIT_DISTANCE_CACHE_TTL)
+
+    result: dict[str, float] = {}
+    for u in units_list:
+        key = unit_distance_cache_key(u.identifier)
+        result[u.identifier] = cached_dists[key] if key in cached_dists else computed_dists.get(u.identifier, 0.0)
+    return result
+
+
+def _aggregate_teams(rows: list[dict], mode: str) -> list[dict] | None:
+    """Aggregate per-unit rows into team totals and assign ranks. Returns None if no teams."""
+    from .models import Game  # noqa: PLC0415
+
+    if not any(r["team"] for r in rows):
+        return None
+
+    agg: dict[str, dict] = {}
+    for r in rows:
+        if not r["team"]:
+            continue
+        t = agg.setdefault(
+            r["team"]["name"],
+            {"team": r["team"], "distance_km": 0.0, "checkin_count": 0, "lighter_count": 0},
+        )
+        t["distance_km"] += r["distance_km"]
+        t["checkin_count"] += r["checkin_count"]
+        t["lighter_count"] += 1
+
+    sort_key = (lambda t: t["checkin_count"]) if mode == Game.Modes.HOT_POTATO else (lambda t: t["distance_km"])
+    teams = sorted(agg.values(), key=sort_key, reverse=True)
+    for i, t in enumerate(teams, start=1):
+        t["rank"] = i
+        t["distance_km"] = round(t["distance_km"], 2)
+    return teams
+
+
+def compute_game_leaderboard(game) -> dict:
+    """Build the cached leaderboard payload for a Game, with batched distance lookups."""
+    from django.core.cache import cache  # noqa: PLC0415
+    from django.db.models import Count, OuterRef, Subquery  # noqa: PLC0415
+    from django.db.models.functions import Coalesce  # noqa: PLC0415
+
+    from config.constants import GAME_LEADERBOARD_CACHE_TTL  # noqa: PLC0415
+
+    from .models import CheckIn, Game, Unit  # noqa: PLC0415
+
+    cache_key = game_leaderboard_cache_key(game.id)
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    latest_qs = CheckIn.objects.filter(unit=OuterRef("pk")).order_by("-date_created", "-pk")
+    latest_place = latest_qs.values("place")[:1]
+    latest_name = latest_qs.annotate(display_name=Coalesce("created_by__name", "anonymous_name")).values(
+        "display_name"
+    )[:1]
+
+    units_list = list(
+        Unit.objects.filter(game=game)
+        .select_related("team")
+        .annotate(
+            cc=Count("checkin", distinct=True),
+            latest_place=Subquery(latest_place),
+            latest_name=Subquery(latest_name),
+        )
+    )
+
+    dist_by_id = _fetch_unit_distances(units_list)
+
+    rows = [
+        {
+            "identifier": u.identifier,
+            "place": u.latest_place or "",
+            "last_checkin_name": u.latest_name or "",
+            "distance_km": dist_by_id[u.identifier],
+            "checkin_count": u.cc,
+            "team": {"name": u.team.name, "color": u.team.color} if u.team_id else None,
+        }
+        for u in units_list
+    ]
+
+    # Per-mode sort — hot potato ranks by activity, all others by distance
+    if game.mode == Game.Modes.HOT_POTATO:
+        sort_field = "checkin_count"
+        rows.sort(key=lambda r: r["checkin_count"], reverse=True)
+    else:
+        sort_field = "distance_km"
+        rows.sort(key=lambda r: r["distance_km"], reverse=True)
+
+    for i, row in enumerate(rows, start=1):
+        row["rank"] = i
+
+    data = {
+        "game": {
+            "id": game.id,
+            "name": game.name,
+            "mode": game.mode,
+            "allowed_time": game.allowed_time,
+            "max_gps_drift": game.max_gps_drift,
+            "start_time": game.start_time.isoformat(),
+            "end_time": game.end_time.isoformat(),
+            "sort_by": sort_field,
+        },
+        "individual": rows,
+        "teams": _aggregate_teams(rows, game.mode),
+    }
+    cache.set(cache_key, data, GAME_LEADERBOARD_CACHE_TTL)
+    return data
 
 
 def total_distance_traveled_in_km() -> float:
@@ -62,7 +207,80 @@ def total_distance_traveled_in_km() -> float:
     return round(total, 2)
 
 
-logger = get_task_logger(__name__)
+def get_cached_game_rank(game_id: int, identifier: str) -> int | None:
+    from django.core.cache import cache  # noqa: PLC0415
+
+    data = cache.get(game_leaderboard_cache_key(game_id))
+    if data is None:
+        return None
+    for entry in data["individual"]:
+        if entry["identifier"] == identifier:
+            return entry["rank"]
+    return None
+
+
+def invalidate_checkin_caches(unit_identifier: str, game_id: int | None = None) -> None:
+    from django.core.cache import cache  # noqa: PLC0415
+
+    keys = [unit_distance_cache_key(unit_identifier), STATS_CACHE_KEY, GLOBE_PINS_CACHE_KEY]
+    if game_id:
+        keys.append(game_leaderboard_cache_key(game_id))
+    cache.delete_many(keys)
+
+
+def get_cached_stats() -> dict:
+    from django.contrib.auth import get_user_model  # noqa: PLC0415
+    from django.core.cache import cache  # noqa: PLC0415
+    from django.db.models import Count  # noqa: PLC0415
+
+    from .models import CheckIn, Unit  # noqa: PLC0415
+
+    stats = cache.get(STATS_CACHE_KEY)
+    if stats is None:
+        user_model = get_user_model()
+        stats = {
+            "active_unit_count": Unit.objects.exclude(admin_only_checkin=True)
+            .annotate(checkin_count=Count("checkin"))
+            .exclude(checkin_count__lt=1)
+            .count(),
+            "checkin_count": CheckIn.objects.count(),
+            "contributing_user_count": user_model.objects.annotate(checkin_count=Count("checkin"))
+            .filter(checkin_count__gte=1)
+            .count(),
+            "total_distance_traveled_km": total_distance_traveled_in_km(),
+        }
+        cache.set(STATS_CACHE_KEY, stats, STATS_CACHE_TTL)
+    return stats
+
+
+def get_cached_globe_pins() -> list[dict]:
+    from django.contrib.gis.db.models.fields import PointField as GeoPointField  # noqa: PLC0415
+    from django.core.cache import cache  # noqa: PLC0415
+    from django.db.models import Count, OuterRef, Subquery  # noqa: PLC0415
+
+    from .models import CheckIn, Unit  # noqa: PLC0415
+
+    pins = cache.get(GLOBE_PINS_CACHE_KEY)
+    if pins is None:
+        latest_location_sq = (
+            CheckIn.objects.filter(unit=OuterRef("pk")).order_by("-date_created").values("location")[:1]
+        )
+        latest_date_sq = (
+            CheckIn.objects.filter(unit=OuterRef("pk")).order_by("-date_created").values("date_created")[:1]
+        )
+        locations = (
+            Unit.objects.exclude(admin_only_checkin=True)
+            .annotate(checkin_count=Count("checkin"))
+            .exclude(checkin_count__lte=1)
+            .annotate(latest_location=Subquery(latest_location_sq, output_field=GeoPointField()))
+            .annotate(latest_date=Subquery(latest_date_sq))
+            .exclude(latest_location__isnull=True)
+            .order_by("-latest_date")
+            .values_list("latest_location", flat=True)[:GLOBE_PINS_COUNT]
+        )
+        pins = [{"lat": loc.y, "lng": loc.x} for loc in locations if loc]
+        cache.set(GLOBE_PINS_CACHE_KEY, pins, GLOBE_PINS_CACHE_TTL)
+    return pins
 
 
 @shared_task(serializer="json")

@@ -21,11 +21,25 @@
       "clickToMove": "Cliquez sur la carte pour déplacer le repère.",
       "dismiss": "Ignorer",
       "errors": {
+        "gpsRequired": "L'accès à la localisation est requis pour cette unité. Autorisez l'accès à la localisation dans votre navigateur et réessayez.",
+        "gpsVerificationFailed": "La vérification de localisation a échoué. Veuillez réessayer.",
         "locationRequired": "Cliquez sur la carte pour définir votre position.",
         "maxPhotos": "Maximum {{max}} photos par enregistrement.",
         "svgNotSupported": "Seules les images matricielles (JPEG, PNG, WebP, etc.) sont prises en charge. Les fichiers SVG ne peuvent pas être téléversés."
       },
+      "gpsDeniedModal": {
+        "body": "Votre navigateur ou votre appareil bloque l'accès à la localisation. Pour vous enregistrer ici, vous devez l'autoriser.",
+        "close": "Fermer",
+        "step1": "Touchez l'icône de cadenas ou d'info à côté de l'adresse de ce site et réglez Localisation sur <strong>Autoriser</strong>.",
+        "step2": "Si cela ne suffit pas, ouvrez les réglages <strong>Confidentialité → Localisation</strong> de votre appareil et assurez-vous que votre navigateur est autorisé.",
+        "step3": "Rechargez cette page une fois terminé.",
+        "title": "Nous ne voyons pas votre position",
+        "tryAgain": "Réessayer"
+      },
+      "gpsNotice": "Cette unité nécessite votre position en temps réel. Elle sera capturée lorsque vous appuyez sur Enregistrement.",
+      "gpsNudgeHint": "Déplacez votre repère si vous préférez ne pas partager votre position exacte.",
       "locationLabel": "Position",
+      "locationSet": "Position définie",
       "messageLabel": "Message",
       "messagePlaceholder": "Où l'avez-vous trouvé ? Où êtes-vous ? Quelle est la suite pour ce briquet ?",
       "nameLabel": "Votre nom (optionnel)",
@@ -33,6 +47,11 @@
       "passedOnNote": "Dès que quelqu'un s'enregistre après vous, le briquet passe au suivant — vous ne pourrez plus ajouter d'enregistrements.",
       "placeLabel": "Lieu",
       "placePlaceholder": "p. ex. « Grande Place, Bruxelles »",
+      "privacyHint": {
+        "body": "Les coordonnées GPS de votre appareil ont été utilisées. Déplacez le repère vers un endroit proche si vous préférez ne pas partager votre position exacte.",
+        "title": "Votre position exacte sera partagée"
+      },
+      "searchPlaceholder": "Rechercher un lieu…",
       "submit": {
         "create": "S'enregistrer",
         "creating": "Envoi",
@@ -60,6 +79,13 @@
     "confirm": "Confirmer",
     "confirming": "Confirmation",
     "connectedAccounts": "Comptes connectés",
+    "duration": {
+      "and": "et",
+      "day_one": "{{count}} jour",
+      "day_other": "{{count}} jours",
+      "hour_one": "{{count}} heure",
+      "hour_other": "{{count}} heures"
+    },
     "loading": "Chargement",
     "nameLabel": "Nom",
     "namePlaceholder": "Votre nom",
@@ -94,6 +120,54 @@
   },
   "footer": {
     "tagline": "Suivez le voyage de votre briquet"
+  },
+  "game": {
+    "countdown": {
+      "days": "Jours",
+      "ended": "Jeu terminé",
+      "endedOn": "Terminé le {{date}}",
+      "endsIn": "Le jeu se termine dans",
+      "endsOn": "Se termine le {{date}}",
+      "hours": "Heures",
+      "minutes": "Min",
+      "seconds": "Sec"
+    },
+    "distance": {
+      "name": "Distance",
+      "rules": "Ce briquet participe à un jeu de distance qui dure {{duration}}. Transmettez-le, faites-le photographier dans de nouveaux lieux et accumulez les kilomètres. Votre position est vérifiée par GPS. Le briquet ayant parcouru le plus de kilomètres à la fin du jeu gagne.",
+      "timeAlmostUp": "Moins de {{minutes}} min avant la fin du jeu !",
+      "timeExpired": "Le jeu de distance est terminé — les résultats sont définitifs. Le voyage du briquet peut continuer."
+    },
+    "hot_potato": {
+      "name": "Patate chaude",
+      "rules": "Transmettez ce briquet avant qu'il n'expire ! Vous avez {{shelfLife}} heures."
+    },
+    "leaderboard": {
+      "byPerson": "par {{name}}",
+      "checkinsHeader": "Passages",
+      "distanceHeader": "Distance",
+      "individualTab": "Briquets",
+      "lighterCountHeader": "Briquets",
+      "noEntries": "Aucun check-in pour l'instant.",
+      "placeHeader": "Dernière position",
+      "rankHeader": "#",
+      "teamHeader": "Équipe",
+      "teamsTab": "Équipes",
+      "title": "Classement — {{name}}"
+    },
+    "modal": {
+      "gotIt": "Compris",
+      "title": "Jeu spécial",
+      "viewLeaderboard": "Voir le classement"
+    },
+    "race": {
+      "name": "Course",
+      "rules": "Atteignez la destination le plus vite possible. Position vérifiée par GPS."
+    },
+    "relay": {
+      "name": "Relais",
+      "rules": "Transmettez ce briquet à la prochaine personne. Pas de limite de temps."
+    }
   },
   "home": {
     "cta": {
@@ -159,6 +233,31 @@
     "supportAriaLabel": "Soutenir ce projet",
     "toggleNav": "Afficher/masquer la navigation"
   },
+  "photoUpload": {
+    "counter": "{{count}} / {{max}} photos",
+    "dragToReorder": "Glissez pour réorganiser · cliquez pour en ajouter",
+    "empty": {
+      "addPhotos": "Ajouter des photos",
+      "clickOrDrag": "Cliquez n'importe où ou glissez-déposez",
+      "dropHere": "Déposez ici !",
+      "releaseToUpload": "Relâchez pour téléverser",
+      "showWhere": "Montrez où vous l'avez trouvé — jusqu'à {{max}} photos"
+    },
+    "existingPhoto": "Photo existante",
+    "label": "Photos",
+    "maxReached": "Maximum de {{max}} photos atteint — retirez-en une pour en ajouter une autre.",
+    "optional": "(facultatif)",
+    "preview": "Aperçu",
+    "removePhoto": "Retirer la photo",
+    "tips": {
+      "heading": "Conseils photo",
+      "hide": "Couvrez ou masquez le nom du briquet — c'est le mot de passe de la page",
+      "lighter": "Le briquet en main ou posé sur une surface fait une belle photo",
+      "location": "Montrez où vous êtes — un point de repère, une vue, ou ce qui vous entoure"
+    },
+    "zoneAriaAdd": "Zone de téléversement — cliquez ou glissez pour ajouter des photos",
+    "zoneAriaFull": "Zone de téléversement — maximum atteint"
+  },
   "supportSection": {
     "body1": "LitRoute est un projet solo. Pas de pub, pas d'abonnements, pas d'investisseurs — juste les coûts de serveur, d'envoi d'e-mails et de stockage qui viennent de ma poche. Y compris les briquets eux-mêmes : chacun est acheté et enregistré à la main avant de pouvoir commencer son voyage.",
     "body2": "Si vous avez aimé suivre un voyage ici, une petite contribution fait toute la différence.",
@@ -182,6 +281,10 @@
     "deleteConfirm": "Supprimer cet enregistrement ?",
     "deleteError": "Impossible de supprimer cet enregistrement.",
     "editBtn": "Modifier",
+    "game": {
+      "leaderboardLink": "Voir le classement →",
+      "rankLabel": "sur {{total}}"
+    },
     "gettingStarted": {
       "body": "Vous êtes la première personne ici. La prochaine sera contente que vous soyez passé.",
       "cta": "Créer le premier enregistrement",
@@ -205,6 +308,7 @@
     "statsFollowers": "abonnés",
     "statsKmTraveled": "km parcourus",
     "statsStops": "arrêts",
+    "statsTeam": "équipe",
     "status": {
       "currentlyIn": "Actuellement à {{place}}",
       "lastSeenDaysAgo_one": "Vu pour la dernière fois il y a {{count}} jour à {{place}}",

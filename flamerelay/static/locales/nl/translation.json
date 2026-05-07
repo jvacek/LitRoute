@@ -21,11 +21,25 @@
       "clickToMove": "Klik op de kaart om de speld te verplaatsen.",
       "dismiss": "Sluiten",
       "errors": {
+        "gpsRequired": "Locatietoegang is vereist voor deze eenheid. Sta locatietoegang toe in je browser en probeer opnieuw.",
+        "gpsVerificationFailed": "Locatieverificatie mislukt. Probeer het opnieuw.",
         "locationRequired": "Klik op de kaart om je locatie in te stellen.",
         "maxPhotos": "Maximaal {{max}} foto's per check-in.",
         "svgNotSupported": "Alleen rasterafbeeldingen (JPEG, PNG, WebP, enz.) worden ondersteund. SVG-bestanden kunnen niet worden geüpload."
       },
+      "gpsDeniedModal": {
+        "body": "Je browser of apparaat blokkeert de locatietoegang. Om hier in te checken moet je het toestaan.",
+        "close": "Sluiten",
+        "step1": "Tik op het slot- of info-icoon naast het adres van deze site en zet Locatie op <strong>Toestaan</strong>.",
+        "step2": "Helpt dat niet? Open dan op je apparaat de instellingen voor <strong>Privacy → Locatie</strong> en zorg dat je browser is toegestaan.",
+        "step3": "Laad deze pagina opnieuw als je klaar bent.",
+        "title": "We zien je locatie niet",
+        "tryAgain": "Opnieuw proberen"
+      },
+      "gpsNotice": "Deze eenheid vereist je realtime locatie. Deze wordt vastgelegd wanneer je op Inchecken tikt.",
+      "gpsNudgeHint": "Verplaats je speld als je je exacte locatie liever niet deelt.",
       "locationLabel": "Locatie",
+      "locationSet": "Locatie ingesteld",
       "messageLabel": "Bericht",
       "messagePlaceholder": "Waar heb je hem gevonden? Waar ben je? Wat is het volgende voor deze aansteker?",
       "nameLabel": "Je naam (optioneel)",
@@ -33,6 +47,11 @@
       "passedOnNote": "Zodra iemand anders na jou incheckt, gaat de aansteker verder — je kunt dan geen check-ins meer toevoegen.",
       "placeLabel": "Plaats",
       "placePlaceholder": "bijv. \"Grote Markt, Brussel\"",
+      "privacyHint": {
+        "body": "De GPS-coördinaten van je apparaat zijn gebruikt. Verplaats de speld naar een nabijgelegen plek als je je exacte positie liever niet deelt.",
+        "title": "Je exacte locatie wordt gedeeld"
+      },
+      "searchPlaceholder": "Zoek een plaats…",
       "submit": {
         "create": "Inchecken",
         "creating": "Versturen",
@@ -60,6 +79,13 @@
     "confirm": "Bevestigen",
     "confirming": "Bevestigen",
     "connectedAccounts": "Gekoppelde accounts",
+    "duration": {
+      "and": "en",
+      "day_one": "{{count}} dag",
+      "day_other": "{{count}} dagen",
+      "hour_one": "{{count}} uur",
+      "hour_other": "{{count}} uur"
+    },
     "loading": "Laden",
     "nameLabel": "Naam",
     "namePlaceholder": "Je naam",
@@ -94,6 +120,54 @@
   },
   "footer": {
     "tagline": "Volg de reis van je aansteker"
+  },
+  "game": {
+    "countdown": {
+      "days": "Dagen",
+      "ended": "Spel voorbij",
+      "endedOn": "Geëindigd op {{date}}",
+      "endsIn": "Het spel eindigt over",
+      "endsOn": "Eindigt op {{date}}",
+      "hours": "Uur",
+      "minutes": "Min",
+      "seconds": "Sec"
+    },
+    "distance": {
+      "name": "Afstand",
+      "rules": "Deze aansteker doet mee aan een afstandsspel dat {{duration}} duurt. Geef hem door, laat hem op nieuwe plekken fotograferen en stapel kilometers op. Je locatie wordt via GPS geverifieerd. De aansteker met de meeste kilometers aan het einde wint.",
+      "timeAlmostUp": "Minder dan {{minutes}} min voor het spel eindigt!",
+      "timeExpired": "Het afstandsspel is voorbij — de uitslag staat vast. De reis van de aansteker kan nog doorgaan."
+    },
+    "hot_potato": {
+      "name": "Hete aardappel",
+      "rules": "Geef deze aansteker door voor hij vervalt! Je hebt {{shelfLife}} uur."
+    },
+    "leaderboard": {
+      "byPerson": "door {{name}}",
+      "checkinsHeader": "Check-ins",
+      "distanceHeader": "Afstand",
+      "individualTab": "Aanstekers",
+      "lighterCountHeader": "Aanstekers",
+      "noEntries": "Nog geen check-ins.",
+      "placeHeader": "Laatst gezien",
+      "rankHeader": "#",
+      "teamHeader": "Team",
+      "teamsTab": "Teams",
+      "title": "Ranglijst — {{name}}"
+    },
+    "modal": {
+      "gotIt": "Begrepen",
+      "title": "Speciaal spel",
+      "viewLeaderboard": "Bekijk de ranglijst"
+    },
+    "race": {
+      "name": "Race",
+      "rules": "Bereik het doel zo snel mogelijk. Locatie geverifieerd via GPS."
+    },
+    "relay": {
+      "name": "Estafette",
+      "rules": "Geef deze aansteker door aan de volgende persoon. Geen tijdslimiet."
+    }
   },
   "home": {
     "cta": {
@@ -159,6 +233,31 @@
     "supportAriaLabel": "Dit project steunen",
     "toggleNav": "Navigatie aan/uit"
   },
+  "photoUpload": {
+    "counter": "{{count}} / {{max}} foto's",
+    "dragToReorder": "Sleep om te herschikken · klik om er meer toe te voegen",
+    "empty": {
+      "addPhotos": "Foto's toevoegen",
+      "clickOrDrag": "Klik ergens of sleep & laat los",
+      "dropHere": "Laat hier los!",
+      "releaseToUpload": "Loslaten om te uploaden",
+      "showWhere": "Laat zien waar je hem vond — maximaal {{max}} foto's"
+    },
+    "existingPhoto": "Bestaande foto",
+    "label": "Foto's",
+    "maxReached": "Maximum van {{max}} foto's bereikt — verwijder er een om een andere toe te voegen.",
+    "optional": "(optioneel)",
+    "preview": "Voorbeeld",
+    "removePhoto": "Foto verwijderen",
+    "tips": {
+      "heading": "Foto-tips",
+      "hide": "Bedek of verberg de naam van de aansteker — dat is het wachtwoord van de pagina",
+      "lighter": "De aansteker in de hand of op een oppervlak geeft een mooie foto",
+      "location": "Laat zien waar je bent — een herkenningspunt, een uitzicht of je omgeving"
+    },
+    "zoneAriaAdd": "Foto-uploadzone — klik of sleep om foto's toe te voegen",
+    "zoneAriaFull": "Foto-uploadzone — maximum bereikt"
+  },
   "supportSection": {
     "body1": "LitRoute is een eenmansproject. Geen reclame, geen abonnementen, geen investeerders — alleen serverkosten, e-mailbezorging en opslag uit eigen zak. De aanstekers zelf ook: elke aansteker wordt met de hand gekocht en geregistreerd voordat hij aan zijn reis kan beginnen.",
     "body2": "Heb je hier met plezier een reis gevolgd? Dan helpt een kleine bijdrage echt.",
@@ -182,6 +281,10 @@
     "deleteConfirm": "Deze check-in verwijderen?",
     "deleteError": "Kon deze check-in niet verwijderen.",
     "editBtn": "Bewerken",
+    "game": {
+      "leaderboardLink": "Bekijk de ranglijst →",
+      "rankLabel": "van {{total}}"
+    },
     "gettingStarted": {
       "body": "Jij bent de eerste hier. Wie hem hierna vindt, zal blij zijn dat jij langskwam.",
       "cta": "Maak de eerste check-in",
@@ -205,6 +308,7 @@
     "statsFollowers": "volgers",
     "statsKmTraveled": "km afgelegd",
     "statsStops": "stops",
+    "statsTeam": "team",
     "status": {
       "currentlyIn": "Op dit moment in {{place}}",
       "lastSeenDaysAgo_one": "{{count}} dag geleden voor het laatst gezien in {{place}}",

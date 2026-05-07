@@ -12,13 +12,13 @@ from django.core import signing
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
-from django.db.models import Count
+from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views import View
-from drf_spectacular.utils import extend_schema, inline_serializer
+from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import serializers, status
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin,
@@ -26,25 +26,29 @@ from rest_framework.mixins import (
     RetrieveModelMixin,
     UpdateModelMixin,
 )
+from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
-from backend.models import CheckIn, CheckInImage, Unit
+from backend.models import CheckIn, CheckInImage, Game, Unit
 from config.constants import (
     CHECKIN_DELETE_GRACE_PERIOD_HOURS,
     CHECKIN_EDIT_GRACE_PERIOD_HOURS,
     CHECKIN_MAX_IMAGES,
-    GLOBE_PINS_CACHE_KEY,
-    GLOBE_PINS_CACHE_TTL,
-    GLOBE_PINS_COUNT,
     GUEST_EMAIL_VERIFICATION_EXPIRY_SECONDS,
+    LOCATION_CLAIM_MAX_DRIFT_METERS,
     STATS_CACHE_KEY,
-    STATS_CACHE_TTL,
 )
 
-from .serializers import CheckInSerializer, UnitSerializer
+from .serializers import (
+    CheckInSerializer,
+    LeaderboardSerializer,
+    LocationClaimRequestSerializer,
+    LocationClaimResponseSerializer,
+    UnitSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -111,23 +115,9 @@ class StatsView(APIView):
         )
     )
     def get(self, request) -> Response:
-        from backend.services import total_distance_traveled_in_km  # noqa: PLC0415
+        from backend.services import get_cached_stats  # noqa: PLC0415
 
-        stats = cache.get(STATS_CACHE_KEY)
-        if stats is None:
-            stats = {
-                "active_unit_count": Unit.objects.exclude(admin_only_checkin=True)
-                .annotate(checkin_count=Count("checkin"))
-                .exclude(checkin_count__lt=1)
-                .count(),
-                "checkin_count": CheckIn.objects.count(),
-                "contributing_user_count": User.objects.annotate(checkin_count=Count("checkin"))
-                .filter(checkin_count__gte=1)
-                .count(),
-                "total_distance_traveled_km": total_distance_traveled_in_km(),
-            }
-            cache.set(STATS_CACHE_KEY, stats, STATS_CACHE_TTL)
-        return Response(stats)
+        return Response(get_cached_stats())
 
 
 class GlobePinsView(APIView):
@@ -150,40 +140,76 @@ class GlobePinsView(APIView):
         )
     )
     def get(self, request) -> Response:
-        from django.contrib.gis.db.models.fields import PointField as GeoPointField  # noqa: PLC0415
-        from django.db.models import OuterRef, Subquery  # noqa: PLC0415
+        from backend.services import get_cached_globe_pins  # noqa: PLC0415
 
-        pins = cache.get(GLOBE_PINS_CACHE_KEY)
-        if pins is None:
-            latest_location_sq = (
-                CheckIn.objects.filter(unit=OuterRef("pk")).order_by("-date_created").values("location")[:1]
+        return Response({"pins": get_cached_globe_pins()})
+
+
+class LocationClaimView(APIView):
+    permission_classes = [AllowAny]
+    parser_classes = [JSONParser]
+
+    @extend_schema(
+        request=LocationClaimRequestSerializer,
+        responses=LocationClaimResponseSerializer,
+    )
+    def post(self, request) -> Response:
+        from backend.location_token import issue_location_claim  # noqa: PLC0415
+
+        rl_key = str(request.user.id) if request.user.is_authenticated else request.META.get("REMOTE_ADDR", "")
+        if not ratelimit.consume(request, action="location_claim", key=rl_key):
+            return Response(
+                {"detail": "Too many attempts. Please try again later."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
             )
-            latest_date_sq = (
-                CheckIn.objects.filter(unit=OuterRef("pk")).order_by("-date_created").values("date_created")[:1]
+
+        serializer = LocationClaimRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        unit_identifier = serializer.validated_data["unit_identifier"]
+        get_object_or_404(Unit, identifier=unit_identifier)
+
+        user_id = request.user.id if request.user.is_authenticated else None
+        try:
+            token = issue_location_claim(
+                serializer.validated_data["lat"],
+                serializer.validated_data["lng"],
+                serializer.validated_data["accuracy"],
+                user_id,
+                unit_identifier=unit_identifier,
             )
-            locations = (
-                Unit.objects.exclude(admin_only_checkin=True)
-                .annotate(checkin_count=Count("checkin"))
-                .exclude(checkin_count__lte=1)
-                .annotate(latest_location=Subquery(latest_location_sq, output_field=GeoPointField()))
-                .annotate(latest_date=Subquery(latest_date_sq))
-                .exclude(latest_location__isnull=True)
-                .order_by("-latest_date")
-                .values_list("latest_location", flat=True)[:GLOBE_PINS_COUNT]
-            )
-            pins = [{"lat": loc.y, "lng": loc.x} for loc in locations if loc]
-            cache.set(GLOBE_PINS_CACHE_KEY, pins, GLOBE_PINS_CACHE_TTL)
-        return Response({"pins": pins})
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"token": token})
+
+
+class GameLeaderboardView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        parameters=[OpenApiParameter("pk", int, OpenApiParameter.PATH)],
+        responses=LeaderboardSerializer,
+    )
+    def get(self, request, pk: int):
+        from backend.services import compute_game_leaderboard  # noqa: PLC0415
+
+        game = get_object_or_404(Game, pk=pk)
+        return Response(compute_game_leaderboard(game))
 
 
 class UnitViewSet(RetrieveModelMixin, GenericViewSet):
     serializer_class = UnitSerializer
     lookup_field = "identifier"
     permission_classes = [IsAuthenticatedOrReadOnly]
-    queryset = Unit.objects.annotate(
-        checkin_count=Count("checkin", distinct=True),
-        subscriber_count=Count("subscribers", distinct=True),
-    )
+
+    def get_queryset(self):
+        game_unit_count_sq = (
+            Unit.objects.filter(game_id=OuterRef("game_id")).values("game_id").annotate(c=Count("id")).values("c")
+        )
+        return Unit.objects.select_related("game").annotate(
+            checkin_count=Count("checkin", distinct=True),
+            subscriber_count=Count("subscribers", distinct=True),
+            game_total=Subquery(game_unit_count_sq),
+        )
 
     def get_permissions(self):
         # subscribe/unsubscribe handle auth manually to return 401 (not 403).
@@ -214,6 +240,23 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
     serializer_class = CheckInSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
+    def _verify_gps_token(self, unit: Unit, request_data, validated_location) -> None:
+        from backend.location_token import verify_location_claim  # noqa: PLC0415
+
+        token = request_data.get("location_token")
+        if not token:
+            raise ValidationError({"location_token": "Required for this unit."})
+        try:
+            lat, lng = validated_location.y, validated_location.x
+        except (AttributeError, TypeError) as exc:
+            raise ValidationError({"location": "Invalid location format."}) from exc
+        max_drift = unit.game.max_gps_drift if unit.game else LOCATION_CLAIM_MAX_DRIFT_METERS
+        user_id = self.request.user.id if self.request.user.is_authenticated else None
+        try:
+            verify_location_claim(token, user_id, unit.identifier, lat, lng, max_drift)
+        except ValueError as exc:
+            raise ValidationError({"location_token": str(exc)}) from exc
+
     def get_permissions(self):
         if self.action in ("create", "destroy", "partial_update"):
             return [AllowAny()]
@@ -233,18 +276,15 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         headers = self.get_success_headers(data)
         return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def perform_create(self, serializer):
-        from backend.services import unit_distance_cache_key  # noqa: PLC0415
-
-        unit = get_object_or_404(Unit, identifier=self.kwargs["identifier"])
-
+    def _save_checkin_record(self, unit, serializer):
+        """Handle auth/anon permission checks, save the CheckIn, return it."""
         if self.request.user.is_authenticated:
             if unit.admin_only_checkin and not (self.request.user.is_superuser or self.request.user.is_staff):
                 msg = "This unit can only be checked in by admins."
                 raise PermissionDenied(msg)
             if not unit.can_user_check_in(self.request.user):
                 msg = (
-                    "You can't check in here \u2014 once someone else takes the lighter, "
+                    "You can't check in here — once someone else takes the lighter, "
                     "its journey moves on. You can still follow along by subscribing."
                 )
                 raise PermissionDenied(msg)
@@ -261,10 +301,10 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
             else:
                 logger.warning("CLOUDFLARE_TURNSTILE_SECRET_KEY is not set — anonymous check-in captcha is disabled")
             checkin = serializer.save(created_by=None, unit=unit, edit_token=uuid.uuid4())
+        return checkin
 
-        cache.delete_many([unit_distance_cache_key(unit.identifier), STATS_CACHE_KEY, GLOBE_PINS_CACHE_KEY])
-
-        image_files = self.request.FILES.getlist("images")
+    def _attach_checkin_images(self, checkin, image_files):
+        """Create CheckInImage rows; rolls back the checkin on any failure."""
         if len(image_files) > CHECKIN_MAX_IMAGES:
             checkin.delete()
             raise serializers.ValidationError({"images": [f"You can upload at most {CHECKIN_MAX_IMAGES} images."]})
@@ -277,9 +317,18 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
                     {"images": [f"'{f.name}' could not be processed. Please upload a JPEG, PNG, or WebP file."]}
                 ) from None
 
-    def _update_checkin_images(self, checkin, request):
-        import json  # noqa: PLC0415
+    def perform_create(self, serializer):
+        from backend.services import invalidate_checkin_caches  # noqa: PLC0415
 
+        unit = get_object_or_404(Unit, identifier=self.kwargs["identifier"])
+        if unit.is_gps_enforced:
+            self._verify_gps_token(unit, self.request.data, serializer.validated_data.get("location"))
+
+        checkin = self._save_checkin_record(unit, serializer)
+        invalidate_checkin_caches(unit.identifier, unit.game_id)
+        self._attach_checkin_images(checkin, self.request.FILES.getlist("images"))
+
+    def _update_checkin_images(self, checkin, request):
         raw = request.data.get("remove_image_ids", "[]")
         try:
             remove_ids = json.loads(raw) if isinstance(raw, str) else list(raw)
@@ -333,9 +382,18 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
                 msg = f"Cannot edit check-ins after {CHECKIN_EDIT_GRACE_PERIOD_HOURS} hours."
                 raise PermissionDenied(msg)
 
-        response = super().partial_update(request, *args, **kwargs)
+        super().partial_update(request, *args, **kwargs)
         self._update_checkin_images(checkin, request)
-        return response
+
+        unit = checkin.unit
+        if unit.game_id:
+            from backend.services import game_leaderboard_cache_key  # noqa: PLC0415
+
+            cache.delete(game_leaderboard_cache_key(unit.game_id))
+
+        checkin.refresh_from_db()
+        serializer = self.get_serializer(checkin)
+        return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):
         checkin = self.get_object()
@@ -351,11 +409,13 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         return super().destroy(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
-        from backend.services import unit_distance_cache_key  # noqa: PLC0415
+        from backend.services import invalidate_checkin_caches  # noqa: PLC0415
 
-        unit_identifier = instance.unit.identifier
+        unit = instance.unit
+        unit_identifier = unit.identifier
+        game_id = unit.game_id
         super().perform_destroy(instance)
-        cache.delete_many([unit_distance_cache_key(unit_identifier), STATS_CACHE_KEY, GLOBE_PINS_CACHE_KEY])
+        invalidate_checkin_caches(unit_identifier, game_id)
 
 
 class GuestSubscribeView(APIView):
@@ -451,5 +511,12 @@ class GuestVerifyView(View):
                 user.name = checkin.anonymous_name
                 user.save(update_fields=["name"])
         checkins.update(created_by=user, edit_token=None)
+
+        cache_keys = [STATS_CACHE_KEY]
+        if unit.game_id:
+            from backend.services import game_leaderboard_cache_key  # noqa: PLC0415
+
+            cache_keys.append(game_leaderboard_cache_key(unit.game_id))
+        cache.delete_many(cache_keys)
 
         return HttpResponseRedirect(f"/unit/{unit_identifier}/?verified=1")

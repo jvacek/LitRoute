@@ -5,16 +5,64 @@ import {
   geocoding,
   type GeocodingFeature,
 } from '@maptiler/client';
+import type { Feature, Polygon } from 'geojson';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import ReactMap, { Layer, Source } from 'react-map-gl/maplibre';
+import ReactMap, { Layer, Marker, Source } from 'react-map-gl/maplibre';
 import type { MapRef } from 'react-map-gl/maplibre';
+import { requestLocationClaim } from '../api';
 import { useAuth } from '../AuthContext';
+import { haversineM } from '../lib/haversine';
 import { useConfig } from '../lib/useConfig';
+import { fieldErrorClass } from '../styles';
 
+import LocationDeniedModal from './LocationDeniedModal';
 import PhotoUpload from './PhotoUpload';
 
 const MAX_IMAGES = 5;
+
+// Web Mercator zoom that makes a circle of `radiusM` at `lat` cover ~60% of the
+// confirm map's 240px height. Mercator m/px = 156543.03 * cos(lat) / 2^z.
+function zoomForDriftRadius(radiusM: number, lat: number): number {
+  if (radiusM <= 0) return 16;
+  const targetDiameterPx = 144;
+  const metersPerPixel = (2 * radiusM) / targetDiameterPx;
+  const z = Math.log2(
+    (156_543.03 * Math.cos((lat * Math.PI) / 180)) / metersPerPixel,
+  );
+  return Math.max(10, Math.min(18, z));
+}
+
+function geodesicCirclePolygon(
+  lat: number,
+  lng: number,
+  radiusM: number,
+  steps = 64,
+): Feature<Polygon> {
+  const R = 6_371_000;
+  const pts: [number, number][] = [];
+  for (let i = 0; i <= steps; i++) {
+    const angle = (i / steps) * 2 * Math.PI;
+    const dLat = (radiusM / R) * (180 / Math.PI) * Math.cos(angle);
+    const dLng =
+      ((radiusM / R) * (180 / Math.PI) * Math.sin(angle)) /
+      Math.cos((lat * Math.PI) / 180);
+    pts.push([lng + dLng, lat + dLat]);
+  }
+  return {
+    type: 'Feature',
+    geometry: { type: 'Polygon', coordinates: [pts] },
+    properties: {},
+  };
+}
+
+type ConfirmStep = {
+  gpsLat: number;
+  gpsLng: number;
+  token: string;
+  pinLat: number;
+  pinLng: number;
+} | null;
 
 async function convertToWebP(file: File): Promise<File> {
   const bitmap = await createImageBitmap(file);
@@ -56,18 +104,22 @@ interface CheckinFormProps {
   mode: 'create' | 'edit';
   initialData?: CheckinFormInitialData;
   unitUrl: string;
+  unitIdentifier: string;
   maptilerKey: string;
+  isGpsEnforced?: boolean;
+  gpsDriftAllowanceM: number;
   onSubmit: (data: FormData) => Promise<Record<string, string[]> | null>;
-  onSuccess?: (checkinId: number, editToken?: string) => void;
 }
 
 export default function CheckinForm({
   mode,
   initialData,
   unitUrl,
+  unitIdentifier,
   maptilerKey,
+  isGpsEnforced = false,
+  gpsDriftAllowanceM,
   onSubmit,
-  onSuccess,
 }: CheckinFormProps) {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
@@ -89,6 +141,8 @@ export default function CheckinForm({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<GeocodingFeature[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [confirmStep, setConfirmStep] = useState<ConfirmStep>(null);
+  const [showLocationDeniedModal, setShowLocationDeniedModal] = useState(false);
   const mapRef = useRef<MapRef>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const showTurnstile =
@@ -249,8 +303,105 @@ export default function CheckinForm({
     setExistingIdOrder(newExistingIdOrder);
   }
 
+  function handleGpsCapture() {
+    if (!navigator.geolocation) {
+      setShowLocationDeniedModal(true);
+      return;
+    }
+    setSubmitting(true);
+    setErrors({});
+    navigator.geolocation.getCurrentPosition(
+      async ({ coords: { latitude: lat, longitude: lng, accuracy } }) => {
+        try {
+          const token = await requestLocationClaim(
+            lat,
+            lng,
+            accuracy,
+            unitIdentifier,
+          );
+          setConfirmStep({
+            gpsLat: lat,
+            gpsLng: lng,
+            token,
+            pinLat: lat,
+            pinLng: lng,
+          });
+        } catch {
+          setErrors({
+            location: [t('checkin.form.errors.gpsVerificationFailed')],
+          });
+        } finally {
+          setSubmitting(false);
+        }
+      },
+      (err) => {
+        // PERMISSION_DENIED + POSITION_UNAVAILABLE both mean the user has to
+        // leave the tab and change a system-wide setting; show the help modal.
+        // TIMEOUT is transient (slow GPS lock, weak signal) — keep it inline
+        // so the user can retry from the placeholder without dismissing a modal.
+        if (
+          err.code === err.PERMISSION_DENIED ||
+          err.code === err.POSITION_UNAVAILABLE
+        ) {
+          setShowLocationDeniedModal(true);
+        } else {
+          setErrors({ location: [t('checkin.form.errors.gpsRequired')] });
+        }
+        setSubmitting(false);
+      },
+      // enableHighAccuracy: matches the backend's 100m accuracy gate and
+      //   engages GPS on mobile rather than network-only positioning.
+      // maximumAge: accept a cached fix up to 60s old — sidesteps the
+      //   Chrome-on-macOS CoreLocation hang on back-to-back acquisitions
+      //   and stays well under LOCATION_CLAIM_TTL_SECONDS (2 min).
+      { enableHighAccuracy: true, maximumAge: 60_000, timeout: 15_000 },
+    );
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (isGpsEnforced) {
+      // The submit button is disabled until confirmStep is set, so the only
+      // way this branch fires without a token is Enter-in-text-field. Bail.
+      if (!confirmStep) return;
+      setSubmitting(true);
+      setErrors({});
+      const data = new FormData();
+      data.append(
+        'location',
+        JSON.stringify({
+          type: 'Point',
+          coordinates: [confirmStep.pinLng, confirmStep.pinLat],
+        }),
+      );
+      data.append('place', place);
+      data.append('message', message);
+      if (showNameField && anonymousName.trim()) {
+        data.append('anonymous_name', anonymousName.trim());
+      }
+      imageFiles.forEach((f) => data.append('images', f));
+      if (showTurnstile && turnstileToken) {
+        data.append('turnstile_token', turnstileToken);
+      }
+      data.append('location_token', confirmStep.token);
+      try {
+        const errs = await onSubmit(data);
+        if (errs) {
+          setErrors(errs);
+          // Token is single-use on the backend — drop it so the user re-captures.
+          setConfirmStep(null);
+        }
+      } catch (err) {
+        console.error(err);
+        setErrors({ non_field_errors: [t('common.unexpectedError')] });
+        setConfirmStep(null);
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
     if (!location) {
       setErrors({ location: [t('checkin.form.errors.locationRequired')] });
       return;
@@ -284,11 +435,7 @@ export default function CheckinForm({
 
     try {
       const errs = await onSubmit(data);
-      if (errs) {
-        setErrors(errs);
-      } else if (onSuccess) {
-        // onSuccess handled by parent; nothing to do here
-      }
+      if (errs) setErrors(errs);
     } catch (err) {
       console.error(err);
       setErrors({ non_field_errors: [t('common.unexpectedError')] });
@@ -314,6 +461,21 @@ export default function CheckinForm({
     };
   }, [location]);
 
+  const confirmCircleGeoJSON = useMemo(() => {
+    if (!confirmStep)
+      return { type: 'FeatureCollection' as const, features: [] };
+    return {
+      type: 'FeatureCollection' as const,
+      features: [
+        geodesicCirclePolygon(
+          confirmStep.gpsLat,
+          confirmStep.gpsLng,
+          gpsDriftAllowanceM,
+        ),
+      ],
+    };
+  }, [confirmStep, gpsDriftAllowanceM]);
+
   const newImages = imageKeys.map((key, i) => ({
     key,
     preview: imagePreviews[i] ?? '',
@@ -321,136 +483,142 @@ export default function CheckinForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Location */}
-      <div>
-        <label className="mb-2 block text-sm font-medium text-char">
-          {t('checkin.form.locationLabel')}
-          {isCreate && <span className="text-ember"> *</span>}
-        </label>
+      {/* Location — non-GPS units only; GPS units render this section below the photos */}
+      {!isGpsEnforced && (
+        <div>
+          <label className="mb-2 block text-sm font-medium text-char">
+            {t('checkin.form.locationLabel')}
+            {isCreate && <span className="text-ember"> *</span>}
+          </label>
 
-        {/* Search bar + Use my location button */}
-        <div ref={searchRef} className="relative mb-2">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => searchResults.length > 0 && setSearchOpen(true)}
-              placeholder={t('checkin.form.searchPlaceholder')}
-              className="flex-1 rounded-input border border-char/15 bg-white px-4 py-2.5 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
-              autoComplete="off"
-            />
-            <button
-              type="button"
-              onClick={handleGeolocate}
-              disabled={geolocating}
-              className="shrink-0 rounded-btn bg-amber px-4 py-2.5 text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
-            >
-              {geolocating
-                ? `${t('checkin.form.useMyLocation.loading')}…`
-                : t('checkin.form.useMyLocation.default')}
-            </button>
-          </div>
+          <>
+            {/* Search bar + Use my location button */}
+            <div ref={searchRef} className="relative mb-2">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() =>
+                    searchResults.length > 0 && setSearchOpen(true)
+                  }
+                  placeholder={t('checkin.form.searchPlaceholder')}
+                  className="flex-1 rounded-input border border-char/15 bg-white px-4 py-2.5 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
+                  autoComplete="off"
+                />
+                <button
+                  type="button"
+                  onClick={handleGeolocate}
+                  disabled={geolocating}
+                  className="shrink-0 rounded-btn bg-amber px-4 py-2.5 text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
+                >
+                  {geolocating
+                    ? `${t('checkin.form.useMyLocation.loading')}…`
+                    : t('checkin.form.useMyLocation.default')}
+                </button>
+              </div>
 
-          {/* Autocomplete dropdown */}
-          {searchOpen && searchResults.length > 0 && (
-            <ul className="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden rounded-card border border-char/10 bg-white shadow-md">
-              {searchResults.map((feature) => (
-                <li key={feature.id as string}>
+              {/* Autocomplete dropdown */}
+              {searchOpen && searchResults.length > 0 && (
+                <ul className="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden rounded-card border border-char/10 bg-white shadow-md">
+                  {searchResults.map((feature) => (
+                    <li key={feature.id as string}>
+                      <button
+                        type="button"
+                        className="w-full px-4 py-2.5 text-left text-sm text-char hover:bg-linen focus:bg-linen focus:outline-none"
+                        onClick={() => handleSelectResult(feature)}
+                      >
+                        <span className="font-medium">{feature.text}</span>
+                        {feature.place_name &&
+                          feature.place_name !== feature.text && (
+                            <span className="ml-1 text-smoke">
+                              {feature.place_name.slice(
+                                (feature.text?.length ?? 0) + 2,
+                              )}
+                            </span>
+                          )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <p className="mb-2 text-xs text-smoke">
+              {isCreate
+                ? t('checkin.form.clickToDrop')
+                : t('checkin.form.clickToMove')}
+            </p>
+
+            {/* Map */}
+            <div className="overflow-hidden rounded-card border border-char/10">
+              <ReactMap
+                ref={mapRef}
+                mapStyle={`https://api.maptiler.com/maps/dataviz/style.json?key=${maptilerKey}`}
+                initialViewState={{
+                  longitude: pickedLatLng ? pickedLatLng[1] : 6,
+                  latitude: pickedLatLng ? pickedLatLng[0] : 41,
+                  zoom: pickedLatLng ? 8 : 3,
+                }}
+                style={{ height: '320px', width: '100%' }}
+                cursor="crosshair"
+                onClick={(e) => {
+                  const { lng, lat } = e.lngLat;
+                  setLocation(`${lat},${lng}`);
+                }}
+              >
+                <Source id="pin" type="geojson" data={pinGeoJSON}>
+                  <Layer
+                    id="pin-circle"
+                    type="circle"
+                    paint={{
+                      'circle-radius': 10,
+                      'circle-color': '#e8a030',
+                      'circle-opacity': 0.9,
+                      'circle-stroke-width': 2,
+                      'circle-stroke-color': '#ffffff',
+                    }}
+                  />
+                </Source>
+              </ReactMap>
+            </div>
+
+            {location && (
+              <p className="mt-1.5 text-xs font-medium text-amber">
+                &#x2713; {t('checkin.form.locationSet')}
+              </p>
+            )}
+
+            {/* Privacy warning — shown as soon as geolocation is triggered */}
+            {showPrivacyHint && (
+              <div className="mt-2 rounded-card border border-amber/40 bg-amber/10 px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-char">
+                      &#9888;&#xFE0E; {t('checkin.form.privacyHint.title')}
+                    </p>
+                    <p className="text-sm text-char/80">
+                      {t('checkin.form.privacyHint.body')}
+                    </p>
+                  </div>
                   <button
                     type="button"
-                    className="w-full px-4 py-2.5 text-left text-sm text-char hover:bg-linen focus:bg-linen focus:outline-none"
-                    onClick={() => handleSelectResult(feature)}
+                    onClick={() => setShowPrivacyHint(false)}
+                    className="mt-0.5 shrink-0 p-1 text-smoke hover:text-char"
+                    aria-label={t('checkin.form.dismiss')}
                   >
-                    <span className="font-medium">{feature.text}</span>
-                    {feature.place_name &&
-                      feature.place_name !== feature.text && (
-                        <span className="ml-1 text-smoke">
-                          {feature.place_name.slice(
-                            (feature.text?.length ?? 0) + 2,
-                          )}
-                        </span>
-                      )}
+                    &#x2715;
                   </button>
-                </li>
-              ))}
-            </ul>
+                </div>
+              </div>
+            )}
+          </>
+
+          {errors.location && (
+            <p className={fieldErrorClass}>{errors.location.join(' ')}</p>
           )}
         </div>
-
-        <p className="mb-2 text-xs text-smoke">
-          {isCreate
-            ? t('checkin.form.clickToDrop')
-            : t('checkin.form.clickToMove')}
-        </p>
-
-        {/* Map */}
-        <div className="overflow-hidden rounded-card border border-char/10">
-          <ReactMap
-            ref={mapRef}
-            mapStyle={`https://api.maptiler.com/maps/dataviz/style.json?key=${maptilerKey}`}
-            initialViewState={{
-              longitude: pickedLatLng ? pickedLatLng[1] : 6,
-              latitude: pickedLatLng ? pickedLatLng[0] : 41,
-              zoom: pickedLatLng ? 8 : 3,
-            }}
-            style={{ height: '320px', width: '100%' }}
-            cursor="crosshair"
-            onClick={(e) => {
-              const { lng, lat } = e.lngLat;
-              setLocation(`${lat},${lng}`);
-            }}
-          >
-            <Source id="pin" type="geojson" data={pinGeoJSON}>
-              <Layer
-                id="pin-circle"
-                type="circle"
-                paint={{
-                  'circle-radius': 10,
-                  'circle-color': '#e8a030',
-                  'circle-opacity': 0.9,
-                  'circle-stroke-width': 2,
-                  'circle-stroke-color': '#ffffff',
-                }}
-              />
-            </Source>
-          </ReactMap>
-        </div>
-
-        {location && (
-          <p className="mt-1.5 text-xs font-medium text-amber">
-            &#x2713; {t('checkin.form.locationSet')}
-          </p>
-        )}
-
-        {/* Privacy warning — shown as soon as geolocation is triggered */}
-        {showPrivacyHint && (
-          <div className="mt-2 rounded-card border border-amber/40 bg-amber/10 px-4 py-3">
-            <div className="flex items-start justify-between gap-3">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-char">
-                  &#9888;&#xFE0E; {t('checkin.form.privacyHint.title')}
-                </p>
-                <p className="text-sm text-char/80">
-                  {t('checkin.form.privacyHint.body')}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowPrivacyHint(false)}
-                className="mt-0.5 shrink-0 p-1 text-smoke hover:text-char"
-                aria-label={t('checkin.form.dismiss')}
-              >
-                &#x2715;
-              </button>
-            </div>
-          </div>
-        )}
-
-        {errors.location && (
-          <p className="mt-1 text-xs text-ember">{errors.location.join(' ')}</p>
-        )}
-      </div>
+      )}
 
       {/* Place */}
       <div>
@@ -469,7 +637,7 @@ export default function CheckinForm({
           className="w-full rounded-input border border-char/15 bg-white px-4 py-3 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
         />
         {errors.place && (
-          <p className="mt-1 text-xs text-ember">{errors.place.join(' ')}</p>
+          <p className={fieldErrorClass}>{errors.place.join(' ')}</p>
         )}
       </div>
 
@@ -492,7 +660,7 @@ export default function CheckinForm({
           className="w-full rounded-input border border-char/15 bg-white px-4 py-3 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
         />
         {errors.message && (
-          <p className="mt-1 text-xs text-ember">{errors.message.join(' ')}</p>
+          <p className={fieldErrorClass}>{errors.message.join(' ')}</p>
         )}
       </div>
 
@@ -529,13 +697,149 @@ export default function CheckinForm({
         error={errors.images?.join(' ')}
       />
 
+      {/* Location — GPS-enforced units; placeholder until the user captures GPS */}
+      {isGpsEnforced && (
+        <div>
+          <label className="mb-2 block text-sm font-medium text-char">
+            {t('checkin.form.locationLabel')}
+            {isCreate && <span className="text-ember"> *</span>}
+          </label>
+
+          <div className="overflow-hidden rounded-card border border-char/10">
+            {confirmStep ? (
+              <ReactMap
+                mapStyle={`https://api.maptiler.com/maps/dataviz/style.json?key=${maptilerKey}`}
+                initialViewState={{
+                  longitude: confirmStep.gpsLng,
+                  latitude: confirmStep.gpsLat,
+                  zoom: zoomForDriftRadius(
+                    gpsDriftAllowanceM,
+                    confirmStep.gpsLat,
+                  ),
+                }}
+                style={{ height: '240px', width: '100%' }}
+                onClick={(e) => {
+                  const { lng, lat } = e.lngLat;
+                  if (
+                    haversineM(
+                      confirmStep.gpsLat,
+                      confirmStep.gpsLng,
+                      lat,
+                      lng,
+                    ) <= gpsDriftAllowanceM
+                  ) {
+                    setConfirmStep(
+                      (s) => s && { ...s, pinLat: lat, pinLng: lng },
+                    );
+                  }
+                }}
+              >
+                <Source
+                  id="confirm-circle"
+                  type="geojson"
+                  data={confirmCircleGeoJSON}
+                >
+                  <Layer
+                    id="confirm-circle-fill"
+                    type="fill"
+                    paint={{ 'fill-color': '#e8a030', 'fill-opacity': 0.15 }}
+                  />
+                  <Layer
+                    id="confirm-circle-line"
+                    type="line"
+                    paint={{ 'line-color': '#e8a030', 'line-width': 2 }}
+                  />
+                </Source>
+                <Marker
+                  longitude={confirmStep.pinLng}
+                  latitude={confirmStep.pinLat}
+                  draggable
+                  onDragEnd={(e) => {
+                    const { lng, lat } = e.lngLat;
+                    if (
+                      haversineM(
+                        confirmStep.gpsLat,
+                        confirmStep.gpsLng,
+                        lat,
+                        lng,
+                      ) <= gpsDriftAllowanceM
+                    ) {
+                      setConfirmStep(
+                        (s) => s && { ...s, pinLat: lat, pinLng: lng },
+                      );
+                    }
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 20,
+                      height: 20,
+                      borderRadius: '50%',
+                      background: '#e8a030',
+                      border: '2px solid #fff',
+                      cursor: 'grab',
+                    }}
+                  />
+                </Marker>
+              </ReactMap>
+            ) : (
+              <div className="relative" style={{ height: '240px' }}>
+                {/* Non-interactive map at a wide view so the placeholder
+                    visually reads as "map" before GPS capture. */}
+                <ReactMap
+                  mapStyle={`https://api.maptiler.com/maps/dataviz/style.json?key=${maptilerKey}`}
+                  initialViewState={{ longitude: 6, latitude: 41, zoom: 3 }}
+                  style={{ height: '240px', width: '100%' }}
+                  interactive={false}
+                  attributionControl={false}
+                />
+                <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6">
+                  <div className="pointer-events-auto flex max-w-sm flex-col items-center gap-3 rounded-card bg-white/95 px-5 py-4 text-center shadow-md">
+                    <p className="text-sm text-char">
+                      {t('checkin.form.gpsNotice')}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleGpsCapture}
+                      disabled={submitting}
+                      className="rounded-btn bg-amber px-[22px] py-[9px] text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
+                    >
+                      {submitting
+                        ? `${t('checkin.form.useMyLocation.loading')}…`
+                        : t('checkin.form.useMyLocation.default')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {confirmStep && (
+            <div className="mt-2 flex items-center justify-between gap-3">
+              <p className="text-xs text-smoke">
+                {t('checkin.form.gpsNudgeHint')}
+              </p>
+              <button
+                type="button"
+                onClick={() => setConfirmStep(null)}
+                className="shrink-0 text-xs text-smoke underline hover:text-char"
+              >
+                {t('checkin.form.useMyLocation.default')}
+              </button>
+            </div>
+          )}
+
+          {errors.location && (
+            <p className={fieldErrorClass}>{errors.location.join(' ')}</p>
+          )}
+        </div>
+      )}
+
       {errors.non_field_errors && (
-        <p className="text-sm text-ember">
-          {errors.non_field_errors.join(' ')}
-        </p>
+        <p className={fieldErrorClass}>{errors.non_field_errors.join(' ')}</p>
       )}
       {errors.captcha && (
-        <p className="text-sm text-ember">{errors.captcha.join(' ')}</p>
+        <p className={fieldErrorClass}>{errors.captcha.join(' ')}</p>
       )}
 
       {isCreate && (
@@ -555,7 +859,7 @@ export default function CheckinForm({
       <div className="flex gap-3">
         <button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || (isGpsEnforced && !confirmStep)}
           className="rounded-btn bg-amber px-[22px] py-[9px] text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
         >
           {submitting
@@ -573,6 +877,16 @@ export default function CheckinForm({
           {t('common.cancel')}
         </a>
       </div>
+
+      {showLocationDeniedModal && (
+        <LocationDeniedModal
+          onDismiss={() => setShowLocationDeniedModal(false)}
+          onRetry={() => {
+            setShowLocationDeniedModal(false);
+            handleGpsCapture();
+          }}
+        />
+      )}
     </form>
   );
 }
