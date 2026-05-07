@@ -21,10 +21,14 @@
       "clickToMove": "Klik op de kaart om de speld te verplaatsen.",
       "dismiss": "Sluiten",
       "errors": {
+        "gpsRequired": "Locatietoegang is vereist voor deze eenheid. Sta locatietoegang toe in je browser en probeer opnieuw.",
+        "gpsVerificationFailed": "Locatieverificatie mislukt. Probeer het opnieuw.",
         "locationRequired": "Klik op de kaart om je locatie in te stellen.",
         "maxPhotos": "Maximaal {{max}} foto's per check-in.",
         "svgNotSupported": "Alleen rasterafbeeldingen (JPEG, PNG, WebP, enz.) worden ondersteund. SVG-bestanden kunnen niet worden geüpload."
       },
+      "gpsNotice": "Deze eenheid vereist je realtime locatie. Deze wordt vastgelegd wanneer je op Inchecken tikt.",
+      "gpsNudgeHint": "Verplaats je speld als je je exacte locatie liever niet deelt.",
       "locationLabel": "Locatie",
       "messageLabel": "Bericht",
       "messagePlaceholder": "Waar heb je hem gevonden? Waar ben je? Wat is het volgende voor deze aansteker?",

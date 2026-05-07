@@ -21,10 +21,14 @@
       "clickToMove": "Cliquez sur la carte pour déplacer le repère.",
       "dismiss": "Ignorer",
       "errors": {
+        "gpsRequired": "L'accès à la localisation est requis pour cette unité. Autorisez l'accès à la localisation dans votre navigateur et réessayez.",
+        "gpsVerificationFailed": "La vérification de localisation a échoué. Veuillez réessayer.",
         "locationRequired": "Cliquez sur la carte pour définir votre position.",
         "maxPhotos": "Maximum {{max}} photos par enregistrement.",
         "svgNotSupported": "Seules les images matricielles (JPEG, PNG, WebP, etc.) sont prises en charge. Les fichiers SVG ne peuvent pas être téléversés."
       },
+      "gpsNotice": "Cette unité nécessite votre position en temps réel. Elle sera capturée lorsque vous appuyez sur Enregistrement.",
+      "gpsNudgeHint": "Déplacez votre repère si vous préférez ne pas partager votre position exacte.",
       "locationLabel": "Position",
       "messageLabel": "Message",
       "messagePlaceholder": "Où l'avez-vous trouvé ? Où êtes-vous ? Quelle est la suite pour ce briquet ?",
