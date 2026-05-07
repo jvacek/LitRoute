@@ -51,6 +51,15 @@ html {
   min-height: 64px;
 }
 
+/* Parchment outline around an alpha-channel image (used to keep the navbar
+   logo legible against the red local-environment background). */
+.logo-outline {
+  filter: drop-shadow(2px 0 0 var(--color-parchment))
+    drop-shadow(-2px 0 0 var(--color-parchment))
+    drop-shadow(0 2px 0 var(--color-parchment))
+    drop-shadow(0 -2px 0 var(--color-parchment));
+}
+
 /* Smooth scrolling */
 @media (prefers-reduced-motion: no-preference) {
   html {

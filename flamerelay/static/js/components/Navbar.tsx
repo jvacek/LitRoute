@@ -22,7 +22,12 @@ export default function Navbar() {
           className="flex items-center gap-2"
           aria-label={t('nav.homeAriaLabel')}
         >
-          <img src={logoUrl} alt="" aria-hidden="true" className="h-12 w-12" />
+          <img
+            src={logoUrl}
+            alt=""
+            aria-hidden="true"
+            className={`h-12 w-12 ${IS_LOCAL ? 'logo-outline' : ''}`}
+          />
           <span className="font-heading text-2xl font-bold tracking-tight">
             <span className="text-amber">Lit</span>
             <span className="text-char">Route</span>
