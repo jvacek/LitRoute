@@ -372,10 +372,12 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
     def perform_create(self, serializer):
         from backend.services import invalidate_checkin_caches  # noqa: PLC0415
 
-        unit = get_object_or_404(Unit, identifier=self.kwargs["identifier"])
+        unit = get_object_or_404(Unit.objects.select_related("game"), identifier=self.kwargs["identifier"])
+        # Required-fields validation runs before token verification so a 400
+        # on missing place/anonymous_name doesn't burn the single-use token.
+        self._verify_game_required_fields(unit, serializer.validated_data)
         if unit.is_gps_enforced:
             self._verify_gps_token(unit, self.request.data, serializer.validated_data.get("location"))
-        self._verify_game_required_fields(unit, serializer.validated_data)
 
         checkin = self._save_checkin_record(unit, serializer)
         invalidate_checkin_caches(unit.identifier, unit.game_id)

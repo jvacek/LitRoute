@@ -614,6 +614,28 @@ class TestCheckInCreateGpsEnforced:
         assert res.status_code == 400  # noqa: PLR2004
         assert "place" in res.json()
 
+    def test_token_survives_required_field_failure(self, client, gps_unit, user):
+        # Required-field validation must run before token verification, so a
+        # 400 on missing place doesn't consume the single-use GPS claim.
+        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id, unit_identifier=gps_unit.identifier)
+        client.force_authenticate(user=user)
+        with (
+            patch("backend.models.send_email_to_subscribers_task.apply_async"),
+            patch("backend.models.send_thank_you_email_task.apply_async"),
+        ):
+            first = client.post(
+                f"/api/units/{gps_unit.identifier}/checkins/",
+                {"location": LONDON_PAYLOAD, "location_token": token},
+                format="json",
+            )
+            second = client.post(
+                f"/api/units/{gps_unit.identifier}/checkins/",
+                {"location": LONDON_PAYLOAD, "location_token": token, "place": "London"},
+                format="json",
+            )
+        assert first.status_code == 400  # noqa: PLR2004
+        assert second.status_code == 201  # noqa: PLR2004
+
     def test_auth_junk_place_rejected(self, client, gps_unit, user):
         # Punctuation-only place doesn't satisfy the word-character minimum.
         token = issue_location_claim(51.5074, -0.1278, 10.0, user.id, unit_identifier=gps_unit.identifier)
