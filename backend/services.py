@@ -1,5 +1,3 @@
-import logging
-
 from anymail.exceptions import AnymailRequestsAPIError
 from celery import Task, shared_task
 from celery.utils.log import get_task_logger
@@ -18,6 +16,8 @@ from config.constants import (
     STATS_CACHE_TTL,
 )
 
+logger = get_task_logger(__name__)
+
 
 class EmailTask(Task):
     autoretry_for = (AnymailRequestsAPIError,)
@@ -25,9 +25,6 @@ class EmailTask(Task):
     retry_backoff = EMAIL_TASK_RETRY_BACKOFF_SECONDS
     retry_backoff_max = EMAIL_TASK_RETRY_BACKOFF_MAX_SECONDS
     retry_jitter = True
-
-
-logger = logging.getLogger(__name__)
 
 
 def unit_distance_cache_key(identifier: str) -> str:
@@ -284,9 +281,6 @@ def get_cached_globe_pins() -> list[dict]:
         pins = [{"lat": loc.y, "lng": loc.x} for loc in locations if loc]
         cache.set(GLOBE_PINS_CACHE_KEY, pins, GLOBE_PINS_CACHE_TTL)
     return pins
-
-
-logger = get_task_logger(__name__)
 
 
 @shared_task(serializer="json")
