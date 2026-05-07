@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin
+from django.db.models import Count
 from django.utils.html import format_html, format_html_join
 
 from .models import CheckIn, CheckInImage, Game, Team, Unit
@@ -54,10 +55,27 @@ class CheckInInline(admin.TabularInline):
 
 @admin.register(Unit)
 class UnitAdmin(admin.ModelAdmin):
-    list_display = ("id", "identifier", "date_created", "created_by", "team")
+    list_display = (
+        "id",
+        "identifier",
+        "date_created",
+        "created_by",
+        "team",
+        "subscriber_count",
+        "checkin_count",
+    )
     list_filter = ("date_created", "created_by", "team")
+    list_select_related = ("team", "created_by")
     filter_horizontal = ["subscribers"]
     inlines = [CheckInInline]
+
+    @admin.display(description="Subscribers", ordering="subscriber_count")
+    def subscriber_count(self, obj):
+        return obj.subscriber_count
+
+    @admin.display(description="Check-ins", ordering="checkin_count")
+    def checkin_count(self, obj):
+        return obj.checkin_count
 
     def _is_contributor(self, request):
         return not request.user.is_superuser and request.user.groups.filter(name="contributor").exists()
@@ -87,7 +105,14 @@ class UnitAdmin(admin.ModelAdmin):
         return ["date_created", "created_by", "team"]
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
+        qs = (
+            super()
+            .get_queryset(request)
+            .annotate(
+                subscriber_count=Count("subscribers", distinct=True),
+                checkin_count=Count("checkin", distinct=True),
+            )
+        )
         if self._is_contributor(request):
             return qs.filter(created_by=request.user)
         return qs
@@ -157,5 +182,6 @@ class CheckInAdmin(admin.ModelAdmin):
         # "location",
     )
     list_filter = ("unit", "date_created", "created_by")
+    list_select_related = ("unit", "created_by")
     actions = [send_email_to_subscribers]
     inlines = [CheckInImageInline]

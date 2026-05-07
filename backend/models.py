@@ -233,6 +233,9 @@ class CheckIn(models.Model):
     def __str__(self):
         return f"{self.unit!s} {self.date_created!s}"
 
+    def get_absolute_url(self) -> str:
+        return f"/unit/{self.unit.identifier}/"
+
     def send_email_to_subscribers(self, **kwargs):
         from django.conf import settings  # noqa: PLC0415
 
