@@ -106,16 +106,16 @@ TODOs/              # task trackers
 
 ## Documentation Map
 
-Read on demand when working in the relevant area. Do not duplicate this content here — link, don't copy.
+**Read the relevant doc before exploring code or planning changes** — not after, not "if needed". These files exist precisely so you don't have to rediscover conventions by grepping. If your task touches an area below, the corresponding doc is a prerequisite, not optional reading. Do not duplicate this content here — link, don't copy.
 
-- **Frontend / SPA / React / auth UX / brand tokens / mobile / WebAuthn**
-  → `flamerelay/templates/FRONTEND.md` — authoritative for anything in `flamerelay/static/js/`.
-- **Backend architecture: User model, signals, storage cleanup, permissions**
-  → `backend/ARCHITECTURE.md` — read before editing `backend/models.py` or signal receivers.
-- **REST API conventions and endpoint reference**
-  → `backend/API.md` — read before adding/changing `/api/` endpoints. Live schema at `/api/docs/`.
-- **Translation tooling and key hygiene**
-  → `scripts/README.md` — read before adding i18n keys or running `scripts/*-translations.py`.
+- **Touching anything in `flamerelay/static/js/` or `flamerelay/templates/`** (React, SPA routing, auth UX, brand tokens, mobile rules, WebAuthn, i18n usage)
+  → **read `flamerelay/templates/FRONTEND.md` first.**
+- **Touching `backend/models.py`, signals, auth, permissions, or storage cleanup**
+  → **read `backend/ARCHITECTURE.md` first.**
+- **Adding, modifying, or testing any `/api/` endpoint**
+  → **read `backend/API.md` first.** Live schema at `/api/docs/`.
+- **Adding i18n keys or running `scripts/*-translations.py`**
+  → **read `scripts/README.md` first.**
 - **Brand voice / translator tone** → `brand/TRANSLATOR_GUIDE.md`
 - **Security audit snapshot** → `SECURITY.md`
 
