@@ -83,6 +83,48 @@ class TeamSerializer(serializers.ModelSerializer):
         fields = ["name", "color"]
 
 
+class LocationClaimRequestSerializer(serializers.Serializer):
+    lat = serializers.FloatField()
+    lng = serializers.FloatField()
+    accuracy = serializers.FloatField()
+    unit_identifier = serializers.CharField(max_length=200)
+
+
+class LocationClaimResponseSerializer(serializers.Serializer):
+    token = serializers.CharField()
+
+
+class LeaderboardIndividualEntrySerializer(serializers.Serializer):
+    rank = serializers.IntegerField()
+    identifier = serializers.CharField()
+    place = serializers.CharField(allow_blank=True)
+    last_checkin_name = serializers.CharField(allow_blank=True)
+    distance_km = serializers.FloatField()
+    checkin_count = serializers.IntegerField()
+    team = TeamSerializer(allow_null=True)
+
+
+class LeaderboardTeamEntrySerializer(serializers.Serializer):
+    rank = serializers.IntegerField()
+    team = TeamSerializer()
+    distance_km = serializers.FloatField()
+    checkin_count = serializers.IntegerField()
+    lighter_count = serializers.IntegerField()
+
+
+class LeaderboardGameSerializer(GameSerializer):
+    sort_by = serializers.ChoiceField(choices=["distance_km", "checkin_count"])
+
+    class Meta(GameSerializer.Meta):
+        fields = [*GameSerializer.Meta.fields, "sort_by"]
+
+
+class LeaderboardSerializer(serializers.Serializer):
+    game = LeaderboardGameSerializer()
+    individual = LeaderboardIndividualEntrySerializer(many=True)
+    teams = LeaderboardTeamEntrySerializer(many=True, allow_null=True)
+
+
 class UnitSerializer(serializers.ModelSerializer):
     checkin_count = serializers.IntegerField(read_only=True)
     subscriber_count = serializers.IntegerField(read_only=True)

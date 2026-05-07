@@ -16,7 +16,7 @@ from django.db.models import Count, OuterRef, Subquery
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views import View
-from drf_spectacular.utils import extend_schema, inline_serializer
+from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
 from rest_framework import serializers, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.mixins import (
@@ -42,7 +42,13 @@ from config.constants import (
     STATS_CACHE_KEY,
 )
 
-from .serializers import CheckInSerializer, UnitSerializer
+from .serializers import (
+    CheckInSerializer,
+    LeaderboardSerializer,
+    LocationClaimRequestSerializer,
+    LocationClaimResponseSerializer,
+    UnitSerializer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -144,39 +150,45 @@ class LocationClaimView(APIView):
     parser_classes = [JSONParser]
 
     @extend_schema(
-        request=inline_serializer(
-            name="LocationClaimRequest",
-            fields={
-                "lat": serializers.FloatField(),
-                "lng": serializers.FloatField(),
-                "accuracy": serializers.FloatField(),
-            },
-        ),
-        responses=inline_serializer(
-            name="LocationClaimResponse",
-            fields={"token": serializers.CharField()},
-        ),
+        request=LocationClaimRequestSerializer,
+        responses=LocationClaimResponseSerializer,
     )
     def post(self, request) -> Response:
         from backend.location_token import issue_location_claim  # noqa: PLC0415
 
-        try:
-            lat = float(request.data["lat"])
-            lng = float(request.data["lng"])
-            accuracy = float(request.data["accuracy"])
-        except KeyError, TypeError, ValueError:
+        rl_key = str(request.user.id) if request.user.is_authenticated else request.META.get("REMOTE_ADDR", "")
+        if not ratelimit.consume(request, action="location_claim", key=rl_key):
             return Response(
-                {"detail": "lat, lng, and accuracy are required numeric fields."},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"detail": "Too many attempts. Please try again later."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
             )
+
+        serializer = LocationClaimRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        unit_identifier = serializer.validated_data["unit_identifier"]
+        get_object_or_404(Unit, identifier=unit_identifier)
+
         user_id = request.user.id if request.user.is_authenticated else None
-        token = issue_location_claim(lat, lng, accuracy, user_id)
+        try:
+            token = issue_location_claim(
+                serializer.validated_data["lat"],
+                serializer.validated_data["lng"],
+                serializer.validated_data["accuracy"],
+                user_id,
+                unit_identifier=unit_identifier,
+            )
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         return Response({"token": token})
 
 
 class GameLeaderboardView(APIView):
     permission_classes = [AllowAny]
 
+    @extend_schema(
+        parameters=[OpenApiParameter("pk", int, OpenApiParameter.PATH)],
+        responses=LeaderboardSerializer,
+    )
     def get(self, request, pk: int):
         from backend.services import compute_game_leaderboard  # noqa: PLC0415
 
@@ -241,7 +253,7 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         max_drift = unit.game.max_gps_drift if unit.game else LOCATION_CLAIM_MAX_DRIFT_METERS
         user_id = self.request.user.id if self.request.user.is_authenticated else None
         try:
-            verify_location_claim(token, user_id, lat, lng, max_drift)
+            verify_location_claim(token, user_id, unit.identifier, lat, lng, max_drift)
         except ValueError as exc:
             raise ValidationError({"location_token": str(exc)}) from exc
 
