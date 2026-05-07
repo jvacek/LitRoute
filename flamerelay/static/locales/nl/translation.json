@@ -45,6 +45,7 @@
       "gpsNotice": "Deze eenheid vereist je realtime locatie. Deze wordt vastgelegd wanneer je op Inchecken tikt.",
       "gpsNudgeHint": "Verplaats je speld als je je exacte locatie liever niet deelt.",
       "locationLabel": "Locatie",
+      "locationLockedOnEdit": "De locatie kan niet meer worden gewijzigd nadat een check-in is aangemaakt.",
       "locationSet": "Locatie ingesteld",
       "messageLabel": "Bericht",
       "messagePlaceholder": "Waar heb je hem gevonden? Waar ben je? Wat is het volgende voor deze aansteker?",

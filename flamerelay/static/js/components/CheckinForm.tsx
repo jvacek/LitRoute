@@ -513,8 +513,49 @@ export default function CheckinForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Edit mode: location is read-only after creation, so render a
+          non-interactive map. Applies regardless of whether the unit is
+          GPS-enforced — neither edit case can move the pin. */}
+      {!isCreate && pickedLatLng && (
+        <div>
+          <label className="mb-2 block text-sm font-medium text-char">
+            {t('checkin.form.locationLabel')}
+          </label>
+          <div className="overflow-hidden rounded-card border border-char/10">
+            <ReactMap
+              mapStyle={`https://api.maptiler.com/maps/dataviz/style.json?key=${maptilerKey}`}
+              initialViewState={{
+                longitude: pickedLatLng[1],
+                latitude: pickedLatLng[0],
+                zoom: 12,
+              }}
+              style={{ height: '240px', width: '100%' }}
+              interactive={false}
+              attributionControl={false}
+            >
+              <Source id="pin" type="geojson" data={pinGeoJSON}>
+                <Layer
+                  id="pin-circle"
+                  type="circle"
+                  paint={{
+                    'circle-radius': 10,
+                    'circle-color': '#e8a030',
+                    'circle-opacity': 0.9,
+                    'circle-stroke-width': 2,
+                    'circle-stroke-color': '#ffffff',
+                  }}
+                />
+              </Source>
+            </ReactMap>
+          </div>
+          <p className="mt-1.5 text-xs text-smoke">
+            {t('checkin.form.locationLockedOnEdit')}
+          </p>
+        </div>
+      )}
+
       {/* Location — non-GPS units only; GPS units render this section below the photos */}
-      {!isGpsEnforced && (
+      {!isGpsEnforced && isCreate && (
         <div>
           <label className="mb-2 block text-sm font-medium text-char">
             {t('checkin.form.locationLabel')}
@@ -745,7 +786,7 @@ export default function CheckinForm({
       />
 
       {/* Location — GPS-enforced units; placeholder until the user captures GPS */}
-      {isGpsEnforced && (
+      {isGpsEnforced && isCreate && (
         <div>
           <label className="mb-2 block text-sm font-medium text-char">
             {t('checkin.form.locationLabel')}
