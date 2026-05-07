@@ -207,18 +207,6 @@ def total_distance_traveled_in_km() -> float:
     return round(total, 2)
 
 
-def get_cached_game_rank(game_id: int, identifier: str) -> int | None:
-    from django.core.cache import cache  # noqa: PLC0415
-
-    data = cache.get(game_leaderboard_cache_key(game_id))
-    if data is None:
-        return None
-    for entry in data["individual"]:
-        if entry["identifier"] == identifier:
-            return entry["rank"]
-    return None
-
-
 def invalidate_checkin_caches(unit_identifier: str, game_id: int | None = None) -> None:
     from django.core.cache import cache  # noqa: PLC0415
 

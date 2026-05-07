@@ -134,8 +134,6 @@ class UnitSerializer(serializers.ModelSerializer):
     is_gps_enforced = serializers.SerializerMethodField()
     team = TeamSerializer(read_only=True)
     game = GameSerializer(read_only=True)
-    game_rank = serializers.SerializerMethodField()
-    game_total = serializers.SerializerMethodField()
 
     class Meta:
         model = Unit
@@ -151,8 +149,6 @@ class UnitSerializer(serializers.ModelSerializer):
             "can_check_in",
             "is_gps_enforced",
             "game",
-            "game_rank",
-            "game_total",
         ]
 
     def get_distance_traveled_km(self, obj: Unit) -> float:
@@ -176,15 +172,3 @@ class UnitSerializer(serializers.ModelSerializer):
 
     def get_is_gps_enforced(self, obj: Unit) -> bool:
         return obj.is_gps_enforced
-
-    def get_game_rank(self, obj: Unit) -> int | None:
-        if not obj.game_id:
-            return None
-        from backend.services import get_cached_game_rank  # noqa: PLC0415
-
-        return get_cached_game_rank(obj.game_id, obj.identifier)
-
-    def get_game_total(self, obj: Unit) -> int | None:
-        if not obj.game_id:
-            return None
-        return obj.game_total

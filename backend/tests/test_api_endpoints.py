@@ -708,25 +708,6 @@ class TestGameLeaderboard:
         assert data["individual"][0]["checkin_count"] == 3  # noqa: PLR2004
         assert data["individual"][1]["checkin_count"] == 2  # noqa: PLR2004
 
-    def test_unit_endpoint_game_rank_cold_cache_returns_none(self, client, user, db):
-        game = GameFactory.create(mode=Game.Modes.DISTANCE)
-        unit = UnitFactory.create(game=game)
-        # Cold cache — rank is not computed until the leaderboard page is visited.
-        res = client.get(f"/api/units/{unit.identifier}/")
-        body = res.json()
-        assert body["game_rank"] is None
-        assert body["game_total"] == 1
-
-    def test_unit_endpoint_game_rank_warm_cache(self, client, user, db):
-        game = GameFactory.create(mode=Game.Modes.DISTANCE)
-        unit = UnitFactory.create(game=game)
-        # Warm the cache by visiting the leaderboard endpoint.
-        client.get(f"/api/games/{game.id}/leaderboard/")
-        res = client.get(f"/api/units/{unit.identifier}/")
-        body = res.json()
-        assert body["game_rank"] == 1
-        assert body["game_total"] == 1
-
 
 # ── Distance Game: time limit is informational only ────────────────────────────
 

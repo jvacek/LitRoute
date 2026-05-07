@@ -456,6 +456,8 @@ export default function Unit() {
   const navigate = useNavigate();
   const [unit, setUnit] = useState<UnitData | null>(null);
   const [checkins, setCheckins] = useState<CheckInData[]>([]);
+  const [gameRank, setGameRank] = useState<number | null>(null);
+  const [gameTotal, setGameTotal] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [subscribeLoading, setSubscribeLoading] = useState(false);
@@ -499,6 +501,29 @@ export default function Unit() {
           !sessionStorage.getItem(`game-intro-seen-${unitData.game.id}`)
         ) {
           setShowGameModal(true);
+        }
+        // Rank/total are not on the unit endpoint — they live on the leaderboard,
+        // which is itself cached for 5 min. Fetch async so the page renders
+        // immediately and rank pops in once the second response arrives.
+        if (unitData.game) {
+          fetch(`/api/games/${unitData.game.id}/leaderboard/`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then(
+              (
+                board: {
+                  individual: { identifier: string; rank: number }[];
+                } | null,
+              ) => {
+                if (!board) return;
+                const entry = board.individual.find(
+                  (e) => e.identifier === unitData.identifier,
+                );
+                if (!entry) return;
+                setGameRank(entry.rank);
+                setGameTotal(board.individual.length);
+              },
+            )
+            .catch(console.error);
         }
       })
       .catch(console.error)
@@ -749,14 +774,14 @@ export default function Unit() {
                     {t('unit.statsFollowers')}
                   </div>
                 </div>
-                {unit.game && unit.game_rank != null && (
+                {unit.game && gameRank != null && (
                   <div>
                     <div className="font-heading text-2xl font-bold text-white">
-                      #{unit.game_rank}
+                      #{gameRank}
                     </div>
                     <div className="mt-0.5 text-xs uppercase tracking-wide text-white/40">
                       {t('unit.game.rankLabel', {
-                        total: formatNumber(unit.game_total ?? 0),
+                        total: formatNumber(gameTotal ?? 0),
                       })}
                     </div>
                   </div>

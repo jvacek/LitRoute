@@ -12,7 +12,7 @@ from django.core import signing
 from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
-from django.db.models import Count, OuterRef, Subquery
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views import View
@@ -202,13 +202,9 @@ class UnitViewSet(RetrieveModelMixin, GenericViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        game_unit_count_sq = (
-            Unit.objects.filter(game_id=OuterRef("game_id")).values("game_id").annotate(c=Count("id")).values("c")
-        )
         return Unit.objects.select_related("game").annotate(
             checkin_count=Count("checkin", distinct=True),
             subscriber_count=Count("subscribers", distinct=True),
-            game_total=Subquery(game_unit_count_sq),
         )
 
     def get_permissions(self):
