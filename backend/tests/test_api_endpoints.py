@@ -396,12 +396,18 @@ class TestUnitGameField:
 
 
 class TestLocationClaimView:
-    def test_anon_returns_token(self, client, db):
+    @pytest.fixture(autouse=True)
+    def _clear_cache(self):
+        cache.clear()
+        yield
+        cache.clear()
+
+    def test_anon_returns_token(self, client, unit):
         # Anonymous users can claim a location so GPS-enforced anonymous check-ins work.
         # The token binds user_id=None; authenticated tokens are not interchangeable.
         res = client.post(
             "/api/location-claim/",
-            {"lat": 51.5, "lng": -0.1, "accuracy": 10.0},
+            {"lat": 51.5, "lng": -0.1, "accuracy": 10.0, "unit_identifier": unit.identifier},
             format="json",
         )
         assert res.status_code == 200  # noqa: PLR2004
@@ -412,21 +418,56 @@ class TestLocationClaimView:
         res = client.post("/api/location-claim/", {}, format="json")
         assert res.status_code == 400  # noqa: PLR2004
 
-    def test_returns_token_string(self, client, user):
+    def test_unknown_unit_returns_404(self, client, user, db):
         client.force_authenticate(user=user)
         res = client.post(
             "/api/location-claim/",
-            {"lat": 51.5074, "lng": -0.1278, "accuracy": 10.0},
+            {"lat": 51.5, "lng": -0.1, "accuracy": 10.0, "unit_identifier": "no-such-unit"},
+            format="json",
+        )
+        assert res.status_code == 404  # noqa: PLR2004
+
+    def test_accuracy_too_low_returns_400(self, client, user, unit):
+        client.force_authenticate(user=user)
+        res = client.post(
+            "/api/location-claim/",
+            {"lat": 51.5, "lng": -0.1, "accuracy": 500.0, "unit_identifier": unit.identifier},
+            format="json",
+        )
+        assert res.status_code == 400  # noqa: PLR2004
+
+    def test_returns_token_string(self, client, user, unit):
+        client.force_authenticate(user=user)
+        res = client.post(
+            "/api/location-claim/",
+            {"lat": 51.5074, "lng": -0.1278, "accuracy": 10.0, "unit_identifier": unit.identifier},
             format="json",
         )
         assert res.status_code == 200  # noqa: PLR2004
         assert isinstance(res.json().get("token"), str)
+
+    def test_rate_limit_returns_429(self, client, user, unit, settings):
+        # Use a tight per-test limit so we don't hammer the endpoint
+        settings.ACCOUNT_RATE_LIMITS = {**settings.ACCOUNT_RATE_LIMITS, "location_claim": "2/m"}
+        client.force_authenticate(user=user)
+        body = {"lat": 51.5074, "lng": -0.1278, "accuracy": 10.0, "unit_identifier": unit.identifier}
+        # First two should succeed, third trips the limit
+        for _ in range(2):
+            assert client.post("/api/location-claim/", body, format="json").status_code == 200  # noqa: PLR2004
+        res = client.post("/api/location-claim/", body, format="json")
+        assert res.status_code == 429  # noqa: PLR2004
 
 
 # ── CheckIn Create — GPS-enforced ──────────────────────────────────────────────
 
 
 class TestCheckInCreateGpsEnforced:
+    @pytest.fixture(autouse=True)
+    def _clear_cache(self):
+        cache.clear()
+        yield
+        cache.clear()
+
     @pytest.fixture
     def gps_unit(self, db):
         game = Game.objects.create(mode=Game.Modes.RACE, name="GPS Race")
@@ -447,7 +488,7 @@ class TestCheckInCreateGpsEnforced:
         assert "location_token" in res.json()
 
     def test_valid_token_creates_checkin(self, client, gps_unit, user):
-        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id)
+        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id, unit_identifier=gps_unit.identifier)
         client.force_authenticate(user=user)
         with (
             patch("backend.models.send_email_to_subscribers_task.apply_async"),
@@ -462,7 +503,7 @@ class TestCheckInCreateGpsEnforced:
 
     def test_token_wrong_user_returns_400(self, client, gps_unit, user, db):
         other = UserFactory.create()
-        token = issue_location_claim(51.5074, -0.1278, 10.0, other.id)
+        token = issue_location_claim(51.5074, -0.1278, 10.0, other.id, unit_identifier=gps_unit.identifier)
         client.force_authenticate(user=user)
         with (
             patch("backend.models.send_email_to_subscribers_task.apply_async"),
@@ -475,8 +516,46 @@ class TestCheckInCreateGpsEnforced:
             )
         assert res.status_code == 400  # noqa: PLR2004
 
+    def test_token_wrong_unit_returns_400(self, client, gps_unit, user, db):
+        other_game = Game.objects.create(mode=Game.Modes.RACE, name="Other GPS Race")
+        other_unit = UnitFactory.create(game=other_game)
+        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id, unit_identifier=other_unit.identifier)
+        client.force_authenticate(user=user)
+        with (
+            patch("backend.models.send_email_to_subscribers_task.apply_async"),
+            patch("backend.models.send_thank_you_email_task.apply_async"),
+        ):
+            res = client.post(
+                f"/api/units/{gps_unit.identifier}/checkins/",
+                {"location": LONDON_PAYLOAD, "location_token": token},
+                format="json",
+            )
+        assert res.status_code == 400  # noqa: PLR2004
+        assert "different unit" in str(res.json())
+
+    def test_replay_returns_400(self, client, gps_unit, user):
+        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id, unit_identifier=gps_unit.identifier)
+        client.force_authenticate(user=user)
+        with (
+            patch("backend.models.send_email_to_subscribers_task.apply_async"),
+            patch("backend.models.send_thank_you_email_task.apply_async"),
+        ):
+            first = client.post(
+                f"/api/units/{gps_unit.identifier}/checkins/",
+                {"location": LONDON_PAYLOAD, "location_token": token},
+                format="json",
+            )
+            second = client.post(
+                f"/api/units/{gps_unit.identifier}/checkins/",
+                {"location": LONDON_PAYLOAD, "location_token": token},
+                format="json",
+            )
+        assert first.status_code == 201  # noqa: PLR2004
+        assert second.status_code == 400  # noqa: PLR2004
+        assert "already used" in str(second.json())
+
     def test_location_beyond_drift_returns_400(self, client, gps_unit, user):
-        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id)
+        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id, unit_identifier=gps_unit.identifier)
         client.force_authenticate(user=user)
         with (
             patch("backend.models.send_email_to_subscribers_task.apply_async"),
@@ -500,7 +579,7 @@ class TestCheckInCreateGpsEnforced:
         assert "location_token" in res.json()
 
     def test_anon_valid_token_creates_checkin(self, client, gps_unit):
-        token = issue_location_claim(51.5074, -0.1278, 10.0, None)
+        token = issue_location_claim(51.5074, -0.1278, 10.0, None, unit_identifier=gps_unit.identifier)
         with (
             patch("backend.models.send_email_to_subscribers_task.apply_async"),
             patch("backend.models.send_thank_you_email_task.apply_async"),
@@ -514,7 +593,7 @@ class TestCheckInCreateGpsEnforced:
 
     def test_anon_authed_token_rejected(self, client, gps_unit, user):
         # A token minted for an authenticated user must not be accepted anonymously.
-        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id)
+        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id, unit_identifier=gps_unit.identifier)
         with (
             patch("backend.models.send_email_to_subscribers_task.apply_async"),
             patch("backend.models.send_thank_you_email_task.apply_async"),
@@ -666,7 +745,7 @@ class TestDistanceGameTimeLimit:
 
         # Now another user attempts a check-in. It must succeed.
         next_user = UserFactory.create()
-        token = issue_location_claim(48.8566, 2.3522, 10.0, next_user.id)
+        token = issue_location_claim(48.8566, 2.3522, 10.0, next_user.id, unit_identifier=unit.identifier)
         client.force_authenticate(user=next_user)
         with (
             patch("backend.models.send_email_to_subscribers_task.apply_async"),
