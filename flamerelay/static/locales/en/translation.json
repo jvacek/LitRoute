@@ -333,6 +333,8 @@
       "mapDescription": "Every line is one lighter's journey. Faded segments happened after the game ended.",
       "mapDuringLegend": "During game",
       "mapEmpty": "No journeys to plot yet.",
+      "mapReplay": "Replay",
+      "mapReplaying": "Replaying…",
       "mapTitle": "Journeys",
       "noEntries": "No check-ins yet.",
       "placeHeader": "Last seen",

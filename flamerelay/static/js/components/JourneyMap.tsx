@@ -1,5 +1,5 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactMap, {
   AttributionControl,
@@ -14,6 +14,15 @@ interface JourneyPoint {
   date: string;
   after_end: boolean;
 }
+
+// Replay duration scales with check-in count: 2s for sparse games (~100
+// check-ins) up to 10s for dense ones (~500+ across all units).
+const REPLAY_MIN_MS = 2000;
+const REPLAY_MAX_MS = 10000;
+const REPLAY_MS_PER_CHECKIN = 20;
+// Brief pause at the end of replay before reverting to the "show everything"
+// view, so the user sees the completed picture before it stops being highlighted.
+const REPLAY_HOLD_MS = 600;
 
 interface TeamRef {
   name: string;
@@ -65,17 +74,97 @@ export default function JourneyMap({ entries, maptilerKey }: JourneyMapProps) {
   const [mapLoaded, setMapLoaded] = useState(false);
   const initialFitDone = useRef(false);
 
-  const allPoints = useMemo<[number, number][]>(
+  // Pre-parse each check-in's date once so the replay loop doesn't reparse
+  // strings on every animation frame.
+  const indexedEntries = useMemo(
     () =>
-      entries.flatMap((e) =>
-        e.journey.map((p) => [p.lng, p.lat] as [number, number]),
-      ),
+      entries.map((e) => ({
+        ...e,
+        journey: e.journey.map((p) => ({
+          ...p,
+          t: new Date(p.date).getTime(),
+        })),
+      })),
     [entries],
   );
+
+  const allPoints = useMemo<[number, number][]>(
+    () =>
+      indexedEntries.flatMap((e) =>
+        e.journey.map((p) => [p.lng, p.lat] as [number, number]),
+      ),
+    [indexedEntries],
+  );
+
+  const timeBounds = useMemo(() => {
+    let min = Infinity;
+    let max = -Infinity;
+    for (const e of indexedEntries) {
+      for (const p of e.journey) {
+        if (p.t < min) min = p.t;
+        if (p.t > max) max = p.t;
+      }
+    }
+    return { min, max };
+  }, [indexedEntries]);
+
+  const totalCheckins = useMemo(
+    () => indexedEntries.reduce((s, e) => s + e.journey.length, 0),
+    [indexedEntries],
+  );
+
+  const replayDurationMs = Math.max(
+    REPLAY_MIN_MS,
+    Math.min(REPLAY_MAX_MS, totalCheckins * REPLAY_MS_PER_CHECKIN),
+  );
+
+  // null = show everything (default). A timestamp = show only points dated
+  // ≤ cursor; the RAF loop advances this from min to max time.
+  const [replayCursor, setReplayCursor] = useState<number | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const holdTimeoutRef = useRef<number | null>(null);
+
+  useEffect(
+    () => () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      if (holdTimeoutRef.current !== null)
+        window.clearTimeout(holdTimeoutRef.current);
+    },
+    [],
+  );
+
+  const isReplaying = replayCursor !== null;
+
+  const startReplay = useCallback(() => {
+    if (
+      timeBounds.min === Infinity ||
+      timeBounds.max === timeBounds.min ||
+      isReplaying
+    )
+      return;
+    const { min, max } = timeBounds;
+    const wallStart = performance.now();
+    setReplayCursor(min);
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - wallStart) / replayDurationMs);
+      setReplayCursor(min + (max - min) * t);
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        rafRef.current = null;
+        holdTimeoutRef.current = window.setTimeout(() => {
+          setReplayCursor(null);
+          holdTimeoutRef.current = null;
+        }, REPLAY_HOLD_MS);
+      }
+    };
+    rafRef.current = requestAnimationFrame(tick);
+  }, [timeBounds, isReplaying, replayDurationMs]);
 
   // Single GeoJSON for both line variants and markers — colour is encoded as a
   // feature property and pulled out by the layer paint expression. One source,
   // three layers — scales to thousands of points without per-feature React work.
+  // During replay, each unit's journey is sliced to points dated ≤ cursor.
   const featureCollection = useMemo(() => {
     type Feature =
       | {
@@ -90,19 +179,25 @@ export default function JourneyMap({ entries, maptilerKey }: JourneyMapProps) {
         };
 
     const features: Feature[] = [];
+    const cursor = replayCursor ?? Infinity;
 
-    for (const entry of entries) {
+    for (const entry of indexedEntries) {
       if (entry.journey.length === 0) continue;
+      const visible =
+        cursor === Infinity
+          ? entry.journey
+          : entry.journey.filter((p) => p.t <= cursor);
+      if (visible.length === 0) continue;
       const color = colourFor(entry);
 
       // Split the route at the first post-end point. Post-end line includes
       // the last in-game point too so the path stays visually continuous.
-      const firstAfter = entry.journey.findIndex((p) => p.after_end);
-      const splitAt = firstAfter === -1 ? entry.journey.length : firstAfter;
+      const firstAfter = visible.findIndex((p) => p.after_end);
+      const splitAt = firstAfter === -1 ? visible.length : firstAfter;
 
-      const inGame = entry.journey.slice(0, splitAt);
+      const inGame = visible.slice(0, splitAt);
       const postEnd =
-        firstAfter === -1 ? [] : entry.journey.slice(Math.max(0, splitAt - 1));
+        firstAfter === -1 ? [] : visible.slice(Math.max(0, splitAt - 1));
 
       if (inGame.length > 1) {
         features.push({
@@ -125,7 +220,7 @@ export default function JourneyMap({ entries, maptilerKey }: JourneyMapProps) {
         });
       }
 
-      for (const p of entry.journey) {
+      for (const p of visible) {
         features.push({
           type: 'Feature',
           geometry: { type: 'Point', coordinates: [p.lng, p.lat] },
@@ -135,7 +230,7 @@ export default function JourneyMap({ entries, maptilerKey }: JourneyMapProps) {
     }
 
     return { type: 'FeatureCollection' as const, features };
-  }, [entries]);
+  }, [indexedEntries, replayCursor]);
 
   useEffect(() => {
     if (!mapLoaded || initialFitDone.current || allPoints.length === 0) return;
@@ -232,6 +327,16 @@ export default function JourneyMap({ entries, maptilerKey }: JourneyMapProps) {
           />
           {t('game.leaderboard.mapAfterEndLegend')}
         </span>
+        <button
+          type="button"
+          onClick={startReplay}
+          disabled={isReplaying}
+          className="ml-auto rounded-btn bg-amber px-3 py-1 text-xs font-medium tracking-wide text-char transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-60"
+        >
+          {isReplaying
+            ? t('game.leaderboard.mapReplaying')
+            : t('game.leaderboard.mapReplay')}
+        </button>
       </div>
     </div>
   );
