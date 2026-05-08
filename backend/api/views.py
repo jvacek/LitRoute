@@ -387,9 +387,12 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
 
         unit = checkin.unit
         if unit.game_id:
+            from django.db import transaction  # noqa: PLC0415
+
             from backend.services import game_leaderboard_cache_key  # noqa: PLC0415
 
-            cache.delete(game_leaderboard_cache_key(unit.game_id))
+            game_id = unit.game_id
+            transaction.on_commit(lambda: cache.delete(game_leaderboard_cache_key(game_id)))
 
         checkin.refresh_from_db()
         serializer = self.get_serializer(checkin)
@@ -513,12 +516,14 @@ class GuestVerifyView(View):
                 user.save(update_fields=["name"])
         checkins.update(created_by=user, edit_token=None)
 
+        from django.db import transaction  # noqa: PLC0415
+
         cache_keys = [STATS_CACHE_KEY]
         if unit.game_id:
             from backend.services import game_leaderboard_cache_key  # noqa: PLC0415
 
             cache_keys.append(game_leaderboard_cache_key(unit.game_id))
-        cache.delete_many(cache_keys)
+        transaction.on_commit(lambda: cache.delete_many(cache_keys))
 
         # Establish a Django session so the user lands on the unit page already
         # signed in. Without this, the check-in is claimed in the DB but the
