@@ -507,7 +507,7 @@ export default function Unit() {
         // (other rows are nulled out to prevent slug enumeration).
         if (unitData.game) {
           const url = `/api/games/${unitData.game.id}/leaderboard/?from=${encodeURIComponent(unitData.identifier)}`;
-          fetch(url)
+          apiFetch(url)
             .then((r) => (r.ok ? r.json() : null))
             .then(
               (
