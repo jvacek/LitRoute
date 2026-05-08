@@ -37,6 +37,7 @@ export default function CheckinCreate() {
   );
   const [gameTimeWarning, setGameTimeWarning] = useState<string | null>(null);
   const [team, setTeam] = useState<TeamRef | null>(null);
+  const [subscriberCount, setSubscriberCount] = useState(0);
 
   useEffect(() => {
     apiFetch(`/api/units/${identifier}/`).then(async (r) => {
@@ -47,6 +48,7 @@ export default function CheckinCreate() {
       if (r.ok) {
         const data = (await r.json()) as {
           is_gps_enforced: boolean;
+          subscriber_count: number;
           team: TeamRef | null;
           game: {
             name: string;
@@ -58,6 +60,7 @@ export default function CheckinCreate() {
         };
         setIsGpsEnforced(data.is_gps_enforced ?? false);
         setTeam(data.team ?? null);
+        setSubscriberCount(data.subscriber_count ?? 0);
         setGpsDriftAllowanceM(data.game?.max_gps_drift ?? 0);
         if (data.game?.mode === 'distance' && data.game.end_time) {
           const remainingMinutes =
@@ -113,6 +116,7 @@ export default function CheckinCreate() {
         <GuestEmailCapture
           identifier={identifier}
           checkinId={guestCheckinId}
+          subscriberCount={subscriberCount}
           onDone={() => navigate(unitUrl)}
         />
       </main>

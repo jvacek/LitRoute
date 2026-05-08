@@ -13,7 +13,6 @@
     }
   },
   "checkin": {
-    "checkedIn": "Check-in bevestigd",
     "createTitle": "Nieuwe check-in",
     "editTitle": "Check-in bewerken",
     "form": {
@@ -75,11 +74,12 @@
     "guestEmailSent": "We hebben je een bevestigingslink gestuurd — tik erop en je staat op de lijst.",
     "guestEmailSentBack": "Terug naar Unit",
     "guestEmailSentTitle": "Check je inbox.",
-    "guestEmailSkip": "Voor nu overslaan",
-    "guestEmailSubmit": "Houd me op de hoogte",
-    "guestEmailSubtitle": "Laat je e-mailadres achter om mee te volgen — we laten het weten als deze aansteker ergens nieuws incheckt.",
-    "guestEmailTagline": "Een vlammetje gaat ver.",
-    "guestEmailTitle": "Je maakt nu deel uit van de reis."
+    "guestEmailSkip": "Nee bedankt — hou me niet op de hoogte.",
+    "guestEmailSocialProof_one": "Sluit je aan bij {{count}} andere persoon die deze aansteker volgt.",
+    "guestEmailSocialProof_other": "Sluit je aan bij {{count}} anderen die deze aansteker volgen.",
+    "guestEmailSubmit": "Volg deze aansteker",
+    "guestEmailSubtitle": "We sturen je een e-mail als iemand anders deze aansteker ergens nieuws incheckt. Dat is alles — geen reclame, in één tik uitschrijven.",
+    "guestEmailTitle": "Wil je weten waar deze aansteker hierna naartoe gaat?"
   },
   "common": {
     "about": "Over",

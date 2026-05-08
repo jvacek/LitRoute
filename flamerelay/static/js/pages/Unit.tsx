@@ -1103,6 +1103,7 @@ export default function Unit() {
             <GuestEmailCapture
               identifier={identifier}
               checkinId={claimingCheckinId}
+              subscriberCount={unit?.subscriber_count ?? 0}
               onDone={() => setClaimingCheckinId(null)}
             />
           </div>

@@ -15,10 +15,12 @@ function LighterIllustration() {
 export default function GuestEmailCapture({
   identifier,
   checkinId,
+  subscriberCount,
   onDone,
 }: {
   identifier: string;
   checkinId: number;
+  subscriberCount: number;
   onDone: () => void;
 }) {
   const { t } = useTranslation();
@@ -72,16 +74,15 @@ export default function GuestEmailCapture({
   return (
     <div className="mx-auto max-w-sm rounded-2xl bg-white px-8 py-10 text-center shadow-sm">
       <LighterIllustration />
-      <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-ember">
-        {t('checkin.checkedIn')}
-      </p>
-      <h1 className="font-heading mb-3 text-4xl font-bold text-char">
+      <h1 className="font-heading mb-3 text-3xl font-bold text-char">
         {t('checkin.guestEmailTitle')}
       </h1>
-      <p className="font-heading mb-1 text-base italic text-amber">
-        {t('checkin.guestEmailTagline')}
-      </p>
-      <p className="mb-8 text-smoke">{t('checkin.guestEmailSubtitle')}</p>
+      <p className="mb-6 text-smoke">{t('checkin.guestEmailSubtitle')}</p>
+      {subscriberCount > 0 && (
+        <p className="mb-4 text-sm font-medium text-amber">
+          {t('checkin.guestEmailSocialProof', { count: subscriberCount })}
+        </p>
+      )}
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <input
           type="email"
@@ -89,6 +90,9 @@ export default function GuestEmailCapture({
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t('checkin.guestEmailPlaceholder')}
           required
+          autoFocus
+          autoComplete="email"
+          inputMode="email"
           className="w-full rounded-input border border-char/15 bg-linen px-4 py-3 text-center text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
         />
         <button

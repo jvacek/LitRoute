@@ -13,7 +13,6 @@
     }
   },
   "checkin": {
-    "checkedIn": "Enregistrement confirmé",
     "createTitle": "Nouvel enregistrement",
     "editTitle": "Modifier l'enregistrement",
     "form": {
@@ -75,11 +74,12 @@
     "guestEmailSent": "Nous vous avons envoyé un lien à confirmer — appuyez dessus et vous êtes sur la liste.",
     "guestEmailSentBack": "Retour à l'Unit",
     "guestEmailSentTitle": "Vérifiez votre boîte de réception.",
-    "guestEmailSkip": "Passer pour l'instant",
-    "guestEmailSubmit": "Me prévenir",
-    "guestEmailSubtitle": "Laissez votre e-mail pour suivre — nous vous préviendrons quand ce briquet s'enregistrera ailleurs.",
-    "guestEmailTagline": "Une petite flamme, ça voyage.",
-    "guestEmailTitle": "Vous faites maintenant partie du voyage."
+    "guestEmailSkip": "Non merci — ne me prévenez pas.",
+    "guestEmailSocialProof_one": "Rejoignez {{count}} autre personne qui suit ce briquet.",
+    "guestEmailSocialProof_other": "Rejoignez {{count}} autres personnes qui suivent ce briquet.",
+    "guestEmailSubmit": "Suivre ce briquet",
+    "guestEmailSubtitle": "On vous enverra un e-mail quand quelqu'un d'autre s'enregistrera ailleurs avec ce briquet. C'est tout — pas de marketing, désabonnement en un clic.",
+    "guestEmailTitle": "Vous voulez savoir où ce briquet ira ensuite ?"
   },
   "common": {
     "about": "À propos",

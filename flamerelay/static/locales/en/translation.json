@@ -98,7 +98,6 @@
     }
   },
   "checkin": {
-    "checkedIn": "Check-in confirmed",
     "createTitle": "New check-in",
     "editTitle": "Edit check-in",
     "form": {
@@ -160,11 +159,12 @@
     "guestEmailSent": "We sent you a link to confirm — tap it and you're on the list.",
     "guestEmailSentBack": "Back to the unit",
     "guestEmailSentTitle": "Check your inbox.",
-    "guestEmailSkip": "Skip for now",
-    "guestEmailSubmit": "Notify me",
-    "guestEmailSubtitle": "Leave your email to follow along — we'll let you know when this lighter checks in somewhere new.",
-    "guestEmailTagline": "A little flame goes a long way.",
-    "guestEmailTitle": "You're part of the journey now."
+    "guestEmailSkip": "No thanks — don't update me.",
+    "guestEmailSocialProof_one": "Join {{count}} other person following this lighter.",
+    "guestEmailSocialProof_other": "Join {{count}} others following this lighter.",
+    "guestEmailSubmit": "Follow this lighter",
+    "guestEmailSubtitle": "We'll email you when someone else checks this lighter in somewhere new. That's it — no marketing, unsubscribe with one tap.",
+    "guestEmailTitle": "Want to know where this lighter goes next?"
   },
   "common": {
     "about": "About",
