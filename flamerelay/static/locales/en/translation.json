@@ -296,7 +296,28 @@
       }
     }
   },
+  "feedback": {
+    "captchaPending": "Please complete the captcha before submitting.",
+    "emailHelpAnonymous": "Optional — if you leave this blank we won't be able to follow up with you.",
+    "emailHelpAuthenticated": "Signed in as {{name}} — we'll send a confirmation to your account email.",
+    "emailLabel": "Your email (optional)",
+    "emailPlaceholder": "you@example.com",
+    "embedHeading": "Got something to share?",
+    "embedSubheading": "Bug reports, feature ideas, gripes, praise — a real person reads every message.",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "errorRequiredMessage": "Please write a message before submitting.",
+    "messageLabel": "Your message",
+    "messagePlaceholder": "Tell us what's on your mind — bugs, ideas, gripes, praise. All of it is read.",
+    "submit": "Send feedback",
+    "submitting": "Sending…",
+    "subtitle": "Bug reports, feature ideas, things that confused you — anything goes. A real person reads every message.",
+    "successMessage": "Your feedback is in. If you left an email, we sent a confirmation. Thanks for helping make LitRoute better.",
+    "successTitle": "Thank you",
+    "title": "Send feedback",
+    "youFallback": "you"
+  },
   "footer": {
+    "feedback": "Send feedback",
     "footerNav": "Footer navigation",
     "tagline": "Track your lighter's journey",
     "viewCommit": "View current commit on GitHub"
@@ -381,7 +402,7 @@
     "headline": "A lighter with a history. Add yours.",
     "howItWorks": {
       "heading": "Here's the deal.",
-      "step1Body": "Spot a lighter with a QR sticker. Scan it, or type its ID on litroute.com. Every city, every hand it passed through — it's all there waiting for you.",
+      "step1Body": "Spot a lighter with a QR sticker. Scan it, type its name on litroute.com. Every city, every hand it passed through — it's all there waiting for you.",
       "step1Title": "Find it.",
       "step2Body": "Drop a photo and a quick note. Your moment — where you were, what you saw — becomes a permanent chapter in the lighter's story.",
       "step2Title": "Check in.",
@@ -416,6 +437,7 @@
     "tryExample": "try \"john-93\" to see an example"
   },
   "nav": {
+    "feedback": "Feedback",
     "homeAriaLabel": "LitRoute home",
     "languageLabel": "Language",
     "mainNav": "Main navigation",

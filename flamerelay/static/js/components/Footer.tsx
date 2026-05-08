@@ -72,6 +72,12 @@ export default function Footer() {
             {t('terms.title')}
           </Link>
           <Link
+            to="/feedback/"
+            className="text-xs text-amber transition-colors hover:text-amber/80"
+          >
+            ✦ {t('footer.feedback')} ✦
+          </Link>
+          <Link
             to="/support/"
             className="text-xs text-amber transition-colors hover:text-amber/80"
           >

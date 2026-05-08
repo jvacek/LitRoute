@@ -18,6 +18,7 @@ import CheckinCreate from './pages/CheckinCreate';
 import CheckinEdit from './pages/CheckinEdit';
 import EmailConfirm from './pages/EmailConfirm';
 import ErrorPage from './pages/ErrorPage';
+import Feedback from './pages/Feedback';
 import GameLeaderboard from './pages/GameLeaderboard';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -84,6 +85,7 @@ export default function App() {
               <Route path="/about/" element={<About />} />
               <Route path="/support/" element={<Support />} />
               <Route path="/contribute/" element={<ContributorGuide />} />
+              <Route path="/feedback/" element={<Feedback />} />
               <Route path="/privacy/" element={<Privacy />} />
               <Route path="/terms/" element={<Terms />} />
               <Route path="/accounts/login/" element={<Login />} />
