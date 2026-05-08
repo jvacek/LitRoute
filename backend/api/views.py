@@ -32,11 +32,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
-from backend.models import CheckIn, CheckInImage, Game, Unit
+from backend.models import CheckIn, CheckInImage, Feedback, Game, Unit
 from config.constants import (
     CHECKIN_DELETE_GRACE_PERIOD_HOURS,
     CHECKIN_EDIT_GRACE_PERIOD_HOURS,
     CHECKIN_MAX_IMAGES,
+    FEEDBACK_MESSAGE_MAX_LENGTH,
     GUEST_EMAIL_VERIFICATION_EXPIRY_SECONDS,
     LOCATION_CLAIM_MAX_DRIFT_METERS,
     MIN_GAME_REQUIRED_WORD_CHARS,
@@ -613,3 +614,56 @@ class GuestVerifyView(View):
             email=email,
             redirect_url=f"/unit/{unit_identifier}/?verified=1",
         )
+
+
+class FeedbackView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        request=inline_serializer(
+            name="FeedbackRequest",
+            fields={
+                "message": serializers.CharField(max_length=FEEDBACK_MESSAGE_MAX_LENGTH),
+                "email": serializers.EmailField(required=False, allow_blank=True),
+                "turnstile_token": serializers.CharField(required=False, allow_blank=True),
+            },
+        ),
+        responses={
+            201: inline_serializer(name="FeedbackSuccess", fields={"detail": serializers.CharField()}),
+            400: inline_serializer(name="FeedbackError", fields={"detail": serializers.CharField()}),
+        },
+    )
+    def post(self, request):
+        message = (request.data.get("message") or "").strip()
+        if not message:
+            return Response({"detail": "Message is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if len(message) > FEEDBACK_MESSAGE_MAX_LENGTH:
+            return Response(
+                {"detail": f"Message must be {FEEDBACK_MESSAGE_MAX_LENGTH} characters or fewer."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if request.user.is_authenticated:
+            email = request.user.email or ""
+            user = request.user
+        else:
+            if settings.CLOUDFLARE_TURNSTILE_SECRET_KEY:
+                turnstile_token = request.data.get("turnstile_token", "")
+                if not _verify_turnstile(turnstile_token, request.META.get("REMOTE_ADDR", "")):
+                    return Response(
+                        {"detail": "Captcha verification failed. Please try again."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+            email = (request.data.get("email") or "").strip().lower()
+            if email:
+                try:
+                    validate_email(email)
+                except DjangoValidationError:
+                    return Response(
+                        {"detail": "Enter a valid email address."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+            user = None
+
+        Feedback.objects.create(user=user, email=email, message=message)
+        return Response({"detail": "Feedback received."}, status=status.HTTP_201_CREATED)

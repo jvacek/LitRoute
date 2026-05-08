@@ -18,12 +18,13 @@ from config.constants import (
     CHECKIN_ANONYMOUS_NAME_MAX_LENGTH,
     CHECKIN_IMAGE_MAX_UPLOAD_BYTES,
     DISTANCE_DEFAULT_ALLOWED_TIME,
+    FEEDBACK_MESSAGE_MAX_LENGTH,
     HOT_POTATO_SHELF_LIFE,
     LOCATION_CLAIM_MAX_DRIFT_METERS,
 )
 from flamerelay.users.models import User
 
-from .services import send_email_to_subscribers_task, send_thank_you_email_task
+from .services import send_email_to_subscribers_task, send_feedback_emails_task, send_thank_you_email_task
 
 _OBFUSCATED_DOT_RE = re.compile(r"[\(\[\{]\s*\.\s*[\)\]\}]")
 _URL_RE = re.compile(r"(?:https?://|www\.|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/)\S*", re.IGNORECASE)
@@ -304,3 +305,22 @@ def delete_checkin_image_file(sender, instance, **kwargs):
 
         image_name = instance.image.name
         transaction.on_commit(lambda: delete_checkin_image_file_task.delay(image_name))
+
+
+class Feedback(models.Model):
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    email = models.EmailField(blank=True)
+    message = models.TextField(max_length=FEEDBACK_MESSAGE_MAX_LENGTH)
+    date_created = models.DateTimeField(editable=False, default=timezone.now)
+
+    class Meta:
+        ordering = ["-date_created"]
+
+    def __str__(self):
+        return f"Feedback {self.pk} from {self.email or 'anonymous'} at {self.date_created!s}"
+
+
+@receiver(post_save, sender=Feedback)
+def send_feedback_emails_signal(sender, instance, created, **kwargs):
+    if created:
+        send_feedback_emails_task.apply_async(args=[instance.pk])

@@ -3,7 +3,9 @@ from django.contrib import admin
 from django.db.models import Count
 from django.utils.html import format_html, format_html_join
 
-from .models import CheckIn, CheckInImage, Game, Team, Unit
+from config.constants import FEEDBACK_ADMIN_PREVIEW_LENGTH
+
+from .models import CheckIn, CheckInImage, Feedback, Game, Team, Unit
 
 
 @admin.register(Game)
@@ -185,3 +187,20 @@ class CheckInAdmin(admin.ModelAdmin):
     list_select_related = ("unit", "created_by")
     actions = [send_email_to_subscribers]
     inlines = [CheckInImageInline]
+
+
+@admin.register(Feedback)
+class FeedbackAdmin(admin.ModelAdmin):
+    list_display = ("id", "date_created", "email", "user", "message_preview")
+    list_select_related = ("user",)
+    search_fields = ("email", "message")
+    readonly_fields = ("date_created", "user", "email", "message")
+
+    @admin.display(description="Message")
+    def message_preview(self, obj):
+        if len(obj.message) > FEEDBACK_ADMIN_PREVIEW_LENGTH:
+            return obj.message[:FEEDBACK_ADMIN_PREVIEW_LENGTH] + "…"
+        return obj.message
+
+    def has_add_permission(self, request):
+        return False

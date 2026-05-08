@@ -530,3 +530,56 @@ def send_guest_verification_email_task(token: str, email: str, unit_identifier: 
         html_message=html_message,
         fail_silently=False,
     )
+
+
+@shared_task(base=EmailTask, serializer="json")
+def send_feedback_emails_task(feedback_id: int):
+    from django.contrib.auth import get_user_model  # noqa: PLC0415
+    from django.contrib.sites.models import Site  # noqa: PLC0415
+    from django.template.loader import render_to_string  # noqa: PLC0415
+    from django.utils.html import strip_tags  # noqa: PLC0415
+
+    from .models import Feedback  # noqa: PLC0415
+
+    try:
+        feedback = Feedback.objects.select_related("user").get(pk=feedback_id)
+    except Feedback.DoesNotExist:
+        logger.info("Feedback %d no longer exists, skipping emails", feedback_id)
+        return
+
+    site = Site.objects.get_current()
+    from_email = f"LitRoute <noreply@{site.domain}>"
+
+    User = get_user_model()  # noqa: N806
+    admin_emails = list(
+        User.objects.filter(is_superuser=True, is_active=True).exclude(email="").values_list("email", flat=True)
+    )
+    if admin_emails:
+        submitter = feedback.email or "anonymous"
+        if feedback.user_id:
+            submitter = f"{feedback.user} ({feedback.email})"
+        admin_body = f"From: {submitter}\nSubmitted: {feedback.date_created}\n\n{feedback.message}\n"
+        admin_subject = f"LitRoute feedback from {feedback.email or 'anonymous'}"
+        logger.info("Sending feedback %d to %d admin(s)", feedback_id, len(admin_emails))
+        mail.send_mail(
+            subject=admin_subject,
+            message=admin_body,
+            from_email=from_email,
+            recipient_list=admin_emails,
+            fail_silently=False,
+        )
+
+    if feedback.email:
+        html_message = render_to_string(
+            "backend/email_feedback_thank_you.html",
+            {"instance": feedback, "site": site},
+        )
+        logger.info("Sending feedback thank-you to %s", feedback.email)
+        mail.send_mail(
+            subject="LitRoute: Thanks for your feedback",
+            message=strip_tags(html_message),
+            from_email=from_email,
+            recipient_list=[feedback.email],
+            html_message=html_message,
+            fail_silently=False,
+        )

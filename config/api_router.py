@@ -5,6 +5,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 from backend.api.views import (
     CheckInViewSet,
     ConfigView,
+    FeedbackView,
     GameJourneysView,
     GameLeaderboardView,
     GlobePinsView,
@@ -58,4 +59,5 @@ urlpatterns = [
     path("account/social-accounts/", SocialAccountDisconnectView.as_view(), name="account-social-accounts"),
     path("units/<str:identifier>/guest-subscribe/", GuestSubscribeView.as_view(), name="guest-subscribe"),
     path("guest-verify/", GuestVerifyView.as_view(), name="guest-verify"),
+    path("feedback/", FeedbackView.as_view(), name="feedback"),
 ]
