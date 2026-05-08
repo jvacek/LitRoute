@@ -65,8 +65,24 @@ updates:
     # Every weekday
     schedule:
       interval: 'daily'
+    # Only track [project.dependencies], skip [dependency-groups.dev] tooling.
+    allow:
+      - dependency-type: 'production'
     groups:
       python:
         update-types:
           - 'minor'
           - 'patch'
+
+  # Enable version updates for npm/package.json
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'daily'
+    # Only track runtime `dependencies`, skip `devDependencies`.
+    allow:
+      - dependency-type: 'production'
+    groups:
+      npm:
+        patterns:
+          - '*'
