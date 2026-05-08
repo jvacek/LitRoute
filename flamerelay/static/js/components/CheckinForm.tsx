@@ -419,13 +419,20 @@ export default function CheckinForm({
         const errs = await onSubmit(data);
         if (errs) {
           setErrors(errs);
-          // Token is single-use on the backend — drop it so the user re-captures.
-          setConfirmStep(null);
+          // The backend deliberately runs every check that DOESN'T consume the
+          // single-use token (required fields, permission, captcha, image count)
+          // before token verification. Only force a GPS recapture when the
+          // failure was actually about the token or location — otherwise the
+          // user can fix the field error and resubmit with the same token.
+          if (errs.location_token || errs.location) {
+            setConfirmStep(null);
+          }
         }
       } catch (err) {
+        // Network/unexpected error: leave confirmStep intact since the request
+        // may not have reached the server, in which case the token is still valid.
         console.error(err);
         setErrors({ non_field_errors: [t('common.unexpectedError')] });
-        setConfirmStep(null);
       } finally {
         setSubmitting(false);
       }
