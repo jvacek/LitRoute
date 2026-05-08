@@ -84,9 +84,9 @@ class TeamSerializer(serializers.ModelSerializer):
 
 
 class LocationClaimRequestSerializer(serializers.Serializer):
-    lat = serializers.FloatField()
-    lng = serializers.FloatField()
-    accuracy = serializers.FloatField()
+    lat = serializers.FloatField(min_value=-90, max_value=90)
+    lng = serializers.FloatField(min_value=-180, max_value=180)
+    accuracy = serializers.FloatField(min_value=0)
     unit_identifier = serializers.CharField(max_length=200)
 
 
@@ -94,9 +94,21 @@ class LocationClaimResponseSerializer(serializers.Serializer):
     token = serializers.CharField()
 
 
+class JourneyPointSerializer(serializers.Serializer):
+    lng = serializers.FloatField()
+    lat = serializers.FloatField()
+    date = serializers.CharField()
+    # True when the check-in happened after the game's end_time. The journey
+    # still includes these so the route stays continuous on the map; the
+    # frontend renders post-end points/segments in a different colour.
+    after_end = serializers.BooleanField()
+
+
 class LeaderboardIndividualEntrySerializer(serializers.Serializer):
     rank = serializers.IntegerField()
-    identifier = serializers.CharField()
+    # Null for every row except the one matching the ?from=<identifier> query
+    # param — keeps the public endpoint from leaking the full slug list.
+    identifier = serializers.CharField(allow_null=True)
     place = serializers.CharField(allow_blank=True)
     last_checkin_name = serializers.CharField(allow_blank=True)
     distance_km = serializers.FloatField()
@@ -125,6 +137,17 @@ class LeaderboardSerializer(serializers.Serializer):
     teams = LeaderboardTeamEntrySerializer(many=True, allow_null=True)
 
 
+class JourneyEntrySerializer(serializers.Serializer):
+    rank = serializers.IntegerField()
+    team = TeamSerializer(allow_null=True)
+    journey = JourneyPointSerializer(many=True)
+
+
+class GameJourneysSerializer(serializers.Serializer):
+    game_id = serializers.IntegerField()
+    journeys = JourneyEntrySerializer(many=True)
+
+
 class UnitSerializer(serializers.ModelSerializer):
     checkin_count = serializers.IntegerField(read_only=True)
     subscriber_count = serializers.IntegerField(read_only=True)
@@ -134,8 +157,6 @@ class UnitSerializer(serializers.ModelSerializer):
     is_gps_enforced = serializers.SerializerMethodField()
     team = TeamSerializer(read_only=True)
     game = GameSerializer(read_only=True)
-    game_rank = serializers.SerializerMethodField()
-    game_total = serializers.SerializerMethodField()
 
     class Meta:
         model = Unit
@@ -151,8 +172,6 @@ class UnitSerializer(serializers.ModelSerializer):
             "can_check_in",
             "is_gps_enforced",
             "game",
-            "game_rank",
-            "game_total",
         ]
 
     def get_distance_traveled_km(self, obj: Unit) -> float:
@@ -176,15 +195,3 @@ class UnitSerializer(serializers.ModelSerializer):
 
     def get_is_gps_enforced(self, obj: Unit) -> bool:
         return obj.is_gps_enforced
-
-    def get_game_rank(self, obj: Unit) -> int | None:
-        if not obj.game_id:
-            return None
-        from backend.services import get_cached_game_rank  # noqa: PLC0415
-
-        return get_cached_game_rank(obj.game_id, obj.identifier)
-
-    def get_game_total(self, obj: Unit) -> int | None:
-        if not obj.game_id:
-            return None
-        return obj.game_total

@@ -20,6 +20,14 @@ import LocationDeniedModal from './LocationDeniedModal';
 import PhotoUpload from './PhotoUpload';
 
 const MAX_IMAGES = 5;
+// Game-mode required fields must contain at least this many word characters
+// (Unicode letters or numbers) so the leaderboard isn't populated with junk
+// like "..." or "ab".
+const MIN_REQUIRED_WORD_CHARS = 3;
+
+function countWordChars(s: string): number {
+  return (s.match(/[\p{L}\p{N}]/gu) ?? []).length;
+}
 
 // Web Mercator zoom that makes a circle of `radiusM` at `lat` cover ~60% of the
 // confirm map's 240px height. Mercator m/px = 156543.03 * cos(lat) / 2^z.
@@ -365,6 +373,28 @@ export default function CheckinForm({
       // The submit button is disabled until confirmStep is set, so the only
       // way this branch fires without a token is Enter-in-text-field. Bail.
       if (!confirmStep) return;
+
+      // Game-mode requires Place (everyone) and Name (anonymous only) so the
+      // check-in can be attributed on the leaderboard. Reject fewer than
+      // MIN_REQUIRED_WORD_CHARS letters/digits so users can't sneak past with
+      // "..." or "ab". Validate before burning the single-use location_token.
+      const requiredFieldErrors: Record<string, string[]> = {};
+      if (countWordChars(place) < MIN_REQUIRED_WORD_CHARS) {
+        requiredFieldErrors.place = [t('checkin.form.errors.placeRequired')];
+      }
+      if (
+        showNameField &&
+        countWordChars(anonymousName) < MIN_REQUIRED_WORD_CHARS
+      ) {
+        requiredFieldErrors.anonymous_name = [
+          t('checkin.form.errors.nameRequired'),
+        ];
+      }
+      if (Object.keys(requiredFieldErrors).length > 0) {
+        setErrors(requiredFieldErrors);
+        return;
+      }
+
       setSubmitting(true);
       setErrors({});
       const data = new FormData();
@@ -389,13 +419,20 @@ export default function CheckinForm({
         const errs = await onSubmit(data);
         if (errs) {
           setErrors(errs);
-          // Token is single-use on the backend — drop it so the user re-captures.
-          setConfirmStep(null);
+          // The backend deliberately runs every check that DOESN'T consume the
+          // single-use token (required fields, permission, captcha, image count)
+          // before token verification. Only force a GPS recapture when the
+          // failure was actually about the token or location — otherwise the
+          // user can fix the field error and resubmit with the same token.
+          if (errs.location_token || errs.location) {
+            setConfirmStep(null);
+          }
         }
       } catch (err) {
+        // Network/unexpected error: leave confirmStep intact since the request
+        // may not have reached the server, in which case the token is still valid.
         console.error(err);
         setErrors({ non_field_errors: [t('common.unexpectedError')] });
-        setConfirmStep(null);
       } finally {
         setSubmitting(false);
       }
@@ -483,8 +520,49 @@ export default function CheckinForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Edit mode: location is read-only after creation, so render a
+          non-interactive map. Applies regardless of whether the unit is
+          GPS-enforced — neither edit case can move the pin. */}
+      {!isCreate && pickedLatLng && (
+        <div>
+          <label className="mb-2 block text-sm font-medium text-char">
+            {t('checkin.form.locationLabel')}
+          </label>
+          <div className="overflow-hidden rounded-card border border-char/10">
+            <ReactMap
+              mapStyle={`https://api.maptiler.com/maps/dataviz/style.json?key=${maptilerKey}`}
+              initialViewState={{
+                longitude: pickedLatLng[1],
+                latitude: pickedLatLng[0],
+                zoom: 12,
+              }}
+              style={{ height: '240px', width: '100%' }}
+              interactive={false}
+              attributionControl={false}
+            >
+              <Source id="pin" type="geojson" data={pinGeoJSON}>
+                <Layer
+                  id="pin-circle"
+                  type="circle"
+                  paint={{
+                    'circle-radius': 10,
+                    'circle-color': '#e8a030',
+                    'circle-opacity': 0.9,
+                    'circle-stroke-width': 2,
+                    'circle-stroke-color': '#ffffff',
+                  }}
+                />
+              </Source>
+            </ReactMap>
+          </div>
+          <p className="mt-1.5 text-xs text-smoke">
+            {t('checkin.form.locationLockedOnEdit')}
+          </p>
+        </div>
+      )}
+
       {/* Location — non-GPS units only; GPS units render this section below the photos */}
-      {!isGpsEnforced && (
+      {!isGpsEnforced && isCreate && (
         <div>
           <label className="mb-2 block text-sm font-medium text-char">
             {t('checkin.form.locationLabel')}
@@ -620,6 +698,16 @@ export default function CheckinForm({
         </div>
       )}
 
+      {/* Game-mode leaderboard note: explains why place (and name, for anon)
+          are required. Shown above the first field that gets the asterisk. */}
+      {isGpsEnforced && isCreate && (
+        <p className="rounded-card border border-amber/40 bg-amber/10 px-4 py-3 text-sm text-char">
+          {showNameField
+            ? t('checkin.form.gameRequiredNote.anon')
+            : t('checkin.form.gameRequiredNote.auth')}
+        </p>
+      )}
+
       {/* Place */}
       <div>
         <label
@@ -627,6 +715,7 @@ export default function CheckinForm({
           className="mb-1 block text-sm font-medium text-char"
         >
           {t('checkin.form.placeLabel')}
+          {isGpsEnforced && isCreate && <span className="text-ember"> *</span>}
         </label>
         <input
           id="place"
@@ -671,7 +760,10 @@ export default function CheckinForm({
             htmlFor="anonymous-name"
             className="mb-1 block text-sm font-medium text-char"
           >
-            {t('checkin.form.nameLabel')}
+            {isGpsEnforced
+              ? t('checkin.form.nameLabelRequired')
+              : t('checkin.form.nameLabel')}
+            {isGpsEnforced && <span className="text-ember"> *</span>}
           </label>
           <input
             id="anonymous-name"
@@ -682,6 +774,9 @@ export default function CheckinForm({
             maxLength={100}
             className="w-full rounded-input border border-char/15 bg-white px-4 py-3 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
           />
+          {errors.anonymous_name && (
+            <p className={fieldErrorClass}>{errors.anonymous_name.join(' ')}</p>
+          )}
         </div>
       )}
 
@@ -698,7 +793,7 @@ export default function CheckinForm({
       />
 
       {/* Location — GPS-enforced units; placeholder until the user captures GPS */}
-      {isGpsEnforced && (
+      {isGpsEnforced && isCreate && (
         <div>
           <label className="mb-2 block text-sm font-medium text-char">
             {t('checkin.form.locationLabel')}

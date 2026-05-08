@@ -82,4 +82,6 @@ def _haversine_m(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
     dphi = math.radians(lat2 - lat1)
     dlambda = math.radians(lng2 - lng1)
     a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
-    return 2 * earth_radius_m * math.asin(math.sqrt(a))
+    # FP error can push sqrt(a) slightly above 1 for near-antipodal points,
+    # which would make asin() raise. Clamp to keep the result in domain.
+    return 2 * earth_radius_m * math.asin(min(1.0, math.sqrt(a)))

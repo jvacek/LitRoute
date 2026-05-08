@@ -41,6 +41,8 @@ just prune          # remove containers AND volumes (destructive)
 | Mailpit | http://localhost:8025 | Local email UI            |
 | Flower  | http://localhost:5555 | Celery monitoring         |
 
+**Browser-based UI testing (Chrome DevTools MCP, manual smoke tests) always uses port 3000, never 8000.** The Django shell on :8000 has a SPA catch-all route that returns `text/html` for unknown paths — including hashed webpack bundle URLs — which causes the page to render blank with MIME-type errors in the console. The webpack dev server on :3000 serves the bundles directly with correct MIME types and proxies `/api/` to Django. Curl/API checks against :8000 are fine; only Chrome-rendered pages need :3000.
+
 Secrets live in `.envs/.local/` (git-ignored). Do not commit these.
 
 ## Running Tests
@@ -72,6 +74,8 @@ prek run --all-files                   # full sweep
 The hook chain covers: Ruff (Python, 120-char), Prettier (JS/CSS/JSON), ESLint + `tsc --noEmit`, djLint, django-upgrade, pyproject-fmt, `lint-translations`, `uv-lock`. Templates are excluded from Prettier.
 
 **JSX text never uses bare apostrophes or quotes.** ESLint's `react/no-unescaped-entities` rejects them and Prettier won't fix it. Use `&apos;` for `'` and `&quot;` for `"`.
+
+**Translation JSON values use real characters, not HTML entities.** The JSX rule above does NOT apply to `flamerelay/static/locales/*/translation.json` — those values are inserted into the DOM as raw strings via `t()`, so `&apos;` would render literally as `&apos;`. Write `lighter's` not `lighter&apos;s` in JSON.
 
 ## Project Structure
 

@@ -3,7 +3,7 @@ import logging
 import sentry_sdk
 from sentry_sdk.integrations.celery import CeleryIntegration
 from sentry_sdk.integrations.django import DjangoIntegration
-from sentry_sdk.integrations.logging import LoggingIntegration
+from sentry_sdk.integrations.logging import LoggingIntegration, ignore_logger
 from sentry_sdk.integrations.redis import RedisIntegration
 
 from .base import *  # noqa: F403
@@ -34,6 +34,12 @@ CACHES = {
         },
     },
 }
+# Without this, IGNORE_EXCEPTIONS=True silently swallows Redis errors and
+# Sentry never sees them. With it, every ignored exception is logged via the
+# `django_redis.cache` logger configured below, which routes to Sentry via
+# the LoggingIntegration.
+DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS = True
+DJANGO_REDIS_LOGGER = "django_redis.cache"
 
 # SECURITY
 # ------------------------------------------------------------------------------
@@ -128,6 +134,14 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         },
+        # Dedicated Sentry sink for `django_redis.cache`. Set at WARNING so any
+        # level django-redis emits becomes a real Sentry event, not just a
+        # breadcrumb. The global LoggingIntegration's event_level is ERROR,
+        # which would miss WARNINGs.
+        "sentry_redis_events": {
+            "level": "WARNING",
+            "class": "sentry_sdk.integrations.logging.EventHandler",
+        },
     },
     "root": {"level": "INFO", "handlers": ["console"]},
     "loggers": {
@@ -141,6 +155,18 @@ LOGGING = {
         "django.security.DisallowedHost": {
             "level": "ERROR",
             "handlers": ["console"],
+            "propagate": False,
+        },
+        # `IGNORE_EXCEPTIONS=True` silences Redis errors at the cache layer.
+        # `DJANGO_REDIS_LOG_IGNORED_EXCEPTIONS=True` (above) re-emits them
+        # via this logger; the dedicated `sentry_redis_events` handler
+        # captures them as Sentry events. `propagate: False` + the matching
+        # `ignore_logger("django_redis.cache")` call after `sentry_sdk.init`
+        # below keeps the global LoggingIntegration from double-emitting
+        # ERROR records.
+        "django_redis.cache": {
+            "level": "WARNING",
+            "handlers": ["console", "sentry_redis_events"],
             "propagate": False,
         },
     },
@@ -167,6 +193,12 @@ sentry_sdk.init(
     environment=env("SENTRY_ENVIRONMENT", default="production"),
     traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
 )
+
+# Capture django-redis cache exceptions via the dedicated `sentry_redis_events`
+# handler in LOGGING above (level=WARNING). Pair with `ignore_logger` so the
+# global LoggingIntegration's `callHandlers` patch doesn't ALSO emit an event
+# for ERROR records — without this, every cache error would be sent twice.
+ignore_logger("django_redis.cache")
 
 # django-rest-framework
 # -------------------------------------------------------------------------------

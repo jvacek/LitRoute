@@ -36,12 +36,22 @@ DISTANCE_DEFAULT_ALLOWED_TIME = 60 * 24  # 60 days in hours — Distance mode de
 HOT_POTATO_SHELF_LIFE = 24 * 5  # hours (5 days) — Hot Potato mode default
 HOT_POTATO_MIN_DISTANCE_METERS = 1000
 
+# Game-mode check-ins must populate a real place and (for anon users) a real
+# signing name — at least this many Unicode letters or digits — so leaderboard
+# rows aren't junk like "..." or "ab". Mirrored on the frontend.
+MIN_GAME_REQUIRED_WORD_CHARS = 3
+
 GAME_LEADERBOARD_CACHE_TTL = 5 * 60  # 5 minutes
 GAME_LEADERBOARD_CACHE_KEY_PREFIX = "game:leaderboard"
 
 # Single-flight lock around expensive cache-miss compute. Without it, a
 # thundering herd on cold cache runs the full NxM geodesic compute many times
-# in parallel.
-GAME_LEADERBOARD_LOCK_TTL_SECONDS = 30
-GAME_LEADERBOARD_LOCK_POLL_ATTEMPTS = 10
-GAME_LEADERBOARD_LOCK_POLL_SECONDS = 0.2
+# in parallel. Shared by every caller of `cached_with_lock`.
+CACHE_SINGLEFLIGHT_LOCK_TTL_SECONDS = 30
+CACHE_SINGLEFLIGHT_LOCK_POLL_ATTEMPTS = 10
+CACHE_SINGLEFLIGHT_LOCK_POLL_SECONDS = 0.2
+
+# Journey-map data lives in a separate endpoint with its own cache. Heavier
+# payload, accessed less often than the leaderboard table, longer TTL.
+GAME_JOURNEYS_CACHE_TTL = 10 * 60  # 10 minutes
+GAME_JOURNEYS_CACHE_KEY_PREFIX = "game:journeys"

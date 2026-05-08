@@ -110,7 +110,13 @@
         "gpsVerificationFailed": "Location verification failed. Please try again.",
         "locationRequired": "Please click the map to set your location.",
         "maxPhotos": "Maximum {{max}} photos per check-in.",
+        "nameRequired": "Please add a name with at least 3 letters so your check-in counts on the leaderboard.",
+        "placeRequired": "Please add a place with at least 3 letters so your check-in counts on the leaderboard.",
         "svgNotSupported": "Only raster images (JPEG, PNG, WebP, etc.) are supported. SVG files cannot be uploaded."
+      },
+      "gameRequiredNote": {
+        "anon": "Place and your name are required so your check-in counts on the leaderboard.",
+        "auth": "Place is required so your check-in counts on the leaderboard."
       },
       "gpsDeniedModal": {
         "body": "Your browser or device is blocking location access. To check in here, you'll need to allow it.",
@@ -124,10 +130,12 @@
       "gpsNotice": "This unit requires your real-time location. It will be captured when you tap Check in.",
       "gpsNudgeHint": "Nudge your pin if you'd rather not share your exact location.",
       "locationLabel": "Location",
+      "locationLockedOnEdit": "Location can't be changed after creating a check-in.",
       "locationSet": "Location set",
       "messageLabel": "Message",
       "messagePlaceholder": "Where did you find it? Where are you? What's next for this lighter?",
       "nameLabel": "Your name (optional)",
+      "nameLabelRequired": "Your name",
       "namePlaceholder": "How should we sign this?",
       "passedOnNote": "Once someone else checks in after you, the lighter moves on — you won't be able to add more check-ins.",
       "placeLabel": "Place",
@@ -319,6 +327,8 @@
       "distanceHeader": "Distance",
       "individualTab": "Lighters",
       "lighterCountHeader": "Lighters",
+      "lightersDescriptionByCheckins": "Each row is one lighter, ranked by how many check-ins it has received.",
+      "lightersDescriptionByDistance": "Each row is one lighter, ranked by the total distance it has travelled.",
       "mapAfterEndLegend": "After game ended",
       "mapDescription": "Every line is one lighter's journey. Faded segments happened after the game ended.",
       "mapDuringLegend": "During game",
@@ -330,6 +340,8 @@
       "placeHeader": "Last seen",
       "rankHeader": "#",
       "teamHeader": "Team",
+      "teamsDescriptionByCheckins": "Teams are scored by the total check-ins received across all of their lighters.",
+      "teamsDescriptionByDistance": "Teams are scored by the total distance travelled across all of their lighters.",
       "teamsTab": "Teams",
       "title": "Leaderboard — {{name}}"
     },
@@ -626,8 +638,9 @@
     "deleteError": "Could not delete this check-in.",
     "editBtn": "Edit",
     "game": {
-      "leaderboardLink": "View game leaderboard →",
-      "rankLabel": "of {{total}}"
+      "leaderboardLink": "Go to leaderboard",
+      "rankLabel": "of {{total}}",
+      "showRules": "Show rules"
     },
     "gettingStarted": {
       "body": "You're the first one here. Whoever finds it next will be glad you did.",

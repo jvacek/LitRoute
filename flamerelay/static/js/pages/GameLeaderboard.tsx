@@ -3,10 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { apiFetch } from '../api';
 import Countdown from '../components/Countdown';
+import JourneyMap, { type JourneyEntry } from '../components/JourneyMap';
 import TeamBadge from '../components/TeamBadge';
 import { humanizeHours } from '../lib/duration';
 import { getGameConfig } from '../lib/gameConfig';
 import { formatKm, formatNumber } from '../lib/numbers';
+import { useConfig } from '../lib/useConfig';
 import ErrorPage from './ErrorPage';
 
 interface TeamRef {
@@ -16,7 +18,8 @@ interface TeamRef {
 
 interface IndividualEntry {
   rank: number;
-  identifier: string;
+  // Null for every row except the one matching the ?from=<identifier> query.
+  identifier: string | null;
   place: string;
   last_checkin_name: string;
   distance_km: number;
@@ -55,12 +58,20 @@ export default function GameLeaderboard() {
   const { gameId = '' } = useParams<{ gameId: string }>();
   const [searchParams] = useSearchParams();
   const fromIdentifier = searchParams.get('from');
+  const appConfig = useConfig();
+  const maptilerKey = appConfig?.maptilerKey ?? '';
   const [data, setData] = useState<LeaderboardData | null>(null);
+  const [journeys, setJourneys] = useState<JourneyEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    apiFetch(`/api/games/${gameId}/leaderboard/`)
+    // Pass ?from=<identifier> when known so that one row's identifier comes
+    // through; everyone else's identifier is nulled out by the backend.
+    const url = fromIdentifier
+      ? `/api/games/${gameId}/leaderboard/?from=${encodeURIComponent(fromIdentifier)}`
+      : `/api/games/${gameId}/leaderboard/`;
+    apiFetch(url)
       .then(async (r) => {
         if (!r.ok) {
           setNotFound(true);
@@ -73,6 +84,23 @@ export default function GameLeaderboard() {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
+  }, [gameId, fromIdentifier]);
+
+  useEffect(() => {
+    // Journey-map data is split off so the leaderboard table renders quickly
+    // and the rank lookup on /unit/ doesn't pull megabytes of coordinates.
+    apiFetch(`/api/games/${gameId}/journeys/`)
+      .then(async (r) => {
+        if (!r.ok) return null;
+        return (await r.json()) as {
+          game_id: number;
+          journeys: JourneyEntry[];
+        };
+      })
+      .then((d) => {
+        if (d) setJourneys(d.journeys);
+      })
+      .catch(console.error);
   }, [gameId]);
 
   if (notFound) return <ErrorPage code={404} />;
@@ -97,6 +125,12 @@ export default function GameLeaderboard() {
   const scoreHeader = isByCheckins
     ? t('game.leaderboard.checkinsHeader')
     : t('game.leaderboard.distanceHeader');
+  const teamsDescription = isByCheckins
+    ? t('game.leaderboard.teamsDescriptionByCheckins')
+    : t('game.leaderboard.teamsDescriptionByDistance');
+  const lightersDescription = isByCheckins
+    ? t('game.leaderboard.lightersDescriptionByCheckins')
+    : t('game.leaderboard.lightersDescriptionByDistance');
   const getRowScore = (row: IndividualEntry) =>
     isByCheckins
       ? formatNumber(row.checkin_count)
@@ -127,9 +161,10 @@ export default function GameLeaderboard() {
 
       {data.teams && data.teams.length > 0 && (
         <section className="mt-8">
-          <h2 className="mb-3 font-heading text-xl font-bold text-char">
+          <h2 className="font-heading text-xl font-bold text-char">
             {t('game.leaderboard.teamsTab')}
           </h2>
+          <p className="mb-3 mt-1 text-sm text-char/60">{teamsDescription}</p>
           <div
             role="table"
             className="grid grid-cols-[auto_1fr_auto_auto] overflow-hidden rounded-card border border-char/10 bg-parchment"
@@ -181,13 +216,28 @@ export default function GameLeaderboard() {
         </section>
       )}
 
+      {journeys.length > 0 && maptilerKey && (
+        <section className="mt-8">
+          <h2 className="font-heading text-xl font-bold text-char">
+            {t('game.leaderboard.mapTitle')}
+          </h2>
+          <p className="mb-3 mt-1 text-sm text-char/60">
+            {t('game.leaderboard.mapDescription')}
+          </p>
+          <JourneyMap entries={journeys} maptilerKey={maptilerKey} />
+        </section>
+      )}
+
       {data.individual.length === 0 ? (
         <p className="mt-8 text-char/60">{t('game.leaderboard.noEntries')}</p>
       ) : (
         <section className="mt-8">
-          <h2 className="mb-3 font-heading text-xl font-bold text-char">
+          <h2 className="font-heading text-xl font-bold text-char">
             {t('game.leaderboard.individualTab')}
           </h2>
+          <p className="mb-3 mt-1 text-sm text-char/60">
+            {lightersDescription}
+          </p>
           <div
             role="table"
             className="grid grid-cols-[auto_1fr_auto_auto] overflow-hidden rounded-card border border-char/10 bg-parchment"
@@ -207,7 +257,10 @@ export default function GameLeaderboard() {
               </div>
             </div>
             {data.individual.map((row) => {
-              const isFrom = fromIdentifier === row.identifier;
+              // identifier is null for every row except the ?from= one, so
+              // matching null-to-null doesn't accidentally highlight a row.
+              const isFrom =
+                row.identifier != null && fromIdentifier === row.identifier;
               const rowClass = isFrom
                 ? 'col-span-full grid grid-cols-subgrid items-baseline border-t border-char/10 bg-char text-white'
                 : 'col-span-full grid grid-cols-subgrid items-baseline border-t border-char/10';
@@ -215,7 +268,7 @@ export default function GameLeaderboard() {
               const primary = isFrom ? 'text-white' : 'text-char';
               const muted = isFrom ? 'text-white/75' : 'text-char/60';
               return (
-                <div role="row" key={row.identifier} className={rowClass}>
+                <div role="row" key={row.rank} className={rowClass}>
                   <div
                     role="cell"
                     className={`${dataCell} font-heading text-base font-bold ${rankColor}`}

@@ -25,7 +25,13 @@
         "gpsVerificationFailed": "La vérification de localisation a échoué. Veuillez réessayer.",
         "locationRequired": "Cliquez sur la carte pour définir votre position.",
         "maxPhotos": "Maximum {{max}} photos par enregistrement.",
+        "nameRequired": "Ajoutez un nom d'au moins 3 lettres pour que votre enregistrement compte au classement.",
+        "placeRequired": "Ajoutez un lieu d'au moins 3 lettres pour que votre enregistrement compte au classement.",
         "svgNotSupported": "Seules les images matricielles (JPEG, PNG, WebP, etc.) sont prises en charge. Les fichiers SVG ne peuvent pas être téléversés."
+      },
+      "gameRequiredNote": {
+        "anon": "Le lieu et votre nom sont requis pour que votre enregistrement compte au classement.",
+        "auth": "Le lieu est requis pour que votre enregistrement compte au classement."
       },
       "gpsDeniedModal": {
         "body": "Votre navigateur ou votre appareil bloque l'accès à la localisation. Pour vous enregistrer ici, vous devez l'autoriser.",
@@ -39,10 +45,12 @@
       "gpsNotice": "Cette unité nécessite votre position en temps réel. Elle sera capturée lorsque vous appuyez sur Enregistrement.",
       "gpsNudgeHint": "Déplacez votre repère si vous préférez ne pas partager votre position exacte.",
       "locationLabel": "Position",
+      "locationLockedOnEdit": "La position ne peut pas être modifiée après la création de l'enregistrement.",
       "locationSet": "Position définie",
       "messageLabel": "Message",
       "messagePlaceholder": "Où l'avez-vous trouvé ? Où êtes-vous ? Quelle est la suite pour ce briquet ?",
       "nameLabel": "Votre nom (optionnel)",
+      "nameLabelRequired": "Votre nom",
       "namePlaceholder": "Comment doit-on signer ?",
       "passedOnNote": "Dès que quelqu'un s'enregistre après vous, le briquet passe au suivant — vous ne pourrez plus ajouter d'enregistrements.",
       "placeLabel": "Lieu",
@@ -148,6 +156,8 @@
       "distanceHeader": "Distance",
       "individualTab": "Briquets",
       "lighterCountHeader": "Briquets",
+      "lightersDescriptionByCheckins": "Chaque ligne est un briquet, classé selon le nombre de passages reçus.",
+      "lightersDescriptionByDistance": "Chaque ligne est un briquet, classé selon la distance totale parcourue.",
       "mapAfterEndLegend": "Après la fin du jeu",
       "mapDescription": "Chaque ligne représente le parcours d'un briquet. Les segments estompés sont survenus après la fin du jeu.",
       "mapDuringLegend": "Pendant le jeu",
@@ -159,6 +169,8 @@
       "placeHeader": "Dernière position",
       "rankHeader": "#",
       "teamHeader": "Équipe",
+      "teamsDescriptionByCheckins": "Les équipes sont classées selon le total des passages reçus par tous leurs briquets.",
+      "teamsDescriptionByDistance": "Les équipes sont classées selon la distance totale parcourue par tous leurs briquets.",
       "teamsTab": "Équipes",
       "title": "Classement — {{name}}"
     },
@@ -289,8 +301,9 @@
     "deleteError": "Impossible de supprimer cet enregistrement.",
     "editBtn": "Modifier",
     "game": {
-      "leaderboardLink": "Voir le classement →",
-      "rankLabel": "sur {{total}}"
+      "leaderboardLink": "Aller au classement",
+      "rankLabel": "sur {{total}}",
+      "showRules": "Voir les règles"
     },
     "gettingStarted": {
       "body": "Vous êtes la première personne ici. La prochaine sera contente que vous soyez passé.",

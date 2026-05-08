@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import urllib.parse
 import urllib.request
 import uuid
@@ -9,10 +10,9 @@ from allauth.core import ratelimit
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import signing
-from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
-from django.db.models import Count, OuterRef, Subquery
+from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views import View
@@ -39,11 +39,12 @@ from config.constants import (
     CHECKIN_MAX_IMAGES,
     GUEST_EMAIL_VERIFICATION_EXPIRY_SECONDS,
     LOCATION_CLAIM_MAX_DRIFT_METERS,
-    STATS_CACHE_KEY,
+    MIN_GAME_REQUIRED_WORD_CHARS,
 )
 
 from .serializers import (
     CheckInSerializer,
+    GameJourneysSerializer,
     LeaderboardSerializer,
     LocationClaimRequestSerializer,
     LocationClaimResponseSerializer,
@@ -51,6 +52,10 @@ from .serializers import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Unicode letters or digits, mirroring the frontend's /[\p{L}\p{N}]/gu.
+# `[^\W_]` = word character that isn't underscore = letter or digit.
+_LETTER_OR_DIGIT_RE = re.compile(r"[^\W_]")
 
 
 def _verify_turnstile(token: str, remote_ip: str = "") -> bool:
@@ -186,14 +191,59 @@ class GameLeaderboardView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
-        parameters=[OpenApiParameter("pk", int, OpenApiParameter.PATH)],
+        parameters=[
+            OpenApiParameter("pk", int, OpenApiParameter.PATH),
+            OpenApiParameter(
+                "from",
+                str,
+                OpenApiParameter.QUERY,
+                required=False,
+                description=(
+                    "Unit identifier whose row should keep its identifier in the "
+                    "response. All other rows return identifier=null so the "
+                    "public endpoint cannot be used to enumerate unit slugs."
+                ),
+            ),
+        ],
         responses=LeaderboardSerializer,
     )
     def get(self, request, pk: int):
         from backend.services import compute_game_leaderboard  # noqa: PLC0415
 
         game = get_object_or_404(Game, pk=pk)
-        return Response(compute_game_leaderboard(game))
+        data = compute_game_leaderboard(game)
+        from_identifier = request.query_params.get("from")
+        # Build a new individual list at the response boundary; the cached dict
+        # keeps full identifiers server-side. Mutating the cache would pollute
+        # subsequent callers.
+        return Response(
+            {
+                **data,
+                "individual": [
+                    {**row, "identifier": row["identifier"] if row["identifier"] == from_identifier else None}
+                    for row in data["individual"]
+                ],
+            }
+        )
+
+
+class GameJourneysView(APIView):
+    """Map data for a Game's journeys, split from the leaderboard endpoint so
+    table-only callers (rank lookups on the unit page, the leaderboard table
+    itself) don't pay for the coordinate dump on every fetch. Anonymous: no
+    identifiers in the payload."""
+
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        parameters=[OpenApiParameter("pk", int, OpenApiParameter.PATH)],
+        responses=GameJourneysSerializer,
+    )
+    def get(self, request, pk: int):
+        from backend.services import compute_game_journeys  # noqa: PLC0415
+
+        game = get_object_or_404(Game, pk=pk)
+        return Response(compute_game_journeys(game))
 
 
 class UnitViewSet(RetrieveModelMixin, GenericViewSet):
@@ -202,13 +252,9 @@ class UnitViewSet(RetrieveModelMixin, GenericViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        game_unit_count_sq = (
-            Unit.objects.filter(game_id=OuterRef("game_id")).values("game_id").annotate(c=Count("id")).values("c")
-        )
         return Unit.objects.select_related("game").annotate(
             checkin_count=Count("checkin", distinct=True),
             subscriber_count=Count("subscribers", distinct=True),
-            game_total=Subquery(game_unit_count_sq),
         )
 
     def get_permissions(self):
@@ -239,6 +285,30 @@ class UnitViewSet(RetrieveModelMixin, GenericViewSet):
 class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, DestroyModelMixin, GenericViewSet):
     serializer_class = CheckInSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def _verify_game_required_fields(self, unit: Unit, validated_data) -> None:
+        """For game-enforced units, require a real `place` (everyone) and a real
+        `anonymous_name` (anon only) so leaderboard rows can be attributed.
+        Mirrors the frontend's MIN_REQUIRED_WORD_CHARS check — savvy clients
+        could otherwise bypass it via curl."""
+        if not unit.is_gps_enforced:
+            return
+        errors: dict[str, list[str]] = {}
+        place = validated_data.get("place") or ""
+        if len(_LETTER_OR_DIGIT_RE.findall(place)) < MIN_GAME_REQUIRED_WORD_CHARS:
+            errors["place"] = [
+                f"Place is required ({MIN_GAME_REQUIRED_WORD_CHARS}+ letters or digits) "
+                "so this check-in can be attributed on the leaderboard.",
+            ]
+        if not self.request.user.is_authenticated:
+            anon_name = validated_data.get("anonymous_name") or ""
+            if len(_LETTER_OR_DIGIT_RE.findall(anon_name)) < MIN_GAME_REQUIRED_WORD_CHARS:
+                errors["anonymous_name"] = [
+                    f"Name is required ({MIN_GAME_REQUIRED_WORD_CHARS}+ letters or digits) "
+                    "so this check-in can be attributed on the leaderboard.",
+                ]
+        if errors:
+            raise ValidationError(errors)
 
     def _verify_gps_token(self, unit: Unit, request_data, validated_location) -> None:
         from backend.location_token import verify_location_claim  # noqa: PLC0415
@@ -276,8 +346,9 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         headers = self.get_success_headers(data)
         return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def _save_checkin_record(self, unit, serializer):
-        """Handle auth/anon permission checks, save the CheckIn, return it."""
+    def _verify_can_check_in(self, unit: Unit) -> None:
+        """Permission gate. Runs before any single-use token is consumed so a 403
+        doesn't force the user to recapture GPS."""
         if self.request.user.is_authenticated:
             if unit.admin_only_checkin and not (self.request.user.is_superuser or self.request.user.is_staff):
                 msg = "This unit can only be checked in by admins."
@@ -288,26 +359,38 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
                     "its journey moves on. You can still follow along by subscribing."
                 )
                 raise PermissionDenied(msg)
+        elif unit.admin_only_checkin:
+            msg = "This unit can only be checked in by admins."
+            raise PermissionDenied(msg)
+
+    def _check_anon_captcha(self) -> None:
+        """Anon-only Turnstile check. Runs before the GPS token so a failed
+        captcha doesn't burn the single-use token."""
+        if self.request.user.is_authenticated:
+            return
+        if not settings.CLOUDFLARE_TURNSTILE_SECRET_KEY:
+            logger.error("CLOUDFLARE_TURNSTILE_SECRET_KEY is not set — anonymous check-in captcha is disabled")
+            return
+        turnstile_token = self.request.data.get("turnstile_token", "")
+        if not _verify_turnstile(turnstile_token, self.request.META.get("REMOTE_ADDR", "")):
+            raise serializers.ValidationError({"captcha": ["Captcha verification failed. Please try again."]})
+
+    def _verify_image_count(self, image_files) -> None:
+        if len(image_files) > CHECKIN_MAX_IMAGES:
+            raise serializers.ValidationError({"images": [f"You can upload at most {CHECKIN_MAX_IMAGES} images."]})
+
+    def _save_checkin_record(self, unit, serializer):
+        """Save the CheckIn after all pre-flight checks have passed."""
+        if self.request.user.is_authenticated:
             checkin = serializer.save(created_by=self.request.user, unit=unit)
             unit.subscribers.add(self.request.user)
         else:
-            if unit.admin_only_checkin:
-                msg = "This unit can only be checked in by admins."
-                raise PermissionDenied(msg)
-            if settings.CLOUDFLARE_TURNSTILE_SECRET_KEY:
-                turnstile_token = self.request.data.get("turnstile_token", "")
-                if not _verify_turnstile(turnstile_token, self.request.META.get("REMOTE_ADDR", "")):
-                    raise serializers.ValidationError({"captcha": ["Captcha verification failed. Please try again."]})
-            else:
-                logger.warning("CLOUDFLARE_TURNSTILE_SECRET_KEY is not set — anonymous check-in captcha is disabled")
             checkin = serializer.save(created_by=None, unit=unit, edit_token=uuid.uuid4())
         return checkin
 
     def _attach_checkin_images(self, checkin, image_files):
-        """Create CheckInImage rows; rolls back the checkin on any failure."""
-        if len(image_files) > CHECKIN_MAX_IMAGES:
-            checkin.delete()
-            raise serializers.ValidationError({"images": [f"You can upload at most {CHECKIN_MAX_IMAGES} images."]})
+        """Create CheckInImage rows; rolls back the checkin on any per-file failure.
+        Count is enforced earlier in `_verify_image_count`, before the GPS token."""
         for i, f in enumerate(image_files):
             try:
                 CheckInImage.objects.create(checkin=checkin, image=f, order=i)
@@ -318,14 +401,19 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
                 ) from None
 
     def perform_create(self, serializer):
-        from backend.services import invalidate_checkin_caches  # noqa: PLC0415
-
-        unit = get_object_or_404(Unit, identifier=self.kwargs["identifier"])
+        unit = get_object_or_404(Unit.objects.select_related("game"), identifier=self.kwargs["identifier"])
+        # Order matters: every check that does NOT consume a single-use token
+        # runs first, so a 4xx on permission/captcha/image-count doesn't force
+        # the user to recapture GPS.
+        self._verify_game_required_fields(unit, serializer.validated_data)
+        self._verify_can_check_in(unit)
+        self._check_anon_captcha()
+        self._verify_image_count(self.request.FILES.getlist("images"))
         if unit.is_gps_enforced:
             self._verify_gps_token(unit, self.request.data, serializer.validated_data.get("location"))
 
+        # Cache invalidation runs from the post_save signal in models.py.
         checkin = self._save_checkin_record(unit, serializer)
-        invalidate_checkin_caches(unit.identifier, unit.game_id)
         self._attach_checkin_images(checkin, self.request.FILES.getlist("images"))
 
     def _update_checkin_images(self, checkin, request):
@@ -371,6 +459,8 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
             raise PermissionDenied(msg)
 
     def partial_update(self, request, *args, **kwargs):
+        if "location" in request.data:
+            raise ValidationError({"location": ["Cannot be modified after creation."]})
         checkin = self.get_object()
         if not request.user.is_authenticated:
             self._check_edit_token(checkin, CHECKIN_EDIT_GRACE_PERIOD_HOURS)
@@ -384,15 +474,6 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
 
         super().partial_update(request, *args, **kwargs)
         self._update_checkin_images(checkin, request)
-
-        unit = checkin.unit
-        if unit.game_id:
-            from django.db import transaction  # noqa: PLC0415
-
-            from backend.services import game_leaderboard_cache_key  # noqa: PLC0415
-
-            game_id = unit.game_id
-            transaction.on_commit(lambda: cache.delete(game_leaderboard_cache_key(game_id)))
 
         checkin.refresh_from_db()
         serializer = self.get_serializer(checkin)
@@ -412,13 +493,8 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         return super().destroy(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
-        from backend.services import invalidate_checkin_caches  # noqa: PLC0415
-
-        unit = instance.unit
-        unit_identifier = unit.identifier
-        game_id = unit.game_id
+        # Cache invalidation runs from the post_delete signal in models.py.
         super().perform_destroy(instance)
-        invalidate_checkin_caches(unit_identifier, game_id)
 
 
 class GuestSubscribeView(APIView):
@@ -508,22 +584,24 @@ class GuestVerifyView(View):
         unit = get_object_or_404(Unit, identifier=unit_identifier)
         unit.subscribers.add(user)
 
-        checkins = CheckIn.objects.filter(pk=checkin_id, unit=unit, created_by__isnull=True)
+        # explicit list for cache snapshot
+        checkins = list(CheckIn.objects.filter(pk=checkin_id, unit=unit, created_by__isnull=True))
+
         if not user.name:
-            checkin = checkins.first()
-            if checkin and checkin.anonymous_name:
-                user.name = checkin.anonymous_name
-                user.save(update_fields=["name"])
-        checkins.update(created_by=user, edit_token=None)
-
-        from django.db import transaction  # noqa: PLC0415
-
-        cache_keys = [STATS_CACHE_KEY]
-        if unit.game_id:
-            from backend.services import game_leaderboard_cache_key  # noqa: PLC0415
-
-            cache_keys.append(game_leaderboard_cache_key(unit.game_id))
-        transaction.on_commit(lambda: cache.delete_many(cache_keys))
+            for c in checkins:
+                if c.anonymous_name:
+                    user.name = c.anonymous_name
+                    user.save(update_fields=["name"])
+                    break
+        # Per-instance save (not queryset.update) so the post_save signal
+        # fires and the cache invalidation in models.py runs. Stats also
+        # needs to invalidate (contributing_user_count changes when a guest
+        # claim flips created_by from null to a user); the signal handles
+        # that via invalidate_checkin_caches.
+        for c in checkins:
+            c.created_by = user
+            c.edit_token = None
+            c.save(update_fields=["created_by", "edit_token"])
 
         # Establish a Django session so the user lands on the unit page already
         # signed in. Without this, the check-in is claimed in the DB but the

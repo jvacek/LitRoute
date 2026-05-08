@@ -5,6 +5,7 @@ from rest_framework.routers import DefaultRouter, SimpleRouter
 from backend.api.views import (
     CheckInViewSet,
     ConfigView,
+    GameJourneysView,
     GameLeaderboardView,
     GlobePinsView,
     GuestSubscribeView,
@@ -49,6 +50,7 @@ urlpatterns = [
     ),
     path("location-claim/", LocationClaimView.as_view(), name="location-claim"),
     path("games/<int:pk>/leaderboard/", GameLeaderboardView.as_view(), name="game-leaderboard"),
+    path("games/<int:pk>/journeys/", GameJourneysView.as_view(), name="game-journeys"),
     path("config/", ConfigView.as_view(), name="config"),
     path("stats/", StatsView.as_view(), name="stats"),
     path("globe-pins/", GlobePinsView.as_view(), name="globe-pins"),
