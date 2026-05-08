@@ -418,7 +418,6 @@ export default function CheckinForm({
       try {
         const errs = await onSubmit(data);
         if (errs) {
-          setErrors(errs);
           // The backend deliberately runs every check that DOESN'T consume the
           // single-use token (required fields, permission, captcha, image count)
           // before token verification. Only force a GPS recapture when the
@@ -426,6 +425,16 @@ export default function CheckinForm({
           // user can fix the field error and resubmit with the same token.
           if (errs.location_token || errs.location) {
             setConfirmStep(null);
+            // Backend distinguishes expired/drifted/replayed for logs, but the
+            // user just needs to know to recapture. Override with one friendly
+            // string slotted into `errors.location` (the only location field
+            // we actually render — `errors.location_token` has no render site).
+            setErrors({
+              ...errs,
+              location: [t('checkin.form.errors.gpsRecapture')],
+            });
+          } else {
+            setErrors(errs);
           }
         }
       } catch (err) {

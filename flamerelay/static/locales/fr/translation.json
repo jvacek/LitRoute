@@ -21,6 +21,7 @@
       "clickToMove": "Cliquez sur la carte pour déplacer le repère.",
       "dismiss": "Ignorer",
       "errors": {
+        "gpsRecapture": "Votre capture de position a expiré ou s'est déplacée. Touchez à nouveau « Utiliser ma position » pour la rafraîchir.",
         "gpsRequired": "L'accès à la localisation est requis pour cette unité. Autorisez l'accès à la localisation dans votre navigateur et réessayez.",
         "gpsVerificationFailed": "La vérification de localisation a échoué. Veuillez réessayer.",
         "locationRequired": "Cliquez sur la carte pour définir votre position.",

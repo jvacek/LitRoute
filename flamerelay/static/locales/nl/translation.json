@@ -21,6 +21,7 @@
       "clickToMove": "Klik op de kaart om de speld te verplaatsen.",
       "dismiss": "Sluiten",
       "errors": {
+        "gpsRecapture": "Je locatie-opname is verlopen of verschoven. Tik opnieuw op 'Gebruik mijn locatie' om te vernieuwen.",
         "gpsRequired": "Locatietoegang is vereist voor deze eenheid. Sta locatietoegang toe in je browser en probeer opnieuw.",
         "gpsVerificationFailed": "Locatieverificatie mislukt. Probeer het opnieuw.",
         "locationRequired": "Klik op de kaart om je locatie in te stellen.",
