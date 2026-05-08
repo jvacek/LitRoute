@@ -898,45 +898,17 @@ class TestGameLeaderboard:
         assert first_ids == {unit_a.identifier, None}
         assert second_ids == {unit_b.identifier, None}
 
-    def test_journey_returns_ordered_points_with_after_end_flag(self, client, user, db):
-        """Each individual entry includes a chronologically-ordered list of
-        check-in coordinates + datetimes. Points dated after `game.end_time`
-        are flagged with `after_end=True` so the frontend can colour them
-        differently while keeping the route continuous."""
-        start = timezone.now() - timedelta(hours=10)
-        # allowed_time=2h → end_time = start + 2h, so the third check-in below
-        # falls outside the game window.
-        game = GameFactory.create(mode=Game.Modes.DISTANCE, start_time=start, allowed_time=2)
-        unit = UnitFactory.create(game=game)
-        in_game_a = make_checkin(unit, user, location=LONDON)
-        CheckIn.objects.filter(pk=in_game_a.pk).update(date_created=start + timedelta(minutes=10))
-        in_game_b = make_checkin(unit, user, location=PARIS)
-        CheckIn.objects.filter(pk=in_game_b.pk).update(date_created=start + timedelta(minutes=90))
-        late = make_checkin(unit, user, location=LONDON)
-        CheckIn.objects.filter(pk=late.pk).update(date_created=start + timedelta(hours=5))
-
-        res = client.get(f"/api/games/{game.id}/leaderboard/?from={unit.identifier}")
-        entry = res.json()["individual"][0]
-        journey = entry["journey"]
-        assert len(journey) == 3  # noqa: PLR2004
-        assert journey[0]["date"] < journey[1]["date"] < journey[2]["date"]
-        # PostGIS Point.x = lng, .y = lat
-        assert journey[0]["lng"] == pytest.approx(LONDON.x)
-        assert journey[0]["lat"] == pytest.approx(LONDON.y)
-        assert [p["after_end"] for p in journey] == [False, False, True]
-
-    def test_journey_present_even_when_identifier_hidden(self, client, user, db):
-        """Privacy filter only nulls `identifier` — journey data stays so the
-        map can render every unit's route."""
+    def test_leaderboard_response_excludes_journey(self, client, user, db):
+        """Journey data lives on the dedicated /journeys/ endpoint now —
+        leaderboard rows must not carry it."""
         game = GameFactory.create(mode=Game.Modes.DISTANCE)
         unit = UnitFactory.create(game=game)
         make_checkin(unit, user, location=LONDON)
         make_checkin(unit, user, location=PARIS)
 
-        res = client.get(f"/api/games/{game.id}/leaderboard/")
+        res = client.get(f"/api/games/{game.id}/leaderboard/?from={unit.identifier}")
         entry = res.json()["individual"][0]
-        assert entry["identifier"] is None
-        assert len(entry["journey"]) == 2  # noqa: PLR2004
+        assert "journey" not in entry
 
     def test_checkins_after_end_time_excluded_from_score(self, client, user, db):
         """Once the game ends, new check-ins must not change the leaderboard."""
@@ -998,6 +970,80 @@ class TestGameLeaderboard:
         assert data["individual"][0]["rank"] == 1
         assert data["individual"][0]["checkin_count"] == 3  # noqa: PLR2004
         assert data["individual"][1]["checkin_count"] == 2  # noqa: PLR2004
+
+
+# ── Game Journeys ──────────────────────────────────────────────────────────────
+
+
+class TestGameJourneys:
+    @pytest.fixture(autouse=True)
+    def _clear_cache(self):
+        cache.clear()
+        yield
+        cache.clear()
+
+    def test_returns_404_for_missing_game(self, client, db):
+        res = client.get("/api/games/9999/journeys/")
+        assert res.status_code == 404  # noqa: PLR2004
+
+    def test_returns_200_for_valid_game(self, client, db):
+        game = GameFactory.create(mode=Game.Modes.DISTANCE)
+        res = client.get(f"/api/games/{game.id}/journeys/")
+        assert res.status_code == 200  # noqa: PLR2004
+        data = res.json()
+        assert data["game_id"] == game.id
+        assert data["journeys"] == []
+
+    def test_no_unit_identifiers_in_payload(self, client, user, db):
+        """Anti-enumeration: the journeys endpoint never returns slugs."""
+        game = GameFactory.create(mode=Game.Modes.DISTANCE)
+        unit = UnitFactory.create(game=game)
+        make_checkin(unit, user, location=LONDON)
+
+        body = client.get(f"/api/games/{game.id}/journeys/").json()
+        for entry in body["journeys"]:
+            assert "identifier" not in entry
+
+    def test_journey_returns_ordered_points_with_after_end_flag(self, client, user, db):
+        """Each entry includes a chronologically-ordered list of check-in
+        coordinates + datetimes. Points dated after `game.end_time` are
+        flagged with `after_end=True` so the frontend can colour them
+        differently while keeping the route continuous."""
+        start = timezone.now() - timedelta(hours=10)
+        # allowed_time=2h → end_time = start + 2h, so the third check-in below
+        # falls outside the game window.
+        game = GameFactory.create(mode=Game.Modes.DISTANCE, start_time=start, allowed_time=2)
+        unit = UnitFactory.create(game=game)
+        in_game_a = make_checkin(unit, user, location=LONDON)
+        CheckIn.objects.filter(pk=in_game_a.pk).update(date_created=start + timedelta(minutes=10))
+        in_game_b = make_checkin(unit, user, location=PARIS)
+        CheckIn.objects.filter(pk=in_game_b.pk).update(date_created=start + timedelta(minutes=90))
+        late = make_checkin(unit, user, location=LONDON)
+        CheckIn.objects.filter(pk=late.pk).update(date_created=start + timedelta(hours=5))
+
+        body = client.get(f"/api/games/{game.id}/journeys/").json()
+        entry = body["journeys"][0]
+        journey = entry["journey"]
+        assert len(journey) == 3  # noqa: PLR2004
+        assert journey[0]["date"] < journey[1]["date"] < journey[2]["date"]
+        assert journey[0]["lng"] == pytest.approx(LONDON.x)
+        assert journey[0]["lat"] == pytest.approx(LONDON.y)
+        assert [p["after_end"] for p in journey] == [False, False, True]
+
+    def test_entries_share_rank_with_leaderboard(self, client, user, db):
+        """Map and table must agree on ordering."""
+        game = GameFactory.create(mode=Game.Modes.DISTANCE)
+        unit_a = UnitFactory.create(game=game)
+        unit_b = UnitFactory.create(game=game)
+        make_checkin(unit_a, user, location=LONDON)
+        make_checkin(unit_a, UserFactory.create(), location=PARIS)
+        make_checkin(unit_b, user, location=LONDON)
+
+        leaderboard = client.get(f"/api/games/{game.id}/leaderboard/?from={unit_a.identifier}").json()
+        journeys = client.get(f"/api/games/{game.id}/journeys/").json()
+        # unit_a is rank 1 in both; unit_b is rank 2
+        assert journeys["journeys"][0]["rank"] == leaderboard["individual"][0]["rank"]
+        assert journeys["journeys"][1]["rank"] == leaderboard["individual"][1]["rank"]
 
 
 # ── Distance Game: time limit is informational only ────────────────────────────

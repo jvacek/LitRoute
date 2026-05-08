@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { apiFetch } from '../api';
 import Countdown from '../components/Countdown';
-import JourneyMap from '../components/JourneyMap';
+import JourneyMap, { type JourneyEntry } from '../components/JourneyMap';
 import TeamBadge from '../components/TeamBadge';
 import { humanizeHours } from '../lib/duration';
 import { getGameConfig } from '../lib/gameConfig';
@@ -16,13 +16,6 @@ interface TeamRef {
   color: string;
 }
 
-interface JourneyPoint {
-  lng: number;
-  lat: number;
-  date: string;
-  after_end: boolean;
-}
-
 interface IndividualEntry {
   rank: number;
   // Null for every row except the one matching the ?from=<identifier> query.
@@ -32,7 +25,6 @@ interface IndividualEntry {
   distance_km: number;
   checkin_count: number;
   team: TeamRef | null;
-  journey: JourneyPoint[];
 }
 
 interface TeamEntry {
@@ -69,6 +61,7 @@ export default function GameLeaderboard() {
   const appConfig = useConfig();
   const maptilerKey = appConfig?.maptilerKey ?? '';
   const [data, setData] = useState<LeaderboardData | null>(null);
+  const [journeys, setJourneys] = useState<JourneyEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -92,6 +85,23 @@ export default function GameLeaderboard() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [gameId, fromIdentifier]);
+
+  useEffect(() => {
+    // Journey-map data is split off so the leaderboard table renders quickly
+    // and the rank lookup on /unit/ doesn't pull megabytes of coordinates.
+    apiFetch(`/api/games/${gameId}/journeys/`)
+      .then(async (r) => {
+        if (!r.ok) return null;
+        return (await r.json()) as {
+          game_id: number;
+          journeys: JourneyEntry[];
+        };
+      })
+      .then((d) => {
+        if (d) setJourneys(d.journeys);
+      })
+      .catch(console.error);
+  }, [gameId]);
 
   if (notFound) return <ErrorPage code={404} />;
   if (loading || !data) {
@@ -206,7 +216,7 @@ export default function GameLeaderboard() {
         </section>
       )}
 
-      {data.individual.length > 0 && maptilerKey && (
+      {journeys.length > 0 && maptilerKey && (
         <section className="mt-8">
           <h2 className="font-heading text-xl font-bold text-char">
             {t('game.leaderboard.mapTitle')}
@@ -214,7 +224,7 @@ export default function GameLeaderboard() {
           <p className="mb-3 mt-1 text-sm text-char/60">
             {t('game.leaderboard.mapDescription')}
           </p>
-          <JourneyMap entries={data.individual} maptilerKey={maptilerKey} />
+          <JourneyMap entries={journeys} maptilerKey={maptilerKey} />
         </section>
       )}
 

@@ -110,7 +110,6 @@ class LeaderboardIndividualEntrySerializer(serializers.Serializer):
     distance_km = serializers.FloatField()
     checkin_count = serializers.IntegerField()
     team = TeamSerializer(allow_null=True)
-    journey = JourneyPointSerializer(many=True)
 
 
 class LeaderboardTeamEntrySerializer(serializers.Serializer):
@@ -132,6 +131,17 @@ class LeaderboardSerializer(serializers.Serializer):
     game = LeaderboardGameSerializer()
     individual = LeaderboardIndividualEntrySerializer(many=True)
     teams = LeaderboardTeamEntrySerializer(many=True, allow_null=True)
+
+
+class JourneyEntrySerializer(serializers.Serializer):
+    rank = serializers.IntegerField()
+    team = TeamSerializer(allow_null=True)
+    journey = JourneyPointSerializer(many=True)
+
+
+class GameJourneysSerializer(serializers.Serializer):
+    game_id = serializers.IntegerField()
+    journeys = JourneyEntrySerializer(many=True)
 
 
 class UnitSerializer(serializers.ModelSerializer):

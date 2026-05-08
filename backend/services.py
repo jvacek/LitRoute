@@ -10,6 +10,8 @@ from config.constants import (
     EMAIL_TASK_MAX_RETRIES,
     EMAIL_TASK_RETRY_BACKOFF_MAX_SECONDS,
     EMAIL_TASK_RETRY_BACKOFF_SECONDS,
+    GAME_JOURNEYS_CACHE_KEY_PREFIX,
+    GAME_JOURNEYS_CACHE_TTL,
     GAME_LEADERBOARD_CACHE_KEY_PREFIX,
     GAME_LEADERBOARD_LOCK_POLL_ATTEMPTS,
     GAME_LEADERBOARD_LOCK_POLL_SECONDS,
@@ -38,6 +40,10 @@ def unit_distance_cache_key(identifier: str) -> str:
 
 def game_leaderboard_cache_key(game_id: int) -> str:
     return f"{GAME_LEADERBOARD_CACHE_KEY_PREFIX}:{game_id}"
+
+
+def game_journeys_cache_key(game_id: int) -> str:
+    return f"{GAME_JOURNEYS_CACHE_KEY_PREFIX}:{game_id}"
 
 
 def distance_traveled_in_km(unit) -> float:
@@ -184,8 +190,6 @@ def _build_and_cache_leaderboard(game, cache, cache_key: str, ttl: int) -> dict:
             2,
         )
 
-    journeys_by_id = _fetch_unit_journeys([u.id for u in units_list], game.end_time)
-
     rows = [
         {
             "identifier": u.identifier,
@@ -194,7 +198,6 @@ def _build_and_cache_leaderboard(game, cache, cache_key: str, ttl: int) -> dict:
             "distance_km": dist_by_id[u.identifier],
             "checkin_count": u.cc,
             "team": {"name": u.team.name, "color": u.team.color} if u.team_id else None,
-            "journey": journeys_by_id.get(u.id, []),
         }
         for u in units_list
     ]
@@ -224,6 +227,65 @@ def _build_and_cache_leaderboard(game, cache, cache_key: str, ttl: int) -> dict:
         "individual": rows,
         "teams": _aggregate_teams(rows, game.mode),
     }
+    cache.set(cache_key, data, ttl)
+    return data
+
+
+def compute_game_journeys(game) -> dict:
+    """Build the cached journey-map payload for a Game.
+
+    Separate from the leaderboard so the table-only callers (rank lookup on
+    the unit page, the leaderboard page itself) don't pay for the full
+    coordinate dump on every fetch. Ranks come from the leaderboard so the
+    map and table agree on ordering. Anonymous: no unit identifiers in the
+    payload (the public endpoint cannot leak slugs).
+    """
+    from django.core.cache import cache  # noqa: PLC0415
+
+    cache_key = game_journeys_cache_key(game.id)
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    lock_key = f"{cache_key}:lock"
+    if not cache.add(lock_key, 1, GAME_LEADERBOARD_LOCK_TTL_SECONDS):
+        for _ in range(GAME_LEADERBOARD_LOCK_POLL_ATTEMPTS):
+            time.sleep(GAME_LEADERBOARD_LOCK_POLL_SECONDS)
+            cached = cache.get(cache_key)
+            if cached is not None:
+                return cached
+        # Lock holder hung or crashed — fall through and compute ourselves.
+
+    try:
+        return _build_and_cache_journeys(game, cache, cache_key, GAME_JOURNEYS_CACHE_TTL)
+    finally:
+        cache.delete(lock_key)
+
+
+def _build_and_cache_journeys(game, cache, cache_key: str, ttl: int) -> dict:
+    from .models import Unit  # noqa: PLC0415
+
+    leaderboard = compute_game_leaderboard(game)
+    rank_by_identifier = {row["identifier"]: row["rank"] for row in leaderboard["individual"]}
+
+    units = list(Unit.objects.filter(game=game).select_related("team").only("id", "identifier", "team"))
+    journeys_by_id = _fetch_unit_journeys([u.id for u in units], game.end_time)
+
+    entries = []
+    for u in units:
+        rank = rank_by_identifier.get(u.identifier)
+        if rank is None:
+            continue  # unit isn't on the leaderboard (shouldn't happen, but defend)
+        entries.append(
+            {
+                "rank": rank,
+                "team": {"name": u.team.name, "color": u.team.color} if u.team_id else None,
+                "journey": journeys_by_id.get(u.id, []),
+            }
+        )
+    entries.sort(key=lambda e: e["rank"])
+
+    data = {"game_id": game.id, "journeys": entries}
     cache.set(cache_key, data, ttl)
     return data
 
@@ -267,6 +329,7 @@ def invalidate_checkin_caches(unit_identifier: str, game_id: int | None = None) 
     keys = [unit_distance_cache_key(unit_identifier), STATS_CACHE_KEY, GLOBE_PINS_CACHE_KEY]
     if game_id:
         keys.append(game_leaderboard_cache_key(game_id))
+        keys.append(game_journeys_cache_key(game_id))
     transaction.on_commit(lambda: cache.delete_many(keys))
 
 

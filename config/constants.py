@@ -50,3 +50,8 @@ GAME_LEADERBOARD_CACHE_KEY_PREFIX = "game:leaderboard"
 GAME_LEADERBOARD_LOCK_TTL_SECONDS = 30
 GAME_LEADERBOARD_LOCK_POLL_ATTEMPTS = 10
 GAME_LEADERBOARD_LOCK_POLL_SECONDS = 0.2
+
+# Journey-map data lives in a separate endpoint with its own cache. Heavier
+# payload, accessed less often than the leaderboard table, longer TTL.
+GAME_JOURNEYS_CACHE_TTL = 10 * 60  # 10 minutes
+GAME_JOURNEYS_CACHE_KEY_PREFIX = "game:journeys"

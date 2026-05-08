@@ -46,6 +46,7 @@ from config.constants import (
 
 from .serializers import (
     CheckInSerializer,
+    GameJourneysSerializer,
     LeaderboardSerializer,
     LocationClaimRequestSerializer,
     LocationClaimResponseSerializer,
@@ -226,6 +227,25 @@ class GameLeaderboardView(APIView):
                 ],
             }
         )
+
+
+class GameJourneysView(APIView):
+    """Map data for a Game's journeys, split from the leaderboard endpoint so
+    table-only callers (rank lookups on the unit page, the leaderboard table
+    itself) don't pay for the coordinate dump on every fetch. Anonymous: no
+    identifiers in the payload."""
+
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        parameters=[OpenApiParameter("pk", int, OpenApiParameter.PATH)],
+        responses=GameJourneysSerializer,
+    )
+    def get(self, request, pk: int):
+        from backend.services import compute_game_journeys  # noqa: PLC0415
+
+        game = get_object_or_404(Game, pk=pk)
+        return Response(compute_game_journeys(game))
 
 
 class UnitViewSet(RetrieveModelMixin, GenericViewSet):
@@ -463,10 +483,11 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         if unit.game_id:
             from django.db import transaction  # noqa: PLC0415
 
-            from backend.services import game_leaderboard_cache_key  # noqa: PLC0415
+            from backend.services import game_journeys_cache_key, game_leaderboard_cache_key  # noqa: PLC0415
 
             game_id = unit.game_id
-            transaction.on_commit(lambda: cache.delete(game_leaderboard_cache_key(game_id)))
+            game_keys = [game_leaderboard_cache_key(game_id), game_journeys_cache_key(game_id)]
+            transaction.on_commit(lambda: cache.delete_many(game_keys))
 
         checkin.refresh_from_db()
         serializer = self.get_serializer(checkin)
@@ -593,9 +614,10 @@ class GuestVerifyView(View):
 
         cache_keys = [STATS_CACHE_KEY]
         if unit.game_id:
-            from backend.services import game_leaderboard_cache_key  # noqa: PLC0415
+            from backend.services import game_journeys_cache_key, game_leaderboard_cache_key  # noqa: PLC0415
 
             cache_keys.append(game_leaderboard_cache_key(unit.game_id))
+            cache_keys.append(game_journeys_cache_key(unit.game_id))
         transaction.on_commit(lambda: cache.delete_many(cache_keys))
 
         return HttpResponseRedirect(f"/unit/{unit_identifier}/?verified=1")
