@@ -97,7 +97,7 @@ function Thumbnail({
     <div
       data-item-key={thumbKey}
       className={[
-        'group relative h-20 w-20 shrink-0 select-none touch-none rounded-card transition-all duration-150 cursor-grab active:cursor-grabbing',
+        'relative h-20 w-20 shrink-0 select-none touch-none rounded-card transition-all duration-150 cursor-grab active:cursor-grabbing',
         isDragging ? 'pointer-events-none scale-95 opacity-40' : '',
         isDropTarget ? 'ring-2 ring-amber ring-offset-1' : '',
       ]
@@ -115,18 +115,17 @@ function Thumbnail({
       />
 
       {/* Drag handle icon — visual affordance only, not the hit target */}
-      <div className="pointer-events-none absolute left-1 top-1 transition-opacity duration-150 sm:opacity-0 sm:group-hover:opacity-100">
+      <div className="pointer-events-none absolute left-1 top-1">
         <DragHandle className="h-4 w-4 text-white drop-shadow-sm" />
       </div>
 
-      {/* Remove button — always visible on mobile, hover-only on desktop */}
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
           onRemove();
         }}
-        className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ember text-xs text-white transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember sm:opacity-0 sm:group-hover:opacity-100 sm:hover:opacity-100 sm:focus-visible:opacity-100"
+        className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ember text-xs text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember"
         aria-label={removeLabel}
       >
         &#x2715;
@@ -207,6 +206,9 @@ export default function PhotoUpload({
     e: React.PointerEvent<HTMLDivElement>,
     key: string,
   ) {
+    // Don't start a drag if the pointer-down originated on an interactive
+    // child (e.g. the remove button) — let the click reach it.
+    if ((e.target as HTMLElement).closest('button')) return;
     e.preventDefault();
     e.stopPropagation();
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -414,7 +416,7 @@ export default function PhotoUpload({
                     'flex h-20 w-20 items-center justify-center rounded-card border-2 border-dashed transition-colors duration-200 ' +
                     (isDraggingZone
                       ? 'border-amber bg-amber/20'
-                      : 'border-amber/30 hover:border-amber/60 hover:bg-amber/5')
+                      : 'border-amber/30')
                   }
                 >
                   <span className="text-xl font-light text-amber/50">+</span>
