@@ -328,8 +328,9 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         headers = self.get_success_headers(data)
         return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def _save_checkin_record(self, unit, serializer):
-        """Handle auth/anon permission checks, save the CheckIn, return it."""
+    def _verify_can_check_in(self, unit: Unit) -> None:
+        """Permission gate. Runs before any single-use token is consumed so a 403
+        doesn't force the user to recapture GPS."""
         if self.request.user.is_authenticated:
             if unit.admin_only_checkin and not (self.request.user.is_superuser or self.request.user.is_staff):
                 msg = "This unit can only be checked in by admins."
@@ -340,26 +341,38 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
                     "its journey moves on. You can still follow along by subscribing."
                 )
                 raise PermissionDenied(msg)
+        elif unit.admin_only_checkin:
+            msg = "This unit can only be checked in by admins."
+            raise PermissionDenied(msg)
+
+    def _check_anon_captcha(self) -> None:
+        """Anon-only Turnstile check. Runs before the GPS token so a failed
+        captcha doesn't burn the single-use token."""
+        if self.request.user.is_authenticated:
+            return
+        if not settings.CLOUDFLARE_TURNSTILE_SECRET_KEY:
+            logger.warning("CLOUDFLARE_TURNSTILE_SECRET_KEY is not set — anonymous check-in captcha is disabled")
+            return
+        turnstile_token = self.request.data.get("turnstile_token", "")
+        if not _verify_turnstile(turnstile_token, self.request.META.get("REMOTE_ADDR", "")):
+            raise serializers.ValidationError({"captcha": ["Captcha verification failed. Please try again."]})
+
+    def _verify_image_count(self, image_files) -> None:
+        if len(image_files) > CHECKIN_MAX_IMAGES:
+            raise serializers.ValidationError({"images": [f"You can upload at most {CHECKIN_MAX_IMAGES} images."]})
+
+    def _save_checkin_record(self, unit, serializer):
+        """Save the CheckIn after all pre-flight checks have passed."""
+        if self.request.user.is_authenticated:
             checkin = serializer.save(created_by=self.request.user, unit=unit)
             unit.subscribers.add(self.request.user)
         else:
-            if unit.admin_only_checkin:
-                msg = "This unit can only be checked in by admins."
-                raise PermissionDenied(msg)
-            if settings.CLOUDFLARE_TURNSTILE_SECRET_KEY:
-                turnstile_token = self.request.data.get("turnstile_token", "")
-                if not _verify_turnstile(turnstile_token, self.request.META.get("REMOTE_ADDR", "")):
-                    raise serializers.ValidationError({"captcha": ["Captcha verification failed. Please try again."]})
-            else:
-                logger.warning("CLOUDFLARE_TURNSTILE_SECRET_KEY is not set — anonymous check-in captcha is disabled")
             checkin = serializer.save(created_by=None, unit=unit, edit_token=uuid.uuid4())
         return checkin
 
     def _attach_checkin_images(self, checkin, image_files):
-        """Create CheckInImage rows; rolls back the checkin on any failure."""
-        if len(image_files) > CHECKIN_MAX_IMAGES:
-            checkin.delete()
-            raise serializers.ValidationError({"images": [f"You can upload at most {CHECKIN_MAX_IMAGES} images."]})
+        """Create CheckInImage rows; rolls back the checkin on any per-file failure.
+        Count is enforced earlier in `_verify_image_count`, before the GPS token."""
         for i, f in enumerate(image_files):
             try:
                 CheckInImage.objects.create(checkin=checkin, image=f, order=i)
@@ -373,9 +386,13 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         from backend.services import invalidate_checkin_caches  # noqa: PLC0415
 
         unit = get_object_or_404(Unit.objects.select_related("game"), identifier=self.kwargs["identifier"])
-        # Required-fields validation runs before token verification so a 400
-        # on missing place/anonymous_name doesn't burn the single-use token.
+        # Order matters: every check that does NOT consume a single-use token
+        # runs first, so a 4xx on permission/captcha/image-count doesn't force
+        # the user to recapture GPS.
         self._verify_game_required_fields(unit, serializer.validated_data)
+        self._verify_can_check_in(unit)
+        self._check_anon_captcha()
+        self._verify_image_count(self.request.FILES.getlist("images"))
         if unit.is_gps_enforced:
             self._verify_gps_token(unit, self.request.data, serializer.validated_data.get("location"))
 
@@ -444,9 +461,12 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
 
         unit = checkin.unit
         if unit.game_id:
+            from django.db import transaction  # noqa: PLC0415
+
             from backend.services import game_leaderboard_cache_key  # noqa: PLC0415
 
-            cache.delete(game_leaderboard_cache_key(unit.game_id))
+            game_id = unit.game_id
+            transaction.on_commit(lambda: cache.delete(game_leaderboard_cache_key(game_id)))
 
         checkin.refresh_from_db()
         serializer = self.get_serializer(checkin)
@@ -569,11 +589,13 @@ class GuestVerifyView(View):
                 user.save(update_fields=["name"])
         checkins.update(created_by=user, edit_token=None)
 
+        from django.db import transaction  # noqa: PLC0415
+
         cache_keys = [STATS_CACHE_KEY]
         if unit.game_id:
             from backend.services import game_leaderboard_cache_key  # noqa: PLC0415
 
             cache_keys.append(game_leaderboard_cache_key(unit.game_id))
-        cache.delete_many(cache_keys)
+        transaction.on_commit(lambda: cache.delete_many(cache_keys))
 
         return HttpResponseRedirect(f"/unit/{unit_identifier}/?verified=1")

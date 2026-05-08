@@ -43,3 +43,10 @@ MIN_GAME_REQUIRED_WORD_CHARS = 3
 
 GAME_LEADERBOARD_CACHE_TTL = 5 * 60  # 5 minutes
 GAME_LEADERBOARD_CACHE_KEY_PREFIX = "game:leaderboard"
+
+# Single-flight lock around expensive cache-miss compute. Without it, a
+# thundering herd on cold cache runs the full NxM geodesic compute many times
+# in parallel.
+GAME_LEADERBOARD_LOCK_TTL_SECONDS = 30
+GAME_LEADERBOARD_LOCK_POLL_ATTEMPTS = 10
+GAME_LEADERBOARD_LOCK_POLL_SECONDS = 0.2

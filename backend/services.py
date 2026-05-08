@@ -1,3 +1,5 @@
+import time
+
 from anymail.exceptions import AnymailRequestsAPIError
 from celery import Task, shared_task
 from celery.utils.log import get_task_logger
@@ -9,6 +11,9 @@ from config.constants import (
     EMAIL_TASK_RETRY_BACKOFF_MAX_SECONDS,
     EMAIL_TASK_RETRY_BACKOFF_SECONDS,
     GAME_LEADERBOARD_CACHE_KEY_PREFIX,
+    GAME_LEADERBOARD_LOCK_POLL_ATTEMPTS,
+    GAME_LEADERBOARD_LOCK_POLL_SECONDS,
+    GAME_LEADERBOARD_LOCK_TTL_SECONDS,
     GLOBE_PINS_CACHE_KEY,
     GLOBE_PINS_CACHE_TTL,
     GLOBE_PINS_COUNT,
@@ -109,17 +114,37 @@ def compute_game_leaderboard(game) -> dict:
     continues growing as the lighter travels.
     """
     from django.core.cache import cache  # noqa: PLC0415
-    from django.db.models import Count, OuterRef, Q, Subquery  # noqa: PLC0415
-    from django.db.models.functions import Coalesce  # noqa: PLC0415
 
     from config.constants import GAME_LEADERBOARD_CACHE_TTL  # noqa: PLC0415
-
-    from .models import CheckIn, Game, Unit  # noqa: PLC0415
 
     cache_key = game_leaderboard_cache_key(game.id)
     cached = cache.get(cache_key)
     if cached is not None:
         return cached
+
+    # Single-flight: under a thundering herd on cold cache, only one worker
+    # runs the full compute; others poll briefly for the result. cache.add is
+    # atomic — returns False if the key already exists.
+    lock_key = f"{cache_key}:lock"
+    if not cache.add(lock_key, 1, GAME_LEADERBOARD_LOCK_TTL_SECONDS):
+        for _ in range(GAME_LEADERBOARD_LOCK_POLL_ATTEMPTS):
+            time.sleep(GAME_LEADERBOARD_LOCK_POLL_SECONDS)
+            cached = cache.get(cache_key)
+            if cached is not None:
+                return cached
+        # Lock holder hung or crashed — fall through and compute ourselves.
+
+    try:
+        return _build_and_cache_leaderboard(game, cache, cache_key, GAME_LEADERBOARD_CACHE_TTL)
+    finally:
+        cache.delete(lock_key)
+
+
+def _build_and_cache_leaderboard(game, cache, cache_key: str, ttl: int) -> dict:
+    from django.db.models import Count, OuterRef, Q, Subquery  # noqa: PLC0415
+    from django.db.models.functions import Coalesce  # noqa: PLC0415
+
+    from .models import CheckIn, Game, Unit  # noqa: PLC0415
 
     cutoff = game.end_time
 
@@ -199,7 +224,7 @@ def compute_game_leaderboard(game) -> dict:
         "individual": rows,
         "teams": _aggregate_teams(rows, game.mode),
     }
-    cache.set(cache_key, data, GAME_LEADERBOARD_CACHE_TTL)
+    cache.set(cache_key, data, ttl)
     return data
 
 
@@ -230,12 +255,19 @@ def total_distance_traveled_in_km() -> float:
 
 
 def invalidate_checkin_caches(unit_identifier: str, game_id: int | None = None) -> None:
+    """Schedule cache invalidations to run after the current transaction commits.
+
+    With ATOMIC_REQUESTS=True the request runs in a transaction. Deleting cache
+    entries before commit lets a concurrent reader repopulate them from the
+    pre-commit DB state, leaving stale data for the rest of the TTL.
+    """
     from django.core.cache import cache  # noqa: PLC0415
+    from django.db import transaction  # noqa: PLC0415
 
     keys = [unit_distance_cache_key(unit_identifier), STATS_CACHE_KEY, GLOBE_PINS_CACHE_KEY]
     if game_id:
         keys.append(game_leaderboard_cache_key(game_id))
-    cache.delete_many(keys)
+    transaction.on_commit(lambda: cache.delete_many(keys))
 
 
 def get_cached_stats() -> dict:

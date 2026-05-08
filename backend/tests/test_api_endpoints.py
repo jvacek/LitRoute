@@ -715,6 +715,65 @@ class TestCheckInCreateGpsEnforced:
             )
         assert res.status_code == 201  # noqa: PLR2004
 
+    def test_token_not_consumed_on_permission_denied(self, client, user, db):
+        # admin_only_checkin denies a non-admin user *before* any single-use token
+        # is consumed — so the user can retry once the unit is reopened without
+        # having to recapture GPS.
+        import hashlib  # noqa: PLC0415
+
+        game = Game.objects.create(mode=Game.Modes.RACE, name="Locked GPS Race")
+        locked_unit = UnitFactory.create(game=game, admin_only_checkin=True)
+        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id, unit_identifier=locked_unit.identifier)
+        client.force_authenticate(user=user)
+        with (
+            patch("backend.models.send_email_to_subscribers_task.apply_async"),
+            patch("backend.models.send_thank_you_email_task.apply_async"),
+        ):
+            res = client.post(
+                f"/api/units/{locked_unit.identifier}/checkins/",
+                {"location": LONDON_PAYLOAD, "location_token": token, "place": "London"},
+                format="json",
+            )
+        assert res.status_code == 403  # noqa: PLR2004
+        token_hash = hashlib.sha256(token.encode()).hexdigest()[:32]
+        assert cache.get(f"location-claim-used:{token_hash}") is None
+
+    def test_token_not_consumed_on_image_count_violation(self, client, gps_unit, user):
+        # Image-count violation must be detected *before* the GPS token is consumed.
+        import hashlib  # noqa: PLC0415
+        import io  # noqa: PLC0415
+
+        from PIL import Image  # noqa: PLC0415
+
+        token = issue_location_claim(51.5074, -0.1278, 10.0, user.id, unit_identifier=gps_unit.identifier)
+        client.force_authenticate(user=user)
+
+        def make_jpeg(name: str):
+            buf = io.BytesIO()
+            Image.new("RGB", (4, 4), color=(255, 0, 0)).save(buf, format="JPEG")
+            buf.seek(0)
+            buf.name = name
+            return buf
+
+        with (
+            patch("backend.models.send_email_to_subscribers_task.apply_async"),
+            patch("backend.models.send_thank_you_email_task.apply_async"),
+        ):
+            res = client.post(
+                f"/api/units/{gps_unit.identifier}/checkins/",
+                {
+                    "location": str(LONDON_PAYLOAD).replace("'", '"'),
+                    "location_token": token,
+                    "place": "London",
+                    "images": [make_jpeg(f"img-{i}.jpg") for i in range(6)],
+                },
+                format="multipart",
+            )
+        assert res.status_code == 400  # noqa: PLR2004
+        assert "images" in res.json()
+        token_hash = hashlib.sha256(token.encode()).hexdigest()[:32]
+        assert cache.get(f"location-claim-used:{token_hash}") is None
+
 
 # ── Game Leaderboard ───────────────────────────────────────────────────────────
 
