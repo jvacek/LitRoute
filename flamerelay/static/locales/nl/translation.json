@@ -191,7 +191,7 @@
   },
   "home": {
     "cta": {
-      "body": "Ik ben Jonas, ik heb dit gemaakt tijdens mijn vrolijke werkloosheid. Zin om een aansteker de wereld in te sturen? Lees eerst <aboutLink>de over-pagina</aboutLink> — even contact opnemen voordat je begint met stickers printen.",
+      "body": "Ik ben Jonas, ik heb dit project gemaakt tijdens mijn vrolijke werkeloosheid. Zin om een aansteker de wereld in te sturen? Lees eerst <aboutLink>de over-pagina</aboutLink> — even contact opnemen voordat je begint met stickers printen.",
       "heading": "Begin een reis.",
       "link": "Over het project"
     },
@@ -210,13 +210,13 @@
     "headline": "Een aansteker met een verleden. Voeg jouw verhaal toe.",
     "howItWorks": {
       "heading": "Zo zit het.",
-      "step1Body": "Zie je een aansteker met een QR-sticker? Scan hem, of typ zijn ID op litroute.com. Elke stad, elke hand waardoor hij ging — het wacht allemaal op je.",
+      "step1Body": "Zie je een aansteker met een QR-sticker? Scan hem, typ de naam van de aansteker op litroute.com. Je bent van elke stad, elke hand waardoor hij ging — een klik verwijderd.",
       "step1Title": "Vind hem.",
       "step2Body": "Plaats een foto en een korte noot. Jouw moment — waar je was, wat je zag — wordt een blijvend hoofdstuk in het verhaal van de aansteker.",
       "step2Title": "Check in.",
       "step3Body": "Geef hem aan een onbekende. Laat hem achter in een café, een hostel, bij een wandelpad. Jij bepaalt het volgende hoofdstuk.",
       "step3Title": "Geef hem door.",
-      "step4Body": "Abonneer je en krijg een mailtje als iemand hem weer vindt — waar ook ter wereld dat is. Onschuldig stalken van een stukje metaal.",
+      "step4Body": "Abonneer je en krijg een mailtje als iemand hem weer vindt — waar dat ook ter wereld is. Het onschuldig stalken van een stukje metaal.",
       "step4Title": "Blijf op de hoogte."
     },
     "journey": {
@@ -237,7 +237,7 @@
       "peopleCheckedIn": "mensen die incheckten",
       "traveledSoFar": "afgelegd tot nu toe"
     },
-    "subheadline": "Vind een aansteker met een QR-sticker. Scan hem om te ontdekken waar hij overal is geweest en wie hem heeft vastgehouden. Laat je eigen noot achter — geef hem dan door aan de volgende onbekende.",
+    "subheadline": "Vind een aansteker met een QR-sticker. Scan hem om te ontdekken waar hij allemaal is geweest en wie hem in zijn bezit heeft gehad. Laat je eigen bericht achter — geef hem dan door aan de volgende onbekende.",
     "submit": {
       "checking": "Zoeken",
       "default": "Bekijk de route"
