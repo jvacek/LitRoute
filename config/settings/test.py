@@ -42,3 +42,6 @@ MEDIA_URL = "http://media.testserver/"
 WEBPACK_LOADER["DEFAULT"]["LOADER_CLASS"] = "webpack_loader.loaders.FakeWebpackLoader"  # noqa: F405
 # Your stuff...
 # ------------------------------------------------------------------------------
+
+CLOUDFLARE_TURNSTILE_SITE_KEY = "1x00000000000000000000AA"
+CLOUDFLARE_TURNSTILE_SECRET_KEY = "1x0000000000000000000000000000000AA"  # noqa: S105

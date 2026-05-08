@@ -647,13 +647,12 @@ class FeedbackView(APIView):
             email = request.user.email or ""
             user = request.user
         else:
-            if settings.CLOUDFLARE_TURNSTILE_SECRET_KEY:
-                turnstile_token = request.data.get("turnstile_token", "")
-                if not _verify_turnstile(turnstile_token, request.META.get("REMOTE_ADDR", "")):
-                    return Response(
-                        {"detail": "Captcha verification failed. Please try again."},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+            turnstile_token = request.data.get("turnstile_token", "")
+            if not _verify_turnstile(turnstile_token, request.META.get("REMOTE_ADDR", "")):
+                return Response(
+                    {"detail": "Captcha verification failed. Please try again."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
             email = (request.data.get("email") or "").strip().lower()
             if email:
                 try:

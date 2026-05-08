@@ -208,9 +208,6 @@ SPECTACULAR_SETTINGS["SERVERS"] = [  # pyrefly: ignore
 ]
 # Your stuff...
 # ------------------------------------------------------------------------------
-LOCATION_FIELD = {
-    "provider.google.api": "//maps.google.com/maps/api/js?sensor=false",
-    "provider.google.api_key": env("GOOGLE_MAPS_API_KEY"),
-    "provider.google.api_libraries": "",
-    "provider.google.map.type": "ROADMAP",
-}
+
+CLOUDFLARE_TURNSTILE_SITE_KEY = env("CLOUDFLARE_TURNSTILE_SITE_KEY")
+CLOUDFLARE_TURNSTILE_SECRET_KEY = env("CLOUDFLARE_TURNSTILE_SECRET_KEY")
