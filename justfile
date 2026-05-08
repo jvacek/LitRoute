@@ -32,8 +32,9 @@ prune *args:
     @echo "Killing containers and removing volumes..."
     @docker compose down -v {{args}}
 
-# reload: Restart all containers.
-reload: down up
+# reload: Restart node, django, and celery containers (mailpit and redis stay alive).
+reload:
+    @docker compose restart node django celeryworker celerybeat
 
 # rebuild: Rebuild changed images, restart affected containers, and cap build cache at 5 GB.
 rebuild:
