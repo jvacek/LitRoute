@@ -43,6 +43,18 @@ def mute_emails():
         yield
 
 
+@pytest.fixture(autouse=True)
+def _pass_turnstile():
+    """Default every API call to a successful captcha. The test settings carry
+    a real-looking Turnstile secret, so without this the verify call would hit
+    Cloudflare for real. Tests that exercise captcha behavior open their own
+    `with patch("backend.api.views._verify_turnstile", ...)`, which rebinds
+    the attribute for the duration of the test body and shadows this fixture.
+    """
+    with patch("backend.api.views._verify_turnstile", return_value=True) as mock:
+        yield mock
+
+
 @pytest.fixture
 def client():
     return APIClient()

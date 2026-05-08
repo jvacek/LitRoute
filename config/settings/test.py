@@ -43,5 +43,5 @@ WEBPACK_LOADER["DEFAULT"]["LOADER_CLASS"] = "webpack_loader.loaders.FakeWebpackL
 # Your stuff...
 # ------------------------------------------------------------------------------
 
-CLOUDFLARE_TURNSTILE_SITE_KEY = "1x00000000000000000000AA"
-CLOUDFLARE_TURNSTILE_SECRET_KEY = "1x0000000000000000000000000000000AA"  # noqa: S105
+CLOUDFLARE_TURNSTILE_SITE_KEY = ""
+CLOUDFLARE_TURNSTILE_SECRET_KEY = ""

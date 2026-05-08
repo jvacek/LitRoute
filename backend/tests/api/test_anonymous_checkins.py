@@ -71,17 +71,6 @@ class TestAnonCheckinCreate:
         assert res.status_code == status.HTTP_400_BAD_REQUEST
         assert "captcha" in res.json()
 
-    def test_turnstile_not_called_when_secret_key_absent(self, client, unit, settings, mute_emails):
-        settings.CLOUDFLARE_TURNSTILE_SECRET_KEY = ""
-        with patch("backend.api.views._verify_turnstile") as mock_verify:
-            res = client.post(
-                f"/api/units/{unit.identifier}/checkins/",
-                {"location": LONDON_PAYLOAD},
-                format="json",
-            )
-        assert res.status_code == status.HTTP_201_CREATED
-        mock_verify.assert_not_called()
-
 
 # ── Anonymous edit ─────────────────────────────────────────────────────────────
 

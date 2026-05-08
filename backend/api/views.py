@@ -369,9 +369,6 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         captcha doesn't burn the single-use token."""
         if self.request.user.is_authenticated:
             return
-        if not settings.CLOUDFLARE_TURNSTILE_SECRET_KEY:
-            logger.error("CLOUDFLARE_TURNSTILE_SECRET_KEY is not set — anonymous check-in captcha is disabled")
-            return
         turnstile_token = self.request.data.get("turnstile_token", "")
         if not _verify_turnstile(turnstile_token, self.request.META.get("REMOTE_ADDR", "")):
             raise serializers.ValidationError({"captcha": ["Captcha verification failed. Please try again."]})

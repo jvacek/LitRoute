@@ -67,17 +67,6 @@ class TestAnonFeedback:
         assert res.status_code == status.HTTP_400_BAD_REQUEST
         assert Feedback.objects.count() == 0
 
-    def test_captcha_skipped_when_secret_key_absent(self, client, db, settings, mute_feedback_emails):
-        settings.CLOUDFLARE_TURNSTILE_SECRET_KEY = ""
-        with patch("backend.api.views._verify_turnstile") as mock_verify:
-            res = client.post(
-                "/api/feedback/",
-                {"message": "Hi", "email": "anon@example.com"},
-                format="json",
-            )
-        assert res.status_code == status.HTTP_201_CREATED
-        mock_verify.assert_not_called()
-
 
 class TestAuthenticatedFeedback:
     def test_auth_post_uses_account_email_and_creates_row(self, auth_client, user, mute_feedback_emails):
