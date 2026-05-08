@@ -68,11 +68,13 @@ export default function GameLeaderboard() {
   useEffect(() => {
     // Pass ?from=<identifier> when known so that one row's identifier comes
     // through; everyone else's identifier is nulled out by the backend.
+    let cancelled = false;
     const url = fromIdentifier
       ? `/api/games/${gameId}/leaderboard/?from=${encodeURIComponent(fromIdentifier)}`
       : `/api/games/${gameId}/leaderboard/`;
     apiFetch(url)
       .then(async (r) => {
+        if (cancelled) return null;
         if (!r.ok) {
           setNotFound(true);
           return null;
@@ -80,27 +82,38 @@ export default function GameLeaderboard() {
         return (await r.json()) as LeaderboardData;
       })
       .then((d) => {
+        if (cancelled) return;
         if (d) setData(d);
       })
       .catch(console.error)
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [gameId, fromIdentifier]);
 
   useEffect(() => {
     // Journey-map data is split off so the leaderboard table renders quickly
     // and the rank lookup on /unit/ doesn't pull megabytes of coordinates.
+    let cancelled = false;
     apiFetch(`/api/games/${gameId}/journeys/`)
       .then(async (r) => {
-        if (!r.ok) return null;
+        if (cancelled || !r.ok) return null;
         return (await r.json()) as {
           game_id: number;
           journeys: JourneyEntry[];
         };
       })
       .then((d) => {
-        if (d) setJourneys(d.journeys);
+        if (cancelled || !d) return;
+        setJourneys(d.journeys);
       })
       .catch(console.error);
+    return () => {
+      cancelled = true;
+    };
   }, [gameId]);
 
   if (notFound) return <ErrorPage code={404} />;
