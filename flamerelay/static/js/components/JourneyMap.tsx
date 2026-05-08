@@ -23,6 +23,10 @@ const REPLAY_MS_PER_CHECKIN = 20;
 // Brief pause at the end of replay before reverting to the "show everything"
 // view, so the user sees the completed picture before it stops being highlighted.
 const REPLAY_HOLD_MS = 600;
+// Cursor advances at 10 Hz rather than per-frame: each tick re-runs the
+// featureCollection memo, and at 60 fps that rebuilds the full per-unit
+// GeoJSON 60×/sec for no perceptible visual gain.
+const REPLAY_TICK_MS = 100;
 
 interface TeamRef {
   name: string;
@@ -119,16 +123,15 @@ export default function JourneyMap({ entries, maptilerKey }: JourneyMapProps) {
   );
 
   // null = show everything (default). A timestamp = show only points dated
-  // ≤ cursor; the RAF loop advances this from min to max time.
+  // ≤ cursor; the interval advances this from min to max time at REPLAY_TICK_MS.
   const [replayCursor, setReplayCursor] = useState<number | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const holdTimeoutRef = useRef<number | null>(null);
+  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const holdTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(
     () => () => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-      if (holdTimeoutRef.current !== null)
-        window.clearTimeout(holdTimeoutRef.current);
+      if (tickRef.current !== null) clearInterval(tickRef.current);
+      if (holdTimeoutRef.current !== null) clearTimeout(holdTimeoutRef.current);
     },
     [],
   );
@@ -145,20 +148,20 @@ export default function JourneyMap({ entries, maptilerKey }: JourneyMapProps) {
     const { min, max } = timeBounds;
     const wallStart = performance.now();
     setReplayCursor(min);
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - wallStart) / replayDurationMs);
+    tickRef.current = setInterval(() => {
+      const t = Math.min(1, (performance.now() - wallStart) / replayDurationMs);
       setReplayCursor(min + (max - min) * t);
-      if (t < 1) {
-        rafRef.current = requestAnimationFrame(tick);
-      } else {
-        rafRef.current = null;
-        holdTimeoutRef.current = window.setTimeout(() => {
+      if (t >= 1) {
+        if (tickRef.current !== null) {
+          clearInterval(tickRef.current);
+          tickRef.current = null;
+        }
+        holdTimeoutRef.current = setTimeout(() => {
           setReplayCursor(null);
           holdTimeoutRef.current = null;
         }, REPLAY_HOLD_MS);
       }
-    };
-    rafRef.current = requestAnimationFrame(tick);
+    }, REPLAY_TICK_MS);
   }, [timeBounds, isReplaying, replayDurationMs]);
 
   // Single GeoJSON for both line variants and markers — colour is encoded as a
