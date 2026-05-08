@@ -71,14 +71,14 @@
       }
     },
     "guestEmailPlaceholder": "jij@email.com",
-    "guestEmailSent": "We hebben je een bevestigingslink gestuurd — tik erop en je staat op de lijst.",
-    "guestEmailSentBack": "Terug naar Unit",
+    "guestEmailSent": "We hebben je een bevestigingslink gestuurd — klik erop en je staat op de lijst.",
+    "guestEmailSentBack": "Zie je check-in",
     "guestEmailSentTitle": "Check je inbox.",
     "guestEmailSkip": "Nee bedankt — hou me niet op de hoogte.",
     "guestEmailSocialProof_one": "Sluit je aan bij {{count}} andere persoon die deze aansteker volgt.",
     "guestEmailSocialProof_other": "Sluit je aan bij {{count}} anderen die deze aansteker volgen.",
     "guestEmailSubmit": "Volg deze aansteker",
-    "guestEmailSubtitle": "We sturen je een e-mail als iemand anders deze aansteker ergens nieuws incheckt. Dat is alles — geen reclame, in één tik uitschrijven.",
+    "guestEmailSubtitle": "We sturen je een e-mail als iemand anders deze aansteker ergens anders incheckt. Dat is het — geen reclame, in één tik uitschrijven.",
     "guestEmailTitle": "Wil je weten waar deze aansteker hierna naartoe gaat?"
   },
   "common": {
@@ -337,7 +337,7 @@
       "lastSeenYesterday": "Gisteren voor het laatst gezien in {{place}}"
     },
     "subscribe": "Abonneren",
-    "supportPrompt": "LitRoute is gratis en gemaakt door één persoon. Heeft deze reis je doen glimlachen? Overweeg dan <supportLink>het project te steunen</supportLink>",
+    "supportPrompt": "LitRoute is gratis en gemaakt door één persoon. Als je blij werd van deze (online) reis, overweeg dan <supportLink>het project te steunen</supportLink>",
     "travelLog": "Reisverslag",
     "unsubscribe": "Afmelden",
     "verifiedBanner": "Je e-mail is bevestigd — je bent nu geabonneerd!"
