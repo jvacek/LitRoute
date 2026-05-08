@@ -1,15 +1,13 @@
+"""SPA catch-all routing — the Django shell delegates every non-API path
+to a single React shell view named `spa`. CLAUDE.md calls this out as a
+project invariant."""
+
 from __future__ import annotations
 
+import pytest
 from django.urls import resolve
 
 
-def test_profile_serves_spa():
-    assert resolve("/profile/").view_name == "spa"
-
-
-def test_settings_serves_spa():
-    assert resolve("/profile/settings/").view_name == "spa"
-
-
-def test_update_serves_spa():
-    assert resolve("/profile/update/").view_name == "spa"
+@pytest.mark.parametrize("path", ["/profile/", "/profile/settings/", "/profile/update/"])
+def test_profile_paths_serve_spa(path):
+    assert resolve(path).view_name == "spa"

@@ -4,23 +4,17 @@ from unittest.mock import patch
 
 import pytest
 from django.core import signing
-from django.core.cache import cache
 
 from backend.location_token import _haversine_m, issue_location_claim, verify_location_claim
 from config.constants import LOCATION_CLAIM_MAX_ACCURACY_METERS, LOCATION_CLAIM_TTL_SECONDS
+
+pytestmark = pytest.mark.usefixtures("clear_cache")  # replay-prevention reads/writes the cache
 
 LAT = 51.5074
 LNG = -0.1278
 ACCURACY = 10.0
 USER_ID = 42
 UNIT = "unit-a"
-
-
-@pytest.fixture(autouse=True)
-def _clear_cache():
-    cache.clear()
-    yield
-    cache.clear()
 
 
 class TestHaversine:

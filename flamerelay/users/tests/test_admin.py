@@ -1,5 +1,14 @@
+"""Tests for project-specific Django admin configuration.
+
+Generic admin CRUD/search/changelist behaviour is provided by Django and
+not re-tested here. The only project-owned wiring is the optional
+`DJANGO_ADMIN_FORCE_ALLAUTH=True` mode that swaps the admin login flow
+for the allauth one.
+"""
+
+from __future__ import annotations
+
 import contextlib
-from http import HTTPStatus
 from importlib import reload
 
 import pytest
@@ -8,58 +17,22 @@ from django.contrib.auth.models import AnonymousUser
 from django.urls import reverse
 from pytest_django.asserts import assertRedirects
 
-from flamerelay.users.models import User
+
+@pytest.fixture
+def _force_allauth(settings):
+    settings.DJANGO_ADMIN_FORCE_ALLAUTH = True
+    import flamerelay.users.admin as users_admin  # noqa: PLC0415
+
+    with contextlib.suppress(admin.sites.AlreadyRegistered):  # type: ignore[attr-defined]
+        reload(users_admin)
 
 
-class TestUserAdmin:
-    def test_changelist(self, admin_client):
-        url = reverse("admin:users_user_changelist")
-        response = admin_client.get(url)
-        assert response.status_code == HTTPStatus.OK
+@pytest.mark.django_db
+@pytest.mark.usefixtures("_force_allauth")
+def test_allauth_login_redirects_admin_to_allauth(rf, settings):
+    request = rf.get("/fake-url")
+    request.user = AnonymousUser()
+    response = admin.site.login(request)
 
-    def test_search(self, admin_client):
-        url = reverse("admin:users_user_changelist")
-        response = admin_client.get(url, data={"q": "test"})
-        assert response.status_code == HTTPStatus.OK
-
-    def test_add(self, admin_client):
-        url = reverse("admin:users_user_add")
-        response = admin_client.get(url)
-        assert response.status_code == HTTPStatus.OK
-
-        response = admin_client.post(
-            url,
-            data={
-                "username": "test",
-                "password1": "My_R@ndom-P@ssw0rd",
-                "password2": "My_R@ndom-P@ssw0rd",
-            },
-        )
-        assert response.status_code == HTTPStatus.FOUND
-        assert User.objects.filter(username="test").exists()
-
-    def test_view_user(self, admin_client):
-        user = User.objects.get(username="admin")
-        url = reverse("admin:users_user_change", kwargs={"object_id": user.pk})
-        response = admin_client.get(url)
-        assert response.status_code == HTTPStatus.OK
-
-    @pytest.fixture
-    def _force_allauth(self, settings):
-        settings.DJANGO_ADMIN_FORCE_ALLAUTH = True
-        # Reload the admin module to apply the setting change
-        import flamerelay.users.admin as users_admin  # noqa: PLC0415
-
-        with contextlib.suppress(admin.sites.AlreadyRegistered):  # type: ignore[attr-defined]
-            reload(users_admin)
-
-    @pytest.mark.django_db
-    @pytest.mark.usefixtures("_force_allauth")
-    def test_allauth_login(self, rf, settings):
-        request = rf.get("/fake-url")
-        request.user = AnonymousUser()
-        response = admin.site.login(request)
-
-        # The `admin` login view should redirect to the `allauth` login view
-        target_url = reverse(settings.LOGIN_URL) + "?next=" + request.path
-        assertRedirects(response, target_url, fetch_redirect_response=False)
+    target_url = reverse(settings.LOGIN_URL) + "?next=" + request.path
+    assertRedirects(response, target_url, fetch_redirect_response=False)

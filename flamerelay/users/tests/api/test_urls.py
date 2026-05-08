@@ -1,11 +1,19 @@
+"""Account API URL routing — verifies the `api:` namespace is wired up
+and the canonical paths haven't drifted."""
+
+from __future__ import annotations
+
+import pytest
 from django.urls import resolve, reverse
 
 
-def test_account():
-    assert reverse("api:account") == "/api/account/"
-    assert resolve("/api/account/").view_name == "api:account"
-
-
-def test_account_subscriptions():
-    assert reverse("api:account-subscriptions") == "/api/account/subscriptions/"
-    assert resolve("/api/account/subscriptions/").view_name == "api:account-subscriptions"
+@pytest.mark.parametrize(
+    ("name", "path"),
+    [
+        ("api:account", "/api/account/"),
+        ("api:account-subscriptions", "/api/account/subscriptions/"),
+    ],
+)
+def test_named_routes_resolve(name, path):
+    assert reverse(name) == path
+    assert resolve(path).view_name == name

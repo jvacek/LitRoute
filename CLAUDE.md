@@ -52,9 +52,12 @@ Secrets live in `.envs/.local/` (git-ignored). Do not commit these.
 ```bash
 just test                       # preferred: pytest in Docker (local tests won't work due to no local postgres)
 just test -k test_name          # specific test
+just test backend/tests/api/    # request layer only
 ```
 
 Config in `pyproject.toml` (`[tool.pytest.ini_options]`): `config.settings.test`, `--reuse-db`.
+
+**Before adding or modifying a test, read `backend/TESTING.md`.** It defines the request-vs-logic-layer split, the shared fixtures (`client`, `user`, `unit`, `auth_client`, `make_checkin`, `mute_emails`, `clear_cache`), the canonical `UserFactory` location, and the rules against re-testing Django/DRF/AllAuth internals.
 
 ### JS/TS
 
@@ -118,6 +121,8 @@ TODOs/              # task trackers
   → **read `backend/ARCHITECTURE.md` first.**
 - **Adding, modifying, or testing any `/api/` endpoint**
   → **read `backend/API.md` first.** Live schema at `/api/docs/`.
+- **Writing or refactoring any test under `backend/tests/` or `flamerelay/users/tests/`**
+  → **read `backend/TESTING.md` first.** Layered structure, shared fixtures, FIRST-U rules, anti-patterns.
 - **Adding i18n keys or running `scripts/*-translations.py`**
   → **read `scripts/README.md` first.**
 - **Brand voice / translator tone** → `brand/TRANSLATOR_GUIDE.md`

@@ -3,16 +3,9 @@ from django.contrib.gis.geos import Point
 from django.utils import timezone
 from factory import fuzzy
 
+from flamerelay.users.tests.factories import UserFactory
+
 from .models import CheckIn, Game, Unit
-
-
-class UserFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = "users.User"
-
-    username = factory.Faker("user_name")
-    email = factory.Faker("email")
-    password = factory.Faker("password")
 
 
 class GameFactory(factory.django.DjangoModelFactory):
@@ -43,5 +36,4 @@ class CheckInFactory(factory.django.DjangoModelFactory):
     date_created = factory.Faker("date_time_this_month", tzinfo=timezone.get_current_timezone())
     created_by = factory.SubFactory(UserFactory)
     message = factory.Faker("text")
-    # name_of_place = factory.Faker("city")
     location = factory.LazyFunction(lambda: Point(fuzzy.FuzzyFloat(-180, 180).fuzz(), fuzzy.FuzzyFloat(-90, 90).fuzz()))
