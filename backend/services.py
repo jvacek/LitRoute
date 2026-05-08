@@ -1,3 +1,22 @@
+"""Backend service layer — caching, computation, and async tasks.
+
+Caching strategy:
+    - Custom keys (see `config/constants.py`) read/written via `django.core.cache`.
+    - Single-flight protection via `cached_with_lock` for every cold-miss
+      compute, so a thundering herd doesn't run the same expensive aggregation
+      in parallel.
+    - Invalidation is signal-driven: `post_save` / `post_delete` on `CheckIn`
+      call `invalidate_checkin_caches` (see `backend/models.py`). View hooks
+      do not invalidate directly. Bulk operations that bypass signals
+      (`queryset.update`, `bulk_create`, `bulk_update`) must invalidate
+      explicitly — see `flamerelay/users/services.py::anonymize_user`.
+
+DRF response caching (`@cache_page`, `@cache_response`) is intentionally not
+used: it keys by URL+headers (brittle to invalidate from signals), would
+break the leaderboard's `?from=` boundary trick, and would prevent the
+journeys endpoint from reusing the leaderboard's cached ranks.
+"""
+
 import time
 
 from anymail.exceptions import AnymailRequestsAPIError
@@ -7,15 +26,16 @@ from django.core import mail
 from geopy.distance import geodesic as distance
 
 from config.constants import (
+    CACHE_SINGLEFLIGHT_LOCK_POLL_ATTEMPTS,
+    CACHE_SINGLEFLIGHT_LOCK_POLL_SECONDS,
+    CACHE_SINGLEFLIGHT_LOCK_TTL_SECONDS,
     EMAIL_TASK_MAX_RETRIES,
     EMAIL_TASK_RETRY_BACKOFF_MAX_SECONDS,
     EMAIL_TASK_RETRY_BACKOFF_SECONDS,
     GAME_JOURNEYS_CACHE_KEY_PREFIX,
     GAME_JOURNEYS_CACHE_TTL,
     GAME_LEADERBOARD_CACHE_KEY_PREFIX,
-    GAME_LEADERBOARD_LOCK_POLL_ATTEMPTS,
-    GAME_LEADERBOARD_LOCK_POLL_SECONDS,
-    GAME_LEADERBOARD_LOCK_TTL_SECONDS,
+    GAME_LEADERBOARD_CACHE_TTL,
     GLOBE_PINS_CACHE_KEY,
     GLOBE_PINS_CACHE_TTL,
     GLOBE_PINS_COUNT,
@@ -44,6 +64,38 @@ def game_leaderboard_cache_key(game_id: int) -> str:
 
 def game_journeys_cache_key(game_id: int) -> str:
     return f"{GAME_JOURNEYS_CACHE_KEY_PREFIX}:{game_id}"
+
+
+def cached_with_lock(cache_key: str, compute_fn, ttl: int, *, lock_ttl: int = CACHE_SINGLEFLIGHT_LOCK_TTL_SECONDS):
+    """Cache `compute_fn()` under `cache_key` with single-flight protection.
+
+    On cold cache, only one worker runs `compute_fn`; concurrent workers poll
+    briefly for the result and fall through to compute themselves if the lock
+    holder crashed. `cache.add` is atomic — returns False if the key already
+    exists. The lock is released in a `finally` so a crashing computer can't
+    permanently wedge readers.
+    """
+    from django.core.cache import cache  # noqa: PLC0415
+
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    lock_key = f"{cache_key}:lock"
+    if not cache.add(lock_key, 1, lock_ttl):
+        for _ in range(CACHE_SINGLEFLIGHT_LOCK_POLL_ATTEMPTS):
+            time.sleep(CACHE_SINGLEFLIGHT_LOCK_POLL_SECONDS)
+            cached = cache.get(cache_key)
+            if cached is not None:
+                return cached
+        # Lock holder hung or crashed — fall through and compute ourselves.
+
+    try:
+        result = compute_fn()
+        cache.set(cache_key, result, ttl)
+        return result
+    finally:
+        cache.delete(lock_key)
 
 
 def distance_traveled_in_km(unit) -> float:
@@ -119,34 +171,14 @@ def compute_game_leaderboard(game) -> dict:
     distance (unit_distance_cache_key) is intentionally untouched and
     continues growing as the lighter travels.
     """
-    from django.core.cache import cache  # noqa: PLC0415
-
-    from config.constants import GAME_LEADERBOARD_CACHE_TTL  # noqa: PLC0415
-
-    cache_key = game_leaderboard_cache_key(game.id)
-    cached = cache.get(cache_key)
-    if cached is not None:
-        return cached
-
-    # Single-flight: under a thundering herd on cold cache, only one worker
-    # runs the full compute; others poll briefly for the result. cache.add is
-    # atomic — returns False if the key already exists.
-    lock_key = f"{cache_key}:lock"
-    if not cache.add(lock_key, 1, GAME_LEADERBOARD_LOCK_TTL_SECONDS):
-        for _ in range(GAME_LEADERBOARD_LOCK_POLL_ATTEMPTS):
-            time.sleep(GAME_LEADERBOARD_LOCK_POLL_SECONDS)
-            cached = cache.get(cache_key)
-            if cached is not None:
-                return cached
-        # Lock holder hung or crashed — fall through and compute ourselves.
-
-    try:
-        return _build_and_cache_leaderboard(game, cache, cache_key, GAME_LEADERBOARD_CACHE_TTL)
-    finally:
-        cache.delete(lock_key)
+    return cached_with_lock(
+        game_leaderboard_cache_key(game.id),
+        lambda: _build_leaderboard_payload(game),
+        GAME_LEADERBOARD_CACHE_TTL,
+    )
 
 
-def _build_and_cache_leaderboard(game, cache, cache_key: str, ttl: int) -> dict:
+def _build_leaderboard_payload(game) -> dict:
     from django.db.models import Count, OuterRef, Q, Subquery  # noqa: PLC0415
     from django.db.models.functions import Coalesce  # noqa: PLC0415
 
@@ -213,7 +245,7 @@ def _build_and_cache_leaderboard(game, cache, cache_key: str, ttl: int) -> dict:
     for i, row in enumerate(rows, start=1):
         row["rank"] = i
 
-    data = {
+    return {
         "game": {
             "id": game.id,
             "name": game.name,
@@ -227,8 +259,6 @@ def _build_and_cache_leaderboard(game, cache, cache_key: str, ttl: int) -> dict:
         "individual": rows,
         "teams": _aggregate_teams(rows, game.mode),
     }
-    cache.set(cache_key, data, ttl)
-    return data
 
 
 def compute_game_journeys(game) -> dict:
@@ -236,35 +266,22 @@ def compute_game_journeys(game) -> dict:
 
     Separate from the leaderboard so the table-only callers (rank lookup on
     the unit page, the leaderboard page itself) don't pay for the full
-    coordinate dump on every fetch. Ranks come from the leaderboard so the
-    map and table agree on ordering. Anonymous: no unit identifiers in the
+    coordinate dump on every fetch. Anonymous: no unit identifiers in the
     payload (the public endpoint cannot leak slugs).
     """
-    from django.core.cache import cache  # noqa: PLC0415
-
-    cache_key = game_journeys_cache_key(game.id)
-    cached = cache.get(cache_key)
-    if cached is not None:
-        return cached
-
-    lock_key = f"{cache_key}:lock"
-    if not cache.add(lock_key, 1, GAME_LEADERBOARD_LOCK_TTL_SECONDS):
-        for _ in range(GAME_LEADERBOARD_LOCK_POLL_ATTEMPTS):
-            time.sleep(GAME_LEADERBOARD_LOCK_POLL_SECONDS)
-            cached = cache.get(cache_key)
-            if cached is not None:
-                return cached
-        # Lock holder hung or crashed — fall through and compute ourselves.
-
-    try:
-        return _build_and_cache_journeys(game, cache, cache_key, GAME_JOURNEYS_CACHE_TTL)
-    finally:
-        cache.delete(lock_key)
+    return cached_with_lock(
+        game_journeys_cache_key(game.id),
+        lambda: _build_journeys_payload(game),
+        GAME_JOURNEYS_CACHE_TTL,
+    )
 
 
-def _build_and_cache_journeys(game, cache, cache_key: str, ttl: int) -> dict:
+def _build_journeys_payload(game) -> dict:
     from .models import Unit  # noqa: PLC0415
 
+    # Re-enter the leaderboard cache for ranks. Intentional: guarantees the
+    # map and table agree on ordering, and lets a warm leaderboard cache
+    # short-circuit the recursion.
     leaderboard = compute_game_leaderboard(game)
     rank_by_identifier = {row["identifier"]: row["rank"] for row in leaderboard["individual"]}
 
@@ -285,9 +302,7 @@ def _build_and_cache_journeys(game, cache, cache_key: str, ttl: int) -> dict:
         )
     entries.sort(key=lambda e: e["rank"])
 
-    data = {"game_id": game.id, "journeys": entries}
-    cache.set(cache_key, data, ttl)
-    return data
+    return {"game_id": game.id, "journeys": entries}
 
 
 def total_distance_traveled_in_km() -> float:
@@ -334,58 +349,52 @@ def invalidate_checkin_caches(unit_identifier: str, game_id: int | None = None) 
 
 
 def get_cached_stats() -> dict:
+    return cached_with_lock(STATS_CACHE_KEY, _compute_stats, STATS_CACHE_TTL)
+
+
+def _compute_stats() -> dict:
     from django.contrib.auth import get_user_model  # noqa: PLC0415
-    from django.core.cache import cache  # noqa: PLC0415
     from django.db.models import Count  # noqa: PLC0415
 
     from .models import CheckIn, Unit  # noqa: PLC0415
 
-    stats = cache.get(STATS_CACHE_KEY)
-    if stats is None:
-        user_model = get_user_model()
-        stats = {
-            "active_unit_count": Unit.objects.exclude(admin_only_checkin=True)
-            .annotate(checkin_count=Count("checkin"))
-            .exclude(checkin_count__lt=1)
-            .count(),
-            "checkin_count": CheckIn.objects.count(),
-            "contributing_user_count": user_model.objects.annotate(checkin_count=Count("checkin"))
-            .filter(checkin_count__gte=1)
-            .count(),
-            "total_distance_traveled_km": total_distance_traveled_in_km(),
-        }
-        cache.set(STATS_CACHE_KEY, stats, STATS_CACHE_TTL)
-    return stats
+    user_model = get_user_model()
+    return {
+        "active_unit_count": Unit.objects.exclude(admin_only_checkin=True)
+        .annotate(checkin_count=Count("checkin"))
+        .exclude(checkin_count__lt=1)
+        .count(),
+        "checkin_count": CheckIn.objects.count(),
+        "contributing_user_count": user_model.objects.annotate(checkin_count=Count("checkin"))
+        .filter(checkin_count__gte=1)
+        .count(),
+        "total_distance_traveled_km": total_distance_traveled_in_km(),
+    }
 
 
 def get_cached_globe_pins() -> list[dict]:
+    return cached_with_lock(GLOBE_PINS_CACHE_KEY, _compute_globe_pins, GLOBE_PINS_CACHE_TTL)
+
+
+def _compute_globe_pins() -> list[dict]:
     from django.contrib.gis.db.models.fields import PointField as GeoPointField  # noqa: PLC0415
-    from django.core.cache import cache  # noqa: PLC0415
     from django.db.models import Count, OuterRef, Subquery  # noqa: PLC0415
 
     from .models import CheckIn, Unit  # noqa: PLC0415
 
-    pins = cache.get(GLOBE_PINS_CACHE_KEY)
-    if pins is None:
-        latest_location_sq = (
-            CheckIn.objects.filter(unit=OuterRef("pk")).order_by("-date_created").values("location")[:1]
-        )
-        latest_date_sq = (
-            CheckIn.objects.filter(unit=OuterRef("pk")).order_by("-date_created").values("date_created")[:1]
-        )
-        locations = (
-            Unit.objects.exclude(admin_only_checkin=True)
-            .annotate(checkin_count=Count("checkin"))
-            .exclude(checkin_count__lte=1)
-            .annotate(latest_location=Subquery(latest_location_sq, output_field=GeoPointField()))
-            .annotate(latest_date=Subquery(latest_date_sq))
-            .exclude(latest_location__isnull=True)
-            .order_by("-latest_date")
-            .values_list("latest_location", flat=True)[:GLOBE_PINS_COUNT]
-        )
-        pins = [{"lat": loc.y, "lng": loc.x} for loc in locations if loc]
-        cache.set(GLOBE_PINS_CACHE_KEY, pins, GLOBE_PINS_CACHE_TTL)
-    return pins
+    latest_location_sq = CheckIn.objects.filter(unit=OuterRef("pk")).order_by("-date_created").values("location")[:1]
+    latest_date_sq = CheckIn.objects.filter(unit=OuterRef("pk")).order_by("-date_created").values("date_created")[:1]
+    locations = (
+        Unit.objects.exclude(admin_only_checkin=True)
+        .annotate(checkin_count=Count("checkin"))
+        .exclude(checkin_count__lte=1)
+        .annotate(latest_location=Subquery(latest_location_sq, output_field=GeoPointField()))
+        .annotate(latest_date=Subquery(latest_date_sq))
+        .exclude(latest_location__isnull=True)
+        .order_by("-latest_date")
+        .values_list("latest_location", flat=True)[:GLOBE_PINS_COUNT]
+    )
+    return [{"lat": loc.y, "lng": loc.x} for loc in locations if loc]
 
 
 @shared_task(serializer="json")

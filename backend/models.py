@@ -273,6 +273,25 @@ def send_email_to_subscribers_signal(sender, instance, created, **kwargs):
         instance.send_email_to_subscribers(**kwargs)
 
 
+@receiver(post_save, sender=CheckIn)
+def invalidate_caches_on_checkin_save(sender, instance, **kwargs):
+    from .services import invalidate_checkin_caches  # noqa: PLC0415
+
+    invalidate_checkin_caches(instance.unit.identifier, instance.unit.game_id)
+
+
+@receiver(post_delete, sender=CheckIn)
+def invalidate_caches_on_checkin_delete(sender, instance, **kwargs):
+    from .services import invalidate_checkin_caches  # noqa: PLC0415
+
+    try:
+        unit_identifier = instance.unit.identifier
+        game_id = instance.unit.game_id
+    except Unit.DoesNotExist:
+        return
+    invalidate_checkin_caches(unit_identifier, game_id)
+
+
 @receiver(post_delete, sender=CheckInImage)
 def delete_checkin_image_file(sender, instance, **kwargs):
     if instance.image:

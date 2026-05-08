@@ -46,10 +46,10 @@ GAME_LEADERBOARD_CACHE_KEY_PREFIX = "game:leaderboard"
 
 # Single-flight lock around expensive cache-miss compute. Without it, a
 # thundering herd on cold cache runs the full NxM geodesic compute many times
-# in parallel.
-GAME_LEADERBOARD_LOCK_TTL_SECONDS = 30
-GAME_LEADERBOARD_LOCK_POLL_ATTEMPTS = 10
-GAME_LEADERBOARD_LOCK_POLL_SECONDS = 0.2
+# in parallel. Shared by every caller of `cached_with_lock`.
+CACHE_SINGLEFLIGHT_LOCK_TTL_SECONDS = 30
+CACHE_SINGLEFLIGHT_LOCK_POLL_ATTEMPTS = 10
+CACHE_SINGLEFLIGHT_LOCK_POLL_SECONDS = 0.2
 
 # Journey-map data lives in a separate endpoint with its own cache. Heavier
 # payload, accessed less often than the leaderboard table, longer TTL.

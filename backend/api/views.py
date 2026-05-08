@@ -10,7 +10,6 @@ from allauth.core import ratelimit
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import signing
-from django.core.cache import cache
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
 from django.db.models import Count
@@ -41,7 +40,6 @@ from config.constants import (
     GUEST_EMAIL_VERIFICATION_EXPIRY_SECONDS,
     LOCATION_CLAIM_MAX_DRIFT_METERS,
     MIN_GAME_REQUIRED_WORD_CHARS,
-    STATS_CACHE_KEY,
 )
 
 from .serializers import (
@@ -371,7 +369,7 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         if self.request.user.is_authenticated:
             return
         if not settings.CLOUDFLARE_TURNSTILE_SECRET_KEY:
-            logger.warning("CLOUDFLARE_TURNSTILE_SECRET_KEY is not set — anonymous check-in captcha is disabled")
+            logger.error("CLOUDFLARE_TURNSTILE_SECRET_KEY is not set — anonymous check-in captcha is disabled")
             return
         turnstile_token = self.request.data.get("turnstile_token", "")
         if not _verify_turnstile(turnstile_token, self.request.META.get("REMOTE_ADDR", "")):
@@ -403,8 +401,6 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
                 ) from None
 
     def perform_create(self, serializer):
-        from backend.services import invalidate_checkin_caches  # noqa: PLC0415
-
         unit = get_object_or_404(Unit.objects.select_related("game"), identifier=self.kwargs["identifier"])
         # Order matters: every check that does NOT consume a single-use token
         # runs first, so a 4xx on permission/captcha/image-count doesn't force
@@ -416,8 +412,8 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         if unit.is_gps_enforced:
             self._verify_gps_token(unit, self.request.data, serializer.validated_data.get("location"))
 
+        # Cache invalidation runs from the post_save signal in models.py.
         checkin = self._save_checkin_record(unit, serializer)
-        invalidate_checkin_caches(unit.identifier, unit.game_id)
         self._attach_checkin_images(checkin, self.request.FILES.getlist("images"))
 
     def _update_checkin_images(self, checkin, request):
@@ -479,16 +475,6 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         super().partial_update(request, *args, **kwargs)
         self._update_checkin_images(checkin, request)
 
-        unit = checkin.unit
-        if unit.game_id:
-            from django.db import transaction  # noqa: PLC0415
-
-            from backend.services import game_journeys_cache_key, game_leaderboard_cache_key  # noqa: PLC0415
-
-            game_id = unit.game_id
-            game_keys = [game_leaderboard_cache_key(game_id), game_journeys_cache_key(game_id)]
-            transaction.on_commit(lambda: cache.delete_many(game_keys))
-
         checkin.refresh_from_db()
         serializer = self.get_serializer(checkin)
         return Response(serializer.data)
@@ -507,13 +493,8 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         return super().destroy(request, *args, **kwargs)
 
     def perform_destroy(self, instance):
-        from backend.services import invalidate_checkin_caches  # noqa: PLC0415
-
-        unit = instance.unit
-        unit_identifier = unit.identifier
-        game_id = unit.game_id
+        # Cache invalidation runs from the post_delete signal in models.py.
         super().perform_destroy(instance)
-        invalidate_checkin_caches(unit_identifier, game_id)
 
 
 class GuestSubscribeView(APIView):
@@ -602,22 +583,23 @@ class GuestVerifyView(View):
         unit = get_object_or_404(Unit, identifier=unit_identifier)
         unit.subscribers.add(user)
 
-        checkins = CheckIn.objects.filter(pk=checkin_id, unit=unit, created_by__isnull=True)
+        # explicit list for cache snapshot
+        checkins = list(CheckIn.objects.filter(pk=checkin_id, unit=unit, created_by__isnull=True))
+
         if not user.name:
-            checkin = checkins.first()
-            if checkin and checkin.anonymous_name:
-                user.name = checkin.anonymous_name
-                user.save(update_fields=["name"])
-        checkins.update(created_by=user, edit_token=None)
-
-        from django.db import transaction  # noqa: PLC0415
-
-        cache_keys = [STATS_CACHE_KEY]
-        if unit.game_id:
-            from backend.services import game_journeys_cache_key, game_leaderboard_cache_key  # noqa: PLC0415
-
-            cache_keys.append(game_leaderboard_cache_key(unit.game_id))
-            cache_keys.append(game_journeys_cache_key(unit.game_id))
-        transaction.on_commit(lambda: cache.delete_many(cache_keys))
+            for c in checkins:
+                if c.anonymous_name:
+                    user.name = c.anonymous_name
+                    user.save(update_fields=["name"])
+                    break
+        # Per-instance save (not queryset.update) so the post_save signal
+        # fires and the cache invalidation in models.py runs. Stats also
+        # needs to invalidate (contributing_user_count changes when a guest
+        # claim flips created_by from null to a user); the signal handles
+        # that via invalidate_checkin_caches.
+        for c in checkins:
+            c.created_by = user
+            c.edit_token = None
+            c.save(update_fields=["created_by", "edit_token"])
 
         return HttpResponseRedirect(f"/unit/{unit_identifier}/?verified=1")
