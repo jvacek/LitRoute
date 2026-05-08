@@ -480,8 +480,10 @@ export default function Unit() {
   const mapWrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let cancelled = false;
     Promise.all([
       fetch(`/api/units/${identifier}/`).then((r) => {
+        if (cancelled) return null;
         if (r.status === 404) {
           setNotFound(true);
           return null;
@@ -491,7 +493,7 @@ export default function Unit() {
       fetch(`/api/units/${identifier}/checkins/`).then((r) => r.json()),
     ])
       .then(([unitData, checkinData]) => {
-        if (!unitData) return;
+        if (cancelled || !unitData) return;
         setUnit(unitData as UnitData);
         setCheckins(
           Array.isArray(checkinData)
@@ -519,7 +521,7 @@ export default function Unit() {
                   individual: { identifier: string | null; rank: number }[];
                 } | null,
               ) => {
-                if (!board) return;
+                if (cancelled || !board) return;
                 const entry = board.individual.find(
                   (e) => e.identifier === unitData.identifier,
                 );
@@ -532,7 +534,12 @@ export default function Unit() {
         }
       })
       .catch(console.error)
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [identifier]);
 
   useEffect(() => {
