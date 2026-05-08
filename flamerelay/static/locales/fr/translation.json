@@ -1,345 +1,721 @@
 {
-  "auth": {
-    "email": {
-      "emailLabel": "Adresse e-mail",
-      "passkey": {
-        "default": "Se connecter avec une clé d'accès"
-      },
-      "submit": {
-        "default": "Envoyer le code",
-        "loading": "Envoi"
-      },
-      "title": "Connexion"
-    }
-  },
-  "checkin": {
-    "createTitle": "Nouvel enregistrement",
-    "editTitle": "Modifier l'enregistrement",
-    "form": {
-      "clickToDrop": "Cliquez sur la carte pour placer un repère.",
-      "clickToMove": "Cliquez sur la carte pour déplacer le repère.",
-      "dismiss": "Ignorer",
-      "errors": {
-        "gpsRecapture": "Votre capture de position a expiré ou s'est déplacée. Touchez à nouveau « Utiliser ma position » pour la rafraîchir.",
-        "gpsRequired": "L'accès à la localisation est requis pour cette unité. Autorisez l'accès à la localisation dans votre navigateur et réessayez.",
-        "gpsVerificationFailed": "La vérification de localisation a échoué. Veuillez réessayer.",
-        "locationRequired": "Cliquez sur la carte pour définir votre position.",
-        "maxPhotos": "Maximum {{max}} photos par enregistrement.",
-        "nameRequired": "Ajoutez un nom d'au moins 3 lettres pour que votre enregistrement compte au classement.",
-        "placeRequired": "Ajoutez un lieu d'au moins 3 lettres pour que votre enregistrement compte au classement.",
-        "svgNotSupported": "Seules les images matricielles (JPEG, PNG, WebP, etc.) sont prises en charge. Les fichiers SVG ne peuvent pas être téléversés."
-      },
-      "gameRequiredNote": {
-        "anon": "Le lieu et votre nom sont requis pour que votre enregistrement compte au classement.",
-        "auth": "Le lieu est requis pour que votre enregistrement compte au classement."
-      },
-      "gpsDeniedModal": {
-        "body": "Votre navigateur ou votre appareil bloque l'accès à la localisation. Pour vous enregistrer ici, vous devez l'autoriser.",
-        "close": "Fermer",
-        "step1": "Touchez l'icône de cadenas ou d'info à côté de l'adresse de ce site et réglez Localisation sur <strong>Autoriser</strong>.",
-        "step2": "Si cela ne suffit pas, ouvrez les réglages <strong>Confidentialité → Localisation</strong> de votre appareil et assurez-vous que votre navigateur est autorisé.",
-        "step3": "Rechargez cette page une fois terminé.",
-        "title": "Nous ne voyons pas votre position",
-        "tryAgain": "Réessayer"
-      },
-      "gpsNotice": "Cette unité nécessite votre position en temps réel. Elle sera capturée lorsque vous appuyez sur Enregistrement.",
-      "gpsNudgeHint": "Déplacez votre repère si vous préférez ne pas partager votre position exacte.",
-      "locationLabel": "Position",
-      "locationLockedOnEdit": "La position ne peut pas être modifiée après la création de l'enregistrement.",
-      "locationSet": "Position définie",
-      "messageLabel": "Message",
-      "messagePlaceholder": "Où l'avez-vous trouvé ? Où êtes-vous ? Quelle est la suite pour ce briquet ?",
-      "nameLabel": "Votre nom (optionnel)",
-      "nameLabelRequired": "Votre nom",
-      "namePlaceholder": "Comment doit-on signer ?",
-      "passedOnNote": "Dès que quelqu'un s'enregistre après vous, le briquet passe au suivant — vous ne pourrez plus ajouter d'enregistrements.",
-      "placeLabel": "Lieu",
-      "placePlaceholder": "p. ex. « Grande Place, Bruxelles »",
-      "privacyHint": {
-        "body": "Les coordonnées GPS de votre appareil ont été utilisées. Déplacez le repère vers un endroit proche si vous préférez ne pas partager votre position exacte.",
-        "title": "Votre position exacte sera partagée"
-      },
-      "searchPlaceholder": "Rechercher un lieu…",
-      "submit": {
-        "create": "S'enregistrer",
-        "creating": "Envoi",
-        "save": "Enregistrer les modifications"
-      },
-      "useMyLocation": {
-        "default": "Utiliser ma position",
-        "loading": "Localisation"
-      }
+    "about": {
+        "aboutTitle": "",
+        "faqTitle": "",
+        "header": "",
+        "qa": {
+            "followAlong": {
+                "a": "",
+                "q": ""
+            },
+            "help": {
+                "a1": "",
+                "a2": "",
+                "a3": "",
+                "q": ""
+            },
+            "how": {
+                "a": "",
+                "q": ""
+            },
+            "money": {
+                "a1": "",
+                "a2": "",
+                "a3": "",
+                "q": ""
+            },
+            "secure": {
+                "a1": "",
+                "a2": "",
+                "q": ""
+            },
+            "translate": {
+                "a": "",
+                "q": ""
+            },
+            "who": {
+                "a": "",
+                "q": ""
+            },
+            "why": {
+                "a": "",
+                "q": ""
+            }
+        },
+        "subheader": "",
+        "supportHeading": ""
     },
-    "guestEmailPlaceholder": "votre@email.com",
-    "guestEmailSent": "Nous vous avons envoyé un lien à confirmer — appuyez dessus et vous êtes sur la liste.",
-    "guestEmailSentBack": "Retour à l'Unit",
-    "guestEmailSentTitle": "Vérifiez votre boîte de réception.",
-    "guestEmailSkip": "Non merci — ne me prévenez pas.",
-    "guestEmailSocialProof_one": "Rejoignez {{count}} autre personne qui suit ce briquet.",
-    "guestEmailSocialProof_other": "Rejoignez {{count}} autres personnes qui suivent ce briquet.",
-    "guestEmailSubmit": "Suivre ce briquet",
-    "guestEmailSubtitle": "On vous enverra un e-mail quand quelqu'un d'autre s'enregistrera ailleurs avec ce briquet. C'est tout — pas de marketing, désabonnement en un clic.",
-    "guestEmailTitle": "Vous voulez savoir où ce briquet ira ensuite ?"
-  },
-  "common": {
-    "about": "À propos",
-    "back": "Retour",
-    "cancel": "Annuler",
-    "confirm": "Confirmer",
-    "confirming": "Confirmation",
-    "connectedAccounts": "Comptes connectés",
-    "duration": {
-      "and": "et",
-      "day_one": "{{count}} jour",
-      "day_other": "{{count}} jours",
-      "hour_one": "{{count}} heure",
-      "hour_other": "{{count}} heures"
+    "auth": {
+        "code": {
+            "codeLabel": "",
+            "description": "",
+            "differentEmail": "",
+            "inboxFallback": "",
+            "submit": {
+                "default": ""
+            },
+            "title": ""
+        },
+        "email": {
+            "description": "",
+            "emailLabel": "Adresse e-mail",
+            "passkey": {
+                "default": "Se connecter avec une clé d'accès"
+            },
+            "submit": {
+                "default": "Envoyer le code",
+                "loading": "Envoi"
+            },
+            "title": "Connexion"
+        },
+        "errors": {
+            "passkeyFailed": "",
+            "passkeyMfaFailed": "",
+            "sendFailed": "",
+            "somethingWrong": "",
+            "verifyFailed": ""
+        },
+        "mfa": {
+            "codeLabel": "",
+            "description": "",
+            "passkey": {
+                "default": ""
+            },
+            "submit": {
+                "default": ""
+            }
+        },
+        "signup": {
+            "description": "",
+            "displayNameLabel": "",
+            "previewLabel": "",
+            "saveFailed": "",
+            "submit": {
+                "default": ""
+            },
+            "title": "",
+            "yourNameFallback": ""
+        }
     },
-    "loading": "Chargement",
-    "nameLabel": "Nom",
-    "namePlaceholder": "Votre nom",
-    "or": "ou",
-    "password": "Mot de passe",
-    "profile": "Profil",
-    "remove": "Retirer",
-    "saving": "Enregistrement",
-    "sending": "Envoi",
-    "settings": "Paramètres",
-    "signingIn": "Connexion",
-    "support": "Soutenir",
-    "twoFactorAuth": "Authentification à deux facteurs",
-    "unexpectedError": "Une erreur inattendue s'est produite.",
-    "verificationCodeLabel": "Code de vérification",
-    "verifying": "Vérification"
-  },
-  "emailConfirm": {
-    "checkingLink": "Vérification de votre lien",
-    "confirm": {
-      "body": "Confirmez <strong>{{email}}</strong> comme votre adresse e-mail.",
-      "failed": "La vérification a échoué. Veuillez réessayer.",
-      "submit": {
-        "default": "Confirmer l'adresse e-mail"
-      },
-      "title": "Confirmer votre e-mail"
+    "checkin": {
+        "createTitle": "Nouvel enregistrement",
+        "editTitle": "Modifier l'enregistrement",
+        "form": {
+            "clickToDrop": "Cliquez sur la carte pour placer un repère.",
+            "clickToMove": "Cliquez sur la carte pour déplacer le repère.",
+            "dismiss": "Ignorer",
+            "errors": {
+                "gpsRecapture": "Votre capture de position a expiré ou s'est déplacée. Touchez à nouveau « Utiliser ma position » pour la rafraîchir.",
+                "gpsRequired": "L'accès à la localisation est requis pour cette unité. Autorisez l'accès à la localisation dans votre navigateur et réessayez.",
+                "gpsVerificationFailed": "La vérification de localisation a échoué. Veuillez réessayer.",
+                "locationRequired": "Cliquez sur la carte pour définir votre position.",
+                "maxPhotos": "Maximum {{max}} photos par enregistrement.",
+                "nameRequired": "Ajoutez un nom d'au moins 3 lettres pour que votre enregistrement compte au classement.",
+                "placeRequired": "Ajoutez un lieu d'au moins 3 lettres pour que votre enregistrement compte au classement.",
+                "svgNotSupported": "Seules les images matricielles (JPEG, PNG, WebP, etc.) sont prises en charge. Les fichiers SVG ne peuvent pas être téléversés."
+            },
+            "gameRequiredNote": {
+                "anon": "Le lieu et votre nom sont requis pour que votre enregistrement compte au classement.",
+                "auth": "Le lieu est requis pour que votre enregistrement compte au classement."
+            },
+            "gpsDeniedModal": {
+                "body": "Votre navigateur ou votre appareil bloque l'accès à la localisation. Pour vous enregistrer ici, vous devez l'autoriser.",
+                "close": "Fermer",
+                "step1": "Touchez l'icône de cadenas ou d'info à côté de l'adresse de ce site et réglez Localisation sur <strong>Autoriser</strong>.",
+                "step2": "Si cela ne suffit pas, ouvrez les réglages <strong>Confidentialité → Localisation</strong> de votre appareil et assurez-vous que votre navigateur est autorisé.",
+                "step3": "Rechargez cette page une fois terminé.",
+                "title": "Nous ne voyons pas votre position",
+                "tryAgain": "Réessayer"
+            },
+            "gpsNotice": "Cette unité nécessite votre position en temps réel. Elle sera capturée lorsque vous appuyez sur Enregistrement.",
+            "gpsNudgeHint": "Déplacez votre repère si vous préférez ne pas partager votre position exacte.",
+            "locationLabel": "Position",
+            "locationLockedOnEdit": "La position ne peut pas être modifiée après la création de l'enregistrement.",
+            "locationSet": "Position définie",
+            "messageLabel": "Message",
+            "messagePlaceholder": "Où l'avez-vous trouvé ? Où êtes-vous ? Quelle est la suite pour ce briquet ?",
+            "nameLabel": "Votre nom (optionnel)",
+            "nameLabelRequired": "Votre nom",
+            "namePlaceholder": "Comment doit-on signer ?",
+            "passedOnNote": "Dès que quelqu'un s'enregistre après vous, le briquet passe au suivant — vous ne pourrez plus ajouter d'enregistrements.",
+            "placeLabel": "Lieu",
+            "placePlaceholder": "p. ex. « Grande Place, Bruxelles »",
+            "privacyHint": {
+                "body": "Les coordonnées GPS de votre appareil ont été utilisées. Déplacez le repère vers un endroit proche si vous préférez ne pas partager votre position exacte.",
+                "title": "Votre position exacte sera partagée"
+            },
+            "searchPlaceholder": "Rechercher un lieu…",
+            "submit": {
+                "create": "S'enregistrer",
+                "creating": "Envoi",
+                "save": "Enregistrer les modifications"
+            },
+            "useMyLocation": {
+                "default": "Utiliser ma position",
+                "loading": "Localisation"
+            }
+        },
+        "guestEmailPlaceholder": "votre@email.com",
+        "guestEmailSent": "Nous vous avons envoyé un lien à confirmer — appuyez dessus et vous êtes sur la liste.",
+        "guestEmailSentBack": "Retour à l'Unit",
+        "guestEmailSentTitle": "Vérifiez votre boîte de réception.",
+        "guestEmailSkip": "Non merci — ne me prévenez pas.",
+        "guestEmailSocialProof_many": "",
+        "guestEmailSocialProof_one": "Rejoignez {{count}} autre personne qui suit ce briquet.",
+        "guestEmailSocialProof_other": "Rejoignez {{count}} autres personnes qui suivent ce briquet.",
+        "guestEmailSubmit": "Suivre ce briquet",
+        "guestEmailSubtitle": "On vous enverra un e-mail quand quelqu'un d'autre s'enregistrera ailleurs avec ce briquet. C'est tout — pas de marketing, désabonnement en un clic.",
+        "guestEmailTitle": "Vous voulez savoir où ce briquet ira ensuite ?"
     },
-    "invalid": {
-      "body": "Ce lien de confirmation est invalide ou a expiré. <requestNewLink>Demandez-en un nouveau</requestNewLink>.",
-      "title": "Lien invalide"
-    }
-  },
-  "footer": {
-    "tagline": "Suivez le voyage de votre briquet"
-  },
-  "game": {
-    "countdown": {
-      "days": "Jours",
-      "ended": "Jeu terminé",
-      "endedOn": "Terminé le {{date}}",
-      "endsIn": "Le jeu se termine dans",
-      "endsOn": "Se termine le {{date}}",
-      "hours": "Heures",
-      "minutes": "Min",
-      "seconds": "Sec"
+    "common": {
+        "about": "À propos",
+        "back": "Retour",
+        "cancel": "Annuler",
+        "confirm": "Confirmer",
+        "confirming": "Confirmation",
+        "connectedAccounts": "Comptes connectés",
+        "duration": {
+            "and": "et",
+            "day_many": "",
+            "day_one": "{{count}} jour",
+            "day_other": "{{count}} jours",
+            "hour_many": "",
+            "hour_one": "{{count}} heure",
+            "hour_other": "{{count}} heures"
+        },
+        "loading": "Chargement",
+        "nameLabel": "Nom",
+        "namePlaceholder": "Votre nom",
+        "or": "ou",
+        "password": "Mot de passe",
+        "profile": "Profil",
+        "remove": "Retirer",
+        "saving": "Enregistrement",
+        "sending": "Envoi",
+        "settings": "Paramètres",
+        "signingIn": "Connexion",
+        "support": "Soutenir",
+        "twoFactorAuth": "Authentification à deux facteurs",
+        "unexpectedError": "Une erreur inattendue s'est produite.",
+        "verificationCodeLabel": "Code de vérification",
+        "verifying": "Vérification"
     },
-    "distance": {
-      "name": "Distance",
-      "rules": "Ce briquet participe à un jeu de distance qui dure {{duration}}. Transmettez-le, faites-le photographier dans de nouveaux lieux et accumulez les kilomètres. Votre position est vérifiée par GPS. Le briquet ayant parcouru le plus de kilomètres à la fin du jeu gagne.",
-      "timeAlmostUp": "Moins de {{minutes}} min avant la fin du jeu !",
-      "timeExpired": "Le jeu de distance est terminé — les résultats sont définitifs. Le voyage du briquet peut continuer."
+    "contributorGuide": {
+        "footerText": "",
+        "greeting": "",
+        "greetingBody1": "",
+        "greetingBody2": "",
+        "header": "",
+        "openAdmin": "",
+        "passingOnSubtext": "",
+        "passingOnTitle": "",
+        "steps": {
+            "attachLabel": {
+                "a": "",
+                "q": "",
+                "tip": ""
+            },
+            "createUnit": {
+                "a": "",
+                "q": "",
+                "tip": ""
+            },
+            "firstCheckin": {
+                "a": "",
+                "q": ""
+            },
+            "handOff": {
+                "a": "",
+                "q": ""
+            },
+            "makeLabel": {
+                "a": "",
+                "q": "",
+                "tip": ""
+            }
+        },
+        "stepsTitle": "",
+        "subheader": ""
     },
-    "hot_potato": {
-      "name": "Patate chaude",
-      "rules": "Transmettez ce briquet avant qu'il n'expire ! Vous avez {{shelfLife}} heures."
+    "emailConfirm": {
+        "checkingLink": "Vérification de votre lien",
+        "confirm": {
+            "body": "Confirmez <strong>{{email}}</strong> comme votre adresse e-mail.",
+            "failed": "La vérification a échoué. Veuillez réessayer.",
+            "submit": {
+                "default": "Confirmer l'adresse e-mail"
+            },
+            "title": "Confirmer votre e-mail"
+        },
+        "invalid": {
+            "body": "Ce lien de confirmation est invalide ou a expiré. <requestNewLink>Demandez-en un nouveau</requestNewLink>.",
+            "title": "Lien invalide"
+        }
     },
-    "leaderboard": {
-      "byPerson": "par {{name}}",
-      "checkinsHeader": "Passages",
-      "distanceHeader": "Distance",
-      "individualTab": "Briquets",
-      "lighterCountHeader": "Briquets",
-      "lightersDescriptionByCheckins": "Chaque ligne est un briquet, classé selon le nombre de passages reçus.",
-      "lightersDescriptionByDistance": "Chaque ligne est un briquet, classé selon la distance totale parcourue.",
-      "mapAfterEndLegend": "Après la fin du jeu",
-      "mapDescription": "Chaque ligne représente le parcours d'un briquet. Les segments estompés sont survenus après la fin du jeu.",
-      "mapDuringLegend": "Pendant le jeu",
-      "mapEmpty": "Aucun parcours à afficher pour l'instant.",
-      "mapReplay": "Rejouer",
-      "mapReplaying": "Lecture…",
-      "mapTitle": "Parcours",
-      "noEntries": "Aucun check-in pour l'instant.",
-      "placeHeader": "Dernière position",
-      "rankHeader": "#",
-      "teamHeader": "Équipe",
-      "teamsDescriptionByCheckins": "Les équipes sont classées selon le total des passages reçus par tous leurs briquets.",
-      "teamsDescriptionByDistance": "Les équipes sont classées selon la distance totale parcourue par tous leurs briquets.",
-      "teamsTab": "Équipes",
-      "title": "Classement — {{name}}"
+    "errorPage": {
+        "403": {
+            "description": "",
+            "headline": ""
+        },
+        "403csrf": {
+            "description": "",
+            "headline": ""
+        },
+        "404": {
+            "description": "",
+            "headline": ""
+        },
+        "500": {
+            "description": "",
+            "headline": ""
+        },
+        "backToHome": ""
     },
-    "modal": {
-      "gotIt": "Compris",
-      "title": "Jeu spécial",
-      "viewLeaderboard": "Voir le classement"
+    "faq": {
+        "lighter": {
+            "anythingDo": {
+                "a1": "",
+                "a2": "",
+                "q": ""
+            },
+            "cantSeeAll": {
+                "a1": "",
+                "a2": "",
+                "q": ""
+            },
+            "giveToWhom": {
+                "a1": "",
+                "a2": "",
+                "q": ""
+            },
+            "lightDied": {
+                "a": "",
+                "q": ""
+            },
+            "multipleCheckins": {
+                "a1": "",
+                "a2": "",
+                "q": ""
+            }
+        }
     },
-    "race": {
-      "name": "Course",
-      "rules": "Atteignez la destination le plus vite possible. Position vérifiée par GPS."
+    "feedback": {
+        "captchaPending": "",
+        "emailHelpAnonymous": "",
+        "emailHelpAuthenticated": "",
+        "emailLabel": "",
+        "emailPlaceholder": "",
+        "embedHeading": "",
+        "embedSubheading": "",
+        "errorGeneric": "",
+        "errorRequiredMessage": "",
+        "messageLabel": "",
+        "messagePlaceholder": "",
+        "submit": "",
+        "submitting": "",
+        "subtitle": "",
+        "successMessage": "",
+        "successTitle": "",
+        "title": "",
+        "youFallback": ""
     },
-    "relay": {
-      "name": "Relais",
-      "rules": "Transmettez ce briquet à la prochaine personne. Pas de limite de temps."
-    }
-  },
-  "home": {
-    "cta": {
-      "body": "Je suis Jonas, j'ai créé ça pendant ma période de chômage joyeux. Envie d'envoyer un briquet dans le monde ? <aboutLink>Lisez la page À propos</aboutLink> d'abord — il faudra me contacter avant de commencer à imprimer des étiquettes.",
-      "heading": "Lancez un voyage.",
-      "link": "À propos du projet"
+    "footer": {
+        "feedback": "",
+        "footerNav": "",
+        "tagline": "Suivez le voyage de votre briquet",
+        "viewCommit": ""
     },
-    "errors": {
-      "like": "Comme",
-      "missingDash": "Il manque le tiret — il faut un nom, un tiret, puis un nombre.",
-      "nameTooShort": "Le nom avant le tiret est trop court — il faut au moins 3 lettres (vous avez tapé « {{prefix}} »).",
-      "noNumber": "Rien après le tiret — ajoutez un nombre à 2 chiffres.",
-      "notFound": "Nous n'avons pas trouvé <lighterName>{{id}}</lighterName>. Vérifiez l'autocollant — il devrait ressembler à <lighterName>{{example}}</lighterName>.",
-      "numberRequired": "La partie après le tiret doit être un nombre.",
-      "offMap": "Ce briquet est hors carte.",
-      "singleDigit": "Le nombre doit avoir 2 chiffres."
-    },
-    "eyebrow": "Trouvez-le. Enregistrez-vous. Passez-le.",
-    "globeCaption": "20 briquets récemment actifs — chaque point est une histoire",
-    "headline": "Un briquet avec une histoire. Ajoutez la vôtre.",
-    "howItWorks": {
-      "heading": "Voici comment ça marche.",
-      "step1Body": "Repérez un briquet avec un autocollant QR. Scannez-le, ou tapez son identifiant sur litroute.com. Chaque ville, chaque main par laquelle il est passé — tout est là qui vous attend.",
-      "step1Title": "Trouvez-le.",
-      "step2Body": "Ajoutez une photo et une petite note. Votre moment — où vous étiez, ce que vous avez vu — devient un chapitre permanent dans l'histoire du briquet.",
-      "step2Title": "Enregistrez-vous.",
-      "step3Body": "Donnez-le à un inconnu. Laissez-le dans un café, une auberge, un sentier de randonnée. Vous choisissez le prochain chapitre.",
-      "step3Title": "Passez-le.",
-      "step4Body": "Abonnez-vous et recevez un e-mail la prochaine fois que quelqu'un le trouve — où que ce soit dans le monde. Du suivi discret d'un morceau de métal.",
-      "step4Title": "Suivez l'aventure."
-    },
-    "journey": {
-      "exampleLabel": "Exemple — pas votre briquet",
-      "heading": "Voici ce que vous verrez en scannant un briquet.",
-      "openSlotBody": "Trouvez-en un, enregistrez-vous, et vous pourriez être ici.",
-      "seeReal": "<journeyLink>Voir le parcours d'un vrai briquet</journeyLink>",
-      "somewhere": "Quelque part de nouveau",
-      "subtext": "Ce sont des enregistrements fictifs pour vous montrer comment ça marche.",
-      "yourName": "votre nom ici"
-    },
-    "lighterAlt": "Un briquet posé sur le côté",
-    "lighterLabel": "Comment s'appelle le briquet ?",
-    "stats": {
-      "activeLighters": "briquets actifs",
-      "checkinsLogged": "enregistrements faits",
-      "freeText": "Gratuit, maintenu en vie par des lecteurs comme vous. <supportLink>Soutenir le projet</supportLink>",
-      "peopleCheckedIn": "personnes qui se sont enregistrées",
-      "traveledSoFar": "parcourus jusqu'ici"
-    },
-    "subheadline": "Trouvez un briquet avec un autocollant QR. Scannez-le pour découvrir partout où il est passé et toutes les personnes qui l'ont tenu. Laissez votre propre note — puis passez-le au prochain inconnu.",
-    "submit": {
-      "checking": "Recherche",
-      "default": "Voir le parcours"
-    },
-    "tryExample": "essayez « john-93 » pour voir un exemple"
-  },
-  "nav": {
-    "homeAriaLabel": "Accueil LitRoute",
-    "languageLabel": "Langue",
-    "mainNav": "Navigation principale",
-    "mobileNav": "Navigation mobile",
-    "signIn": "Se connecter",
-    "supportAriaLabel": "Soutenir ce projet",
-    "toggleNav": "Afficher/masquer la navigation"
-  },
-  "photoUpload": {
-    "counter": "{{count}} / {{max}} photos",
-    "dragToReorder": "Glissez pour réorganiser · cliquez pour en ajouter",
-    "empty": {
-      "addPhotos": "Ajouter des photos",
-      "clickOrDrag": "Cliquez n'importe où ou glissez-déposez",
-      "dropHere": "Déposez ici !",
-      "releaseToUpload": "Relâchez pour téléverser",
-      "showWhere": "Montrez où vous l'avez trouvé — jusqu'à {{max}} photos"
-    },
-    "existingPhoto": "Photo existante",
-    "label": "Photos",
-    "maxReached": "Maximum de {{max}} photos atteint — retirez-en une pour en ajouter une autre.",
-    "optional": "(facultatif)",
-    "preview": "Aperçu",
-    "removePhoto": "Retirer la photo",
-    "tips": {
-      "heading": "Conseils photo",
-      "hide": "Couvrez ou masquez le nom du briquet — c'est le mot de passe de la page",
-      "lighter": "Le briquet en main ou posé sur une surface fait une belle photo",
-      "location": "Montrez où vous êtes — un point de repère, une vue, ou ce qui vous entoure"
-    },
-    "zoneAriaAdd": "Zone de téléversement — cliquez ou glissez pour ajouter des photos",
-    "zoneAriaFull": "Zone de téléversement — maximum atteint"
-  },
-  "supportSection": {
-    "body1": "LitRoute est un projet solo. Pas de pub, pas d'abonnements, pas d'investisseurs — juste les coûts de serveur, d'envoi d'e-mails et de stockage qui viennent de ma poche. Y compris les briquets eux-mêmes : chacun est acheté et enregistré à la main avant de pouvoir commencer son voyage.",
-    "body2": "Si vous avez aimé suivre un voyage ici, une petite contribution fait toute la différence.",
-    "donateCta": "Soutenir",
-    "githubDescription": "Sponsorisez directement sur GitHub",
-    "githubLabel": "GitHub Sponsors",
-    "kofiDescription": "Pourboire unique, sans inscription",
-    "kofiLabel": "Ko-fi",
-    "liberapayDescription": "Hebdomadaire ou mensuel",
-    "liberapayLabel": "Liberapay",
-    "otherWaysHeading": "Ou aidez sans dépenser :",
-    "weblateCta": "Contribuer",
-    "weblateDescription": "Aidez à traduire LitRoute dans votre langue sur Weblate",
-    "weblateLabel": "Traduire"
-  },
-  "unit": {
-    "cannotEdit": "Impossible de modifier ou supprimer après 6 heures",
-    "checkinBtn": "Nouvel enregistrement",
-    "currentLocation": "Position actuelle",
-    "deleteBtn": "Supprimer",
-    "deleteConfirm": "Supprimer cet enregistrement ?",
-    "deleteError": "Impossible de supprimer cet enregistrement.",
-    "editBtn": "Modifier",
     "game": {
-      "leaderboardLink": "Aller au classement",
-      "rankLabel": "sur {{total}}",
-      "showRules": "Voir les règles"
+        "countdown": {
+            "days": "Jours",
+            "ended": "Jeu terminé",
+            "endedOn": "Terminé le {{date}}",
+            "endsIn": "Le jeu se termine dans",
+            "endsOn": "Se termine le {{date}}",
+            "hours": "Heures",
+            "minutes": "Min",
+            "seconds": "Sec"
+        },
+        "distance": {
+            "name": "Distance",
+            "rules": "Ce briquet participe à un jeu de distance qui dure {{duration}}. Transmettez-le, faites-le photographier dans de nouveaux lieux et accumulez les kilomètres. Votre position est vérifiée par GPS. Le briquet ayant parcouru le plus de kilomètres à la fin du jeu gagne.",
+            "timeAlmostUp": "Moins de {{minutes}} min avant la fin du jeu !",
+            "timeExpired": "Le jeu de distance est terminé — les résultats sont définitifs. Le voyage du briquet peut continuer."
+        },
+        "hot_potato": {
+            "name": "Patate chaude",
+            "rules": "Transmettez ce briquet avant qu'il n'expire ! Vous avez {{shelfLife}} heures."
+        },
+        "leaderboard": {
+            "byPerson": "par {{name}}",
+            "checkinsHeader": "Passages",
+            "distanceHeader": "Distance",
+            "individualTab": "Briquets",
+            "lighterCountHeader": "Briquets",
+            "lightersDescriptionByCheckins": "Chaque ligne est un briquet, classé selon le nombre de passages reçus.",
+            "lightersDescriptionByDistance": "Chaque ligne est un briquet, classé selon la distance totale parcourue.",
+            "mapAfterEndLegend": "Après la fin du jeu",
+            "mapDescription": "Chaque ligne représente le parcours d'un briquet. Les segments estompés sont survenus après la fin du jeu.",
+            "mapDuringLegend": "Pendant le jeu",
+            "mapEmpty": "Aucun parcours à afficher pour l'instant.",
+            "mapReplay": "Rejouer",
+            "mapReplaying": "Lecture…",
+            "mapTitle": "Parcours",
+            "noEntries": "Aucun check-in pour l'instant.",
+            "placeHeader": "Dernière position",
+            "rankHeader": "#",
+            "teamHeader": "Équipe",
+            "teamsDescriptionByCheckins": "Les équipes sont classées selon le total des passages reçus par tous leurs briquets.",
+            "teamsDescriptionByDistance": "Les équipes sont classées selon la distance totale parcourue par tous leurs briquets.",
+            "teamsTab": "Équipes",
+            "title": "Classement — {{name}}"
+        },
+        "modal": {
+            "gotIt": "Compris",
+            "title": "Jeu spécial",
+            "viewLeaderboard": "Voir le classement"
+        },
+        "race": {
+            "name": "Course",
+            "rules": "Atteignez la destination le plus vite possible. Position vérifiée par GPS."
+        },
+        "relay": {
+            "name": "Relais",
+            "rules": "Transmettez ce briquet à la prochaine personne. Pas de limite de temps."
+        }
     },
-    "gettingStarted": {
-      "body": "Vous êtes la première personne ici. La prochaine sera contente que vous soyez passé.",
-      "cta": "Créer le premier enregistrement",
-      "heading": "Ce briquet commence tout juste."
+    "home": {
+        "cta": {
+            "body": "Je suis Jonas, j'ai créé ça pendant ma période de chômage joyeux. Envie d'envoyer un briquet dans le monde ? <aboutLink>Lisez la page À propos</aboutLink> d'abord — il faudra me contacter avant de commencer à imprimer des étiquettes.",
+            "heading": "Lancez un voyage.",
+            "link": "À propos du projet"
+        },
+        "errors": {
+            "like": "Comme",
+            "missingDash": "Il manque le tiret — il faut un nom, un tiret, puis un nombre.",
+            "nameTooShort": "Le nom avant le tiret est trop court — il faut au moins 3 lettres (vous avez tapé « {{prefix}} »).",
+            "noNumber": "Rien après le tiret — ajoutez un nombre à 2 chiffres.",
+            "notFound": "Nous n'avons pas trouvé <lighterName>{{id}}</lighterName>. Vérifiez l'autocollant — il devrait ressembler à <lighterName>{{example}}</lighterName>.",
+            "numberRequired": "La partie après le tiret doit être un nombre.",
+            "offMap": "Ce briquet est hors carte.",
+            "singleDigit": "Le nombre doit avoir 2 chiffres."
+        },
+        "eyebrow": "Trouvez-le. Enregistrez-vous. Passez-le.",
+        "globeCaption": "20 briquets récemment actifs — chaque point est une histoire",
+        "headline": "Un briquet avec une histoire. Ajoutez la vôtre.",
+        "howItWorks": {
+            "heading": "Voici comment ça marche.",
+            "step1Body": "Repérez un briquet avec un autocollant QR. Scannez-le, ou tapez son identifiant sur litroute.com. Chaque ville, chaque main par laquelle il est passé — tout est là qui vous attend.",
+            "step1Title": "Trouvez-le.",
+            "step2Body": "Ajoutez une photo et une petite note. Votre moment — où vous étiez, ce que vous avez vu — devient un chapitre permanent dans l'histoire du briquet.",
+            "step2Title": "Enregistrez-vous.",
+            "step3Body": "Donnez-le à un inconnu. Laissez-le dans un café, une auberge, un sentier de randonnée. Vous choisissez le prochain chapitre.",
+            "step3Title": "Passez-le.",
+            "step4Body": "Abonnez-vous et recevez un e-mail la prochaine fois que quelqu'un le trouve — où que ce soit dans le monde. Du suivi discret d'un morceau de métal.",
+            "step4Title": "Suivez l'aventure."
+        },
+        "journey": {
+            "exampleLabel": "Exemple — pas votre briquet",
+            "heading": "Voici ce que vous verrez en scannant un briquet.",
+            "openSlotBody": "Trouvez-en un, enregistrez-vous, et vous pourriez être ici.",
+            "seeReal": "<journeyLink>Voir le parcours d'un vrai briquet</journeyLink>",
+            "somewhere": "Quelque part de nouveau",
+            "subtext": "Ce sont des enregistrements fictifs pour vous montrer comment ça marche.",
+            "yourName": "votre nom ici"
+        },
+        "lighterAlt": "Un briquet posé sur le côté",
+        "lighterLabel": "Comment s'appelle le briquet ?",
+        "stats": {
+            "activeLighters": "briquets actifs",
+            "checkinsLogged": "enregistrements faits",
+            "freeText": "Gratuit, maintenu en vie par des lecteurs comme vous. <supportLink>Soutenir le projet</supportLink>",
+            "peopleCheckedIn": "personnes qui se sont enregistrées",
+            "traveledSoFar": "parcourus jusqu'ici"
+        },
+        "subheadline": "Trouvez un briquet avec un autocollant QR. Scannez-le pour découvrir partout où il est passé et toutes les personnes qui l'ont tenu. Laissez votre propre note — puis passez-le au prochain inconnu.",
+        "submit": {
+            "checking": "Recherche",
+            "default": "Voir le parcours"
+        },
+        "tryExample": "essayez « john-93 » pour voir un exemple"
     },
-    "goToPhoto": "Aller à la photo {{index}}",
-    "nextPhoto": "Photo suivante",
-    "noCheckinsYet": "Aucun enregistrement pour l'instant.",
-    "notFound": {
-      "body1": "Nous n'avons pas trouvé <strong>{{identifier}}</strong>.",
-      "body2": "Le nom sur l'autocollant devrait ressembler à <handwriting>EMILY-07</handwriting> — vérifiez l'orthographe et réessayez.",
-      "cta": "Essayer un autre nom",
-      "heading": "Ce briquet est hors carte."
+    "nav": {
+        "feedback": "",
+        "homeAriaLabel": "Accueil LitRoute",
+        "languageLabel": "Langue",
+        "mainNav": "Navigation principale",
+        "mobileNav": "Navigation mobile",
+        "signIn": "Se connecter",
+        "supportAriaLabel": "Soutenir ce projet",
+        "toggleNav": "Afficher/masquer la navigation"
     },
-    "origin": "Origine",
-    "passedOn": "Vous l'avez transmis à quelqu'un d'autre — son voyage continue.",
-    "photoAlt": "photo d'enregistrement {{index}} sur {{total}}",
-    "placeNotGiven": "Lieu non précisé",
-    "prevPhoto": "Photo précédente",
-    "resetView": "Réinitialiser la vue",
-    "statsFollowers": "abonnés",
-    "statsKmTraveled": "km parcourus",
-    "statsStops": "arrêts",
-    "statsTeam": "équipe",
-    "status": {
-      "currentlyIn": "Actuellement à {{place}}",
-      "lastSeenDaysAgo_one": "Vu pour la dernière fois il y a {{count}} jour à {{place}}",
-      "lastSeenDaysAgo_other": "Vu pour la dernière fois il y a {{count}} jours à {{place}}",
-      "lastSeenYesterday": "Vu pour la dernière fois hier à {{place}}"
+    "photoUpload": {
+        "counter": "{{count}} / {{max}} photos",
+        "dragToReorder": "Glissez pour réorganiser · cliquez pour en ajouter",
+        "empty": {
+            "addPhotos": "Ajouter des photos",
+            "clickOrDrag": "Cliquez n'importe où ou glissez-déposez",
+            "dropHere": "Déposez ici !",
+            "releaseToUpload": "Relâchez pour téléverser",
+            "showWhere": "Montrez où vous l'avez trouvé — jusqu'à {{max}} photos"
+        },
+        "existingPhoto": "Photo existante",
+        "label": "Photos",
+        "maxReached": "Maximum de {{max}} photos atteint — retirez-en une pour en ajouter une autre.",
+        "optional": "(facultatif)",
+        "preview": "Aperçu",
+        "removePhoto": "Retirer la photo",
+        "tips": {
+            "heading": "Conseils photo",
+            "hide": "Couvrez ou masquez le nom du briquet — c'est le mot de passe de la page",
+            "lighter": "Le briquet en main ou posé sur une surface fait une belle photo",
+            "location": "Montrez où vous êtes — un point de repère, une vue, ou ce qui vous entoure"
+        },
+        "zoneAriaAdd": "Zone de téléversement — cliquez ou glissez pour ajouter des photos",
+        "zoneAriaFull": "Zone de téléversement — maximum atteint"
     },
-    "subscribe": "S'abonner",
-    "supportPrompt": "LitRoute est gratuit et fait par une seule personne. Si ce voyage vous a fait sourire, pensez à <supportLink>le soutenir</supportLink>",
-    "travelLog": "Journal de voyage",
-    "unsubscribe": "Se désabonner",
-    "verifiedBanner": "Votre e-mail est confirmé — vous êtes maintenant abonné !"
-  }
+    "privacy": {
+        "body": "",
+        "title": ""
+    },
+    "settings": {
+        "connectedAccounts": {
+            "disconnect": {
+                "default": "",
+                "loading": ""
+            },
+            "failedDisconnect": "",
+            "noAccounts": ""
+        },
+        "deleteAccount": {
+            "confirmation": {
+                "failed": "",
+                "item1": "",
+                "item2": "",
+                "item3": "",
+                "item4": "",
+                "item5": "",
+                "keepAnon": "",
+                "placeholder": "",
+                "submit": {
+                    "default": "",
+                    "loading": ""
+                },
+                "title": "",
+                "typeToConfirm": ""
+            },
+            "deleteBtn": "",
+            "description": "",
+            "sectionTitle": ""
+        },
+        "email": {
+            "cancelChange": "",
+            "changeEmail": {
+                "default": "",
+                "loading": ""
+            },
+            "confirmChange": {
+                "default": ""
+            },
+            "currentEmail": "",
+            "errors": {
+                "failedCancel": "",
+                "failedPrimary": "",
+                "failedRemove": "",
+                "failedRequest": "",
+                "failedVerification": ""
+            },
+            "newEmailLabel": "",
+            "newEmailPlaceholder": "",
+            "pendingVerify": "",
+            "readyToSwitch": "",
+            "resendEmail": {
+                "default": ""
+            },
+            "sectionTitle": ""
+        },
+        "mfa": {
+            "deactivate": {
+                "description": "",
+                "remove": {
+                    "default": "",
+                    "loading": ""
+                }
+            },
+            "reauth": {
+                "codeSent": "",
+                "description": "",
+                "sendCode": {
+                    "default": ""
+                }
+            },
+            "recoveryCodes": {
+                "eachOnce": "",
+                "failedGenerate": "",
+                "generateBtn": "",
+                "generateNew": "",
+                "generateWarning": "",
+                "generating": {
+                    "loading": ""
+                },
+                "label": "",
+                "notGenerated": "",
+                "remaining": "",
+                "setUpFirst": "",
+                "viewBtn": ""
+            },
+            "setup": {
+                "activate": {
+                    "default": "",
+                    "loading": ""
+                },
+                "description": "",
+                "invalidCode": "",
+                "secretKeyLabel": ""
+            },
+            "totp": {
+                "active": "",
+                "label": "",
+                "notSetUp": "",
+                "setUp": {
+                    "default": ""
+                }
+            }
+        },
+        "passkeys": {
+            "addBtn": "",
+            "added": "",
+            "adding": {
+                "nameHint": "",
+                "nameLabel": "",
+                "namePlaceholder": "",
+                "submit": {
+                    "default": "",
+                    "loading": ""
+                }
+            },
+            "description": "",
+            "errors": {
+                "cancelled": "",
+                "registerFailed": "",
+                "removeFailed": "",
+                "startFailed": ""
+            },
+            "lastUsed": "",
+            "noPasskeys": "",
+            "reauth": {
+                "codeSent": "",
+                "description": "",
+                "sendCode": {
+                    "default": ""
+                }
+            },
+            "sectionTitle": "",
+            "unsupported": ""
+        },
+        "profile": {
+            "saved": "",
+            "submit": {
+                "default": ""
+            }
+        },
+        "reauth": {
+            "failedSend": "",
+            "incorrectPassword": "",
+            "invalidCode": ""
+        }
+    },
+    "socialProviders": {
+        "orContinueWith": ""
+    },
+    "support": {
+        "header": "",
+        "subheader": ""
+    },
+    "supportSection": {
+        "body1": "LitRoute est un projet solo. Pas de pub, pas d'abonnements, pas d'investisseurs — juste les coûts de serveur, d'envoi d'e-mails et de stockage qui viennent de ma poche. Y compris les briquets eux-mêmes : chacun est acheté et enregistré à la main avant de pouvoir commencer son voyage.",
+        "body2": "Si vous avez aimé suivre un voyage ici, une petite contribution fait toute la différence.",
+        "donateCta": "Soutenir",
+        "githubDescription": "Sponsorisez directement sur GitHub",
+        "githubLabel": "GitHub Sponsors",
+        "kofiDescription": "Pourboire unique, sans inscription",
+        "kofiLabel": "Ko-fi",
+        "liberapayDescription": "Hebdomadaire ou mensuel",
+        "liberapayLabel": "Liberapay",
+        "otherWaysHeading": "Ou aidez sans dépenser :",
+        "weblateCta": "Contribuer",
+        "weblateDescription": "Aidez à traduire LitRoute dans votre langue sur Weblate",
+        "weblateLabel": "Traduire"
+    },
+    "terms": {
+        "body": "",
+        "title": ""
+    },
+    "unit": {
+        "cannotEdit": "Impossible de modifier ou supprimer après 6 heures",
+        "checkinBtn": "Nouvel enregistrement",
+        "claimBtn": "",
+        "currentLocation": "Position actuelle",
+        "deleteBtn": "Supprimer",
+        "deleteConfirm": "Supprimer cet enregistrement ?",
+        "deleteError": "Impossible de supprimer cet enregistrement.",
+        "editBtn": "Modifier",
+        "game": {
+            "leaderboardLink": "Aller au classement",
+            "rankLabel": "sur {{total}}",
+            "showRules": "Voir les règles"
+        },
+        "gettingStarted": {
+            "body": "Vous êtes la première personne ici. La prochaine sera contente que vous soyez passé.",
+            "cta": "Créer le premier enregistrement",
+            "heading": "Ce briquet commence tout juste."
+        },
+        "goToPhoto": "Aller à la photo {{index}}",
+        "nextPhoto": "Photo suivante",
+        "noCheckinsYet": "Aucun enregistrement pour l'instant.",
+        "notFound": {
+            "body1": "Nous n'avons pas trouvé <strong>{{identifier}}</strong>.",
+            "body2": "Le nom sur l'autocollant devrait ressembler à <handwriting>EMILY-07</handwriting> — vérifiez l'orthographe et réessayez.",
+            "cta": "Essayer un autre nom",
+            "heading": "Ce briquet est hors carte."
+        },
+        "origin": "Origine",
+        "passedOn": "Vous l'avez transmis à quelqu'un d'autre — son voyage continue.",
+        "photoAlt": "photo d'enregistrement {{index}} sur {{total}}",
+        "placeNotGiven": "Lieu non précisé",
+        "prevPhoto": "Photo précédente",
+        "resetView": "Réinitialiser la vue",
+        "statsFollowers": "abonnés",
+        "statsKmTraveled": "km parcourus",
+        "statsStops": "arrêts",
+        "statsTeam": "équipe",
+        "status": {
+            "currentlyIn": "Actuellement à {{place}}",
+            "lastSeenDaysAgo_many": "",
+            "lastSeenDaysAgo_one": "Vu pour la dernière fois il y a {{count}} jour à {{place}}",
+            "lastSeenDaysAgo_other": "Vu pour la dernière fois il y a {{count}} jours à {{place}}",
+            "lastSeenYesterday": "Vu pour la dernière fois hier à {{place}}"
+        },
+        "subscribe": "S'abonner",
+        "supportPrompt": "LitRoute est gratuit et fait par une seule personne. Si ce voyage vous a fait sourire, pensez à <supportLink>le soutenir</supportLink>",
+        "travelLog": "Journal de voyage",
+        "unsubscribe": "Se désabonner",
+        "verifiedBanner": "Votre e-mail est confirmé — vous êtes maintenant abonné !"
+    },
+    "userDetail": {
+        "admin": "",
+        "checkins_many": "",
+        "checkins_one": "",
+        "checkins_other": "",
+        "contributorGuide": "",
+        "noSubscriptions": "",
+        "signOut": "",
+        "subscribedUnits": ""
+    },
+    "userForm": {
+        "submit": {
+            "default": ""
+        },
+        "title": ""
+    }
 }
