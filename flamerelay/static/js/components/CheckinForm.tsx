@@ -270,7 +270,9 @@ export default function CheckinForm({
       }),
     );
 
-    const newKeys = converted.map(() => crypto.randomUUID());
+    const newKeys = converted.map(
+      () => `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    );
     const cap = MAX_IMAGES - existingImages.length;
 
     setImageFiles((prev) => [...prev, ...converted].slice(0, cap));
