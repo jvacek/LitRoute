@@ -142,10 +142,20 @@ class UnitAdmin(admin.ModelAdmin):
         extra_context["is_contributor"] = self._is_contributor(request)
         return super().changelist_view(request, extra_context)
 
+    def get_changeform_initial_data(self, request):
+        initial = super().get_changeform_initial_data(request)
+        initial.setdefault("created_by", request.user.pk)
+        return initial
+
     def save_model(self, request, obj, form, change):
-        if not change and self._is_contributor(request):
+        if not change and not obj.created_by_id:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        if not change and form.instance.created_by_id:
+            form.instance.subscribers.add(form.instance.created_by_id)
 
 
 @admin.action(description="Send email to subscribers")
