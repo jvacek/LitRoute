@@ -321,60 +321,68 @@ export default function CheckinForm({
     }
     setSubmitting(true);
     setErrors({});
-    navigator.geolocation.getCurrentPosition(
-      async ({ coords: { latitude: lat, longitude: lng, accuracy } }) => {
-        try {
-          const token = await requestLocationClaim(
-            lat,
-            lng,
-            accuracy,
-            unitIdentifier,
-          );
-          setConfirmStep({
-            gpsLat: lat,
-            gpsLng: lng,
-            token,
-            pinLat: lat,
-            pinLng: lng,
-          });
-        } catch (err) {
-          const isAccuracyError =
-            err instanceof Error && err.message === 'GPS_ACCURACY_TOO_LOW';
-          setErrors({
-            location: [
-              t(
-                isAccuracyError
-                  ? 'checkin.form.errors.gpsAccuracyTooLow'
-                  : 'checkin.form.errors.gpsVerificationFailed',
-              ),
-            ],
-          });
-        } finally {
+
+    // maximumAge: 60_000 on the first attempt sidesteps the Chrome-on-macOS
+    // CoreLocation hang on back-to-back calls. If the cached position has
+    // accuracy > 100 m the backend rejects it; we then retry with maximumAge: 0
+    // to force a fresh hardware fix, keeping submitting=true through the retry.
+    function attempt(opts: PositionOptions) {
+      navigator.geolocation.getCurrentPosition(
+        async ({ coords: { latitude: lat, longitude: lng, accuracy } }) => {
+          try {
+            const token = await requestLocationClaim(
+              lat,
+              lng,
+              accuracy,
+              unitIdentifier,
+            );
+            setConfirmStep({
+              gpsLat: lat,
+              gpsLng: lng,
+              token,
+              pinLat: lat,
+              pinLng: lng,
+            });
+            setSubmitting(false);
+          } catch (err) {
+            const isAccuracyError =
+              err instanceof Error && err.message === 'GPS_ACCURACY_TOO_LOW';
+            if (isAccuracyError && opts.maximumAge !== 0) {
+              attempt({ ...opts, maximumAge: 0 });
+              return;
+            }
+            setErrors({
+              location: [
+                t(
+                  isAccuracyError
+                    ? 'checkin.form.errors.gpsAccuracyTooLow'
+                    : 'checkin.form.errors.gpsVerificationFailed',
+                ),
+              ],
+            });
+            setSubmitting(false);
+          }
+        },
+        (err) => {
+          // PERMISSION_DENIED + POSITION_UNAVAILABLE both mean the user has to
+          // leave the tab and change a system-wide setting; show the help modal.
+          // TIMEOUT is transient (slow GPS lock, weak signal) — keep it inline
+          // so the user can retry from the placeholder without dismissing a modal.
+          if (
+            err.code === err.PERMISSION_DENIED ||
+            err.code === err.POSITION_UNAVAILABLE
+          ) {
+            setShowLocationDeniedModal(true);
+          } else {
+            setErrors({ location: [t('checkin.form.errors.gpsRequired')] });
+          }
           setSubmitting(false);
-        }
-      },
-      (err) => {
-        // PERMISSION_DENIED + POSITION_UNAVAILABLE both mean the user has to
-        // leave the tab and change a system-wide setting; show the help modal.
-        // TIMEOUT is transient (slow GPS lock, weak signal) — keep it inline
-        // so the user can retry from the placeholder without dismissing a modal.
-        if (
-          err.code === err.PERMISSION_DENIED ||
-          err.code === err.POSITION_UNAVAILABLE
-        ) {
-          setShowLocationDeniedModal(true);
-        } else {
-          setErrors({ location: [t('checkin.form.errors.gpsRequired')] });
-        }
-        setSubmitting(false);
-      },
-      // enableHighAccuracy: matches the backend's 100m accuracy gate and
-      //   engages GPS on mobile rather than network-only positioning.
-      // maximumAge: accept a cached fix up to 60s old — sidesteps the
-      //   Chrome-on-macOS CoreLocation hang on back-to-back acquisitions
-      //   and stays well under LOCATION_CLAIM_TTL_SECONDS (2 min).
-      { enableHighAccuracy: true, maximumAge: 60_000, timeout: 15_000 },
-    );
+        },
+        opts,
+      );
+    }
+
+    attempt({ enableHighAccuracy: true, maximumAge: 60_000, timeout: 15_000 });
   }
 
   async function handleSubmit(e: React.FormEvent) {

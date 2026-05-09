@@ -162,7 +162,11 @@ class LocationClaimView(APIView):
     def post(self, request) -> Response:
         from backend.location_token import issue_location_claim  # noqa: PLC0415
 
-        rl_key = str(request.user.id) if request.user.is_authenticated else request.META.get("REMOTE_ADDR", "")
+        rl_key = (
+            str(request.user.id)
+            if request.user.is_authenticated
+            else (request.headers.get("cf-connecting-ip") or request.META.get("REMOTE_ADDR", ""))
+        )
         if not ratelimit.consume(request, action="location_claim", key=rl_key):
             return Response(
                 {"detail": "Too many attempts. Please try again later."},
