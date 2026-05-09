@@ -336,9 +336,17 @@ export default function CheckinForm({
             pinLat: lat,
             pinLng: lng,
           });
-        } catch {
+        } catch (err) {
+          const isAccuracyError =
+            err instanceof Error && err.message === 'GPS_ACCURACY_TOO_LOW';
           setErrors({
-            location: [t('checkin.form.errors.gpsVerificationFailed')],
+            location: [
+              t(
+                isAccuracyError
+                  ? 'checkin.form.errors.gpsAccuracyTooLow'
+                  : 'checkin.form.errors.gpsVerificationFailed',
+              ),
+            ],
           });
         } finally {
           setSubmitting(false);

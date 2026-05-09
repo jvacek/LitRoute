@@ -20,6 +20,7 @@
       "clickToMove": "Klik op de kaart om de speld te verplaatsen.",
       "dismiss": "Sluiten",
       "errors": {
+        "gpsAccuracyTooLow": "Gps-signaal te zwak. Probeer naar een raam of buiten te gaan, tik dan opnieuw op 'Gebruik mijn locatie'.",
         "gpsRecapture": "Je locatie-opname is verlopen of verschoven. Tik opnieuw op 'Gebruik mijn locatie' om te vernieuwen.",
         "gpsRequired": "Locatietoegang is vereist voor deze eenheid. Sta locatietoegang toe in je browser en probeer opnieuw.",
         "gpsVerificationFailed": "Locatieverificatie mislukt. Probeer het opnieuw.",

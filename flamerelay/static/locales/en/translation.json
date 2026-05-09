@@ -105,6 +105,7 @@
       "clickToMove": "Click the map to move the pin.",
       "dismiss": "Dismiss",
       "errors": {
+        "gpsAccuracyTooLow": "GPS signal too weak. Try stepping near a window or outdoors, then tap 'Use my location' again.",
         "gpsRecapture": "Your location capture expired or moved. Please tap 'Use my location' again to refresh it.",
         "gpsRequired": "Location access is required for this unit. Please allow location access in your browser and try again.",
         "gpsVerificationFailed": "Location verification failed. Please try again.",

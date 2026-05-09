@@ -36,7 +36,15 @@ export async function requestLocationClaim(
       unit_identifier: unitIdentifier,
     }),
   });
-  if (!r.ok) throw new Error('Failed to get location claim');
+  if (!r.ok) {
+    if (r.status === 400) {
+      const body = await r.json().catch(() => ({}));
+      if (typeof body.detail === 'string' && body.detail.includes('accuracy')) {
+        throw new Error('GPS_ACCURACY_TOO_LOW');
+      }
+    }
+    throw new Error('Failed to get location claim');
+  }
   const data = (await r.json()) as { token: string };
   return data.token;
 }

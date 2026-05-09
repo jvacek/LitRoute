@@ -20,6 +20,7 @@
       "clickToMove": "Cliquez sur la carte pour déplacer le repère.",
       "dismiss": "Ignorer",
       "errors": {
+        "gpsAccuracyTooLow": "Signal GPS trop faible. Essayez de vous approcher d'une fenêtre ou de sortir, puis touchez à nouveau « Utiliser ma position ».",
         "gpsRecapture": "Votre capture de position a expiré ou s'est déplacée. Touchez à nouveau « Utiliser ma position » pour la rafraîchir.",
         "gpsRequired": "L'accès à la localisation est requis pour cette unité. Autorisez l'accès à la localisation dans votre navigateur et réessayez.",
         "gpsVerificationFailed": "La vérification de localisation a échoué. Veuillez réessayer.",
