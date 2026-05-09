@@ -370,7 +370,8 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         if self.request.user.is_authenticated:
             return
         turnstile_token = self.request.data.get("turnstile_token", "")
-        if not _verify_turnstile(turnstile_token, self.request.META.get("REMOTE_ADDR", "")):
+        remote_ip = self.request.headers.get("cf-connecting-ip") or self.request.META.get("REMOTE_ADDR", "")
+        if not _verify_turnstile(turnstile_token, remote_ip):
             raise serializers.ValidationError({"captcha": ["Captcha verification failed. Please try again."]})
 
     def _verify_image_count(self, image_files) -> None:
@@ -645,7 +646,8 @@ class FeedbackView(APIView):
             user = request.user
         else:
             turnstile_token = request.data.get("turnstile_token", "")
-            if not _verify_turnstile(turnstile_token, request.META.get("REMOTE_ADDR", "")):
+            remote_ip = request.headers.get("cf-connecting-ip") or request.META.get("REMOTE_ADDR", "")
+            if not _verify_turnstile(turnstile_token, remote_ip):
                 return Response(
                     {"detail": "Captcha verification failed. Please try again."},
                     status=status.HTTP_400_BAD_REQUEST,
