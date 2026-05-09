@@ -135,6 +135,10 @@ export default function GameLeaderboard() {
     : null;
 
   const isByCheckins = data.game.sort_by === 'checkin_count';
+  const minCC = isByCheckins ? 1 : 2;
+  const activeEntries = data.individual.filter((r) => r.checkin_count >= minCC);
+  const notStartedCount = data.individual.length - activeEntries.length;
+
   const scoreHeader = isByCheckins
     ? t('game.leaderboard.checkinsHeader')
     : t('game.leaderboard.distanceHeader');
@@ -269,7 +273,7 @@ export default function GameLeaderboard() {
                 {t('game.leaderboard.teamHeader')}
               </div>
             </div>
-            {data.individual.map((row) => {
+            {activeEntries.map((row) => {
               // identifier is null for every row except the ?from= one, so
               // matching null-to-null doesn't accidentally highlight a row.
               const isFrom =
@@ -323,6 +327,18 @@ export default function GameLeaderboard() {
                 </div>
               );
             })}
+            {notStartedCount > 0 && (
+              <div
+                role="row"
+                className="col-span-full border-t border-char/10 bg-smoke"
+              >
+                <div role="cell" className={`${dataCell} italic text-white`}>
+                  {t('game.leaderboard.unitsNotStarted', {
+                    count: notStartedCount,
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </section>
       )}

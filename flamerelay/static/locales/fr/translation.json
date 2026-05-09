@@ -158,7 +158,7 @@
       "individualTab": "Briquets",
       "lighterCountHeader": "Briquets",
       "lightersDescriptionByCheckins": "Chaque ligne est un briquet, classé selon le nombre de passages reçus.",
-      "lightersDescriptionByDistance": "Chaque ligne est un briquet, classé selon la distance totale parcourue.",
+      "lightersDescriptionByDistance": "Chaque ligne est un briquet avec au moins deux check-ins, classé selon la distance totale parcourue.",
       "mapAfterEndLegend": "Après la fin du jeu",
       "mapDescription": "Chaque ligne représente le parcours d'un briquet. Les segments estompés sont survenus après la fin du jeu.",
       "mapDuringLegend": "Pendant le jeu",
@@ -173,7 +173,9 @@
       "teamsDescriptionByCheckins": "Les équipes sont classées selon le total des passages reçus par tous leurs briquets.",
       "teamsDescriptionByDistance": "Les équipes sont classées selon la distance totale parcourue par tous leurs briquets.",
       "teamsTab": "Équipes",
-      "title": "Classement — {{name}}"
+      "title": "Classement — {{name}}",
+      "unitsNotStarted_one": "{{count}} briquet n'a pas encore fait de check-in.",
+      "unitsNotStarted_other": "{{count}} briquets n'ont pas encore fait de check-in."
     },
     "modal": {
       "gotIt": "Compris",

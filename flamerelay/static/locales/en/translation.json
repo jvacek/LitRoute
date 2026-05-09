@@ -350,7 +350,7 @@
       "individualTab": "Lighters",
       "lighterCountHeader": "Lighters",
       "lightersDescriptionByCheckins": "Each row is one lighter, ranked by how many check-ins it has received.",
-      "lightersDescriptionByDistance": "Each row is one lighter, ranked by the total distance it has travelled.",
+      "lightersDescriptionByDistance": "Each row is one lighter with at least two check-ins, ranked by the total distance it has travelled.",
       "mapAfterEndLegend": "After game ended",
       "mapDescription": "Every line is one lighter's journey. Faded segments happened after the game ended.",
       "mapDuringLegend": "During game",
@@ -365,7 +365,9 @@
       "teamsDescriptionByCheckins": "Teams are scored by the total check-ins received across all of their lighters.",
       "teamsDescriptionByDistance": "Teams are scored by the total distance travelled across all of their lighters.",
       "teamsTab": "Teams",
-      "title": "Leaderboard — {{name}}"
+      "title": "Leaderboard — {{name}}",
+      "unitsNotStarted_one": "{{count}} lighter hasn't checked in yet.",
+      "unitsNotStarted_other": "{{count}} lighters haven't checked in yet."
     },
     "modal": {
       "gotIt": "Got it",
