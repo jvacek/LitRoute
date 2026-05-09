@@ -1,345 +1,345 @@
 {
-    "auth": {
-        "email": {
-            "emailLabel": "E-mailadres",
-            "passkey": {
-                "default": "Aanmelden met een passkey"
-            },
-            "submit": {
-                "default": "Doorgaan met e-mail",
-                "loading": "Code versturen"
-            },
-            "title": "Aanmelden of registreren"
-        }
-    },
-    "checkin": {
-        "createTitle": "Nieuwe check-in",
-        "editTitle": "Check-in bewerken",
-        "form": {
-            "clickToDrop": "Klik op de kaart om een speld te plaatsen.",
-            "clickToMove": "Klik op de kaart om de speld te verplaatsen.",
-            "dismiss": "Sluiten",
-            "errors": {
-                "gpsRecapture": "Je locatie-opname is verlopen of verschoven. Tik opnieuw op 'Gebruik mijn locatie' om te vernieuwen.",
-                "gpsRequired": "Locatietoegang is vereist voor deze eenheid. Sta locatietoegang toe in je browser en probeer opnieuw.",
-                "gpsVerificationFailed": "Locatieverificatie mislukt. Probeer het opnieuw.",
-                "locationRequired": "Klik op de kaart om je locatie in te stellen.",
-                "maxPhotos": "Maximaal {{max}} foto's per check-in.",
-                "nameRequired": "Vul een naam van minstens 3 letters in zodat je check-in meetelt voor de ranglijst.",
-                "placeRequired": "Vul een plaats van minstens 3 letters in zodat je check-in meetelt voor de ranglijst.",
-                "svgNotSupported": "Alleen rasterafbeeldingen (JPEG, PNG, WebP, enz.) worden ondersteund. SVG-bestanden kunnen niet worden geüpload."
-            },
-            "gameRequiredNote": {
-                "anon": "Plaats en je naam zijn verplicht zodat je check-in meetelt voor de ranglijst.",
-                "auth": "Plaats is verplicht zodat je check-in meetelt voor de ranglijst."
-            },
-            "gpsDeniedModal": {
-                "body": "Je browser of apparaat blokkeert de locatietoegang. Om hier in te checken moet je het toestaan.",
-                "close": "Sluiten",
-                "step1": "Tik op het slot- of info-icoon naast het adres van deze site en zet Locatie op <strong>Toestaan</strong>.",
-                "step2": "Helpt dat niet? Open dan op je apparaat de instellingen voor <strong>Privacy → Locatie</strong> en zorg dat je browser is toegestaan.",
-                "step3": "Laad deze pagina opnieuw als je klaar bent.",
-                "title": "We zien je locatie niet",
-                "tryAgain": "Opnieuw proberen"
-            },
-            "gpsNotice": "Deze eenheid vereist je realtime locatie. Deze wordt vastgelegd wanneer je op Inchecken tikt.",
-            "gpsNudgeHint": "Verplaats je speld als je je exacte locatie liever niet deelt.",
-            "locationLabel": "Locatie",
-            "locationLockedOnEdit": "De locatie kan niet meer worden gewijzigd nadat een check-in is aangemaakt.",
-            "locationSet": "Locatie ingesteld",
-            "messageLabel": "Bericht",
-            "messagePlaceholder": "Waar heb je hem gevonden? Waar ben je? Wat is het volgende voor deze aansteker?",
-            "nameLabel": "Je naam (optioneel)",
-            "nameLabelRequired": "Je naam",
-            "namePlaceholder": "Hoe moeten we dit ondertekenen?",
-            "passedOnNote": "Zodra iemand anders na jou incheckt, gaat de aansteker verder — je kunt dan geen check-ins meer toevoegen.",
-            "placeLabel": "Plaats",
-            "placePlaceholder": "bijv. \"Grote Markt, Brussel\"",
-            "privacyHint": {
-                "body": "De GPS-coördinaten van je apparaat zijn gebruikt. Verplaats de speld naar een nabijgelegen plek als je je exacte positie liever niet deelt.",
-                "title": "Je exacte locatie wordt gedeeld"
-            },
-            "searchPlaceholder": "Zoek een plaats…",
-            "submit": {
-                "create": "Inchecken",
-                "creating": "Versturen",
-                "save": "Wijzigingen opslaan"
-            },
-            "useMyLocation": {
-                "default": "Mijn locatie gebruiken",
-                "loading": "Locatie zoeken"
-            }
-        },
-        "guestEmailPlaceholder": "jij@email.com",
-        "guestEmailSent": "We hebben je een bevestigingslink gestuurd — klik erop en je staat op de lijst.",
-        "guestEmailSentBack": "Zie je check-in",
-        "guestEmailSentTitle": "Check je inbox.",
-        "guestEmailSkip": "Nee bedankt — hou me niet op de hoogte.",
-        "guestEmailSocialProof_one": "Sluit je aan bij {{count}} andere persoon die deze aansteker volgt.",
-        "guestEmailSocialProof_other": "Sluit je aan bij {{count}} anderen die deze aansteker volgen.",
-        "guestEmailSubmit": "Volg deze aansteker",
-        "guestEmailSubtitle": "We sturen je een e-mail als iemand anders deze aansteker ergens anders incheckt. Dat is het — geen reclame, in één tik uitschrijven.",
-        "guestEmailTitle": "Wil je weten waar deze aansteker hierna naartoe gaat?"
-    },
-    "common": {
-        "about": "Over",
-        "back": "Terug",
-        "cancel": "Annuleren",
-        "confirm": "Bevestigen",
-        "confirming": "Bevestigen",
-        "connectedAccounts": "Gekoppelde accounts",
-        "duration": {
-            "and": "en",
-            "day_one": "{{count}} dag",
-            "day_other": "{{count}} dagen",
-            "hour_one": "{{count}} uur",
-            "hour_other": "{{count}} uur"
-        },
-        "loading": "Laden",
-        "nameLabel": "Naam",
-        "namePlaceholder": "Je naam",
-        "or": "of",
-        "password": "Wachtwoord",
-        "profile": "Profiel",
-        "remove": "Verwijderen",
-        "saving": "Opslaan",
-        "sending": "Versturen",
-        "settings": "Instellingen",
-        "signingIn": "Aanmelden",
-        "support": "Steun",
-        "twoFactorAuth": "Tweestapsverificatie",
-        "unexpectedError": "Er is een onverwachte fout opgetreden.",
-        "verificationCodeLabel": "Verificatiecode",
-        "verifying": "Verifiëren"
-    },
-    "emailConfirm": {
-        "checkingLink": "Je verificatielink controleren",
-        "confirm": {
-            "body": "Bevestig <strong>{{email}}</strong> als je e-mailadres.",
-            "failed": "Verificatie mislukt. Probeer het opnieuw.",
-            "submit": {
-                "default": "E-mailadres bevestigen"
-            },
-            "title": "Bevestig je e-mailadres"
-        },
-        "invalid": {
-            "body": "Deze bevestigingslink is ongeldig of verlopen. <requestNewLink>Vraag een nieuwe aan</requestNewLink>.",
-            "title": "Ongeldige link"
-        }
-    },
-    "footer": {
-        "tagline": "Volg de reis van je aansteker"
-    },
-    "game": {
-        "countdown": {
-            "days": "Dagen",
-            "ended": "Spel voorbij",
-            "endedOn": "Geëindigd op {{date}}",
-            "endsIn": "Het spel eindigt over",
-            "endsOn": "Eindigt op {{date}}",
-            "hours": "Uur",
-            "minutes": "Min",
-            "seconds": "Sec"
-        },
-        "distance": {
-            "name": "Afstand",
-            "rules": "Deze aansteker doet mee aan een afstandsspel dat {{duration}} duurt. Geef hem door, laat hem op nieuwe plekken fotograferen en stapel kilometers op. Je locatie wordt via GPS geverifieerd. De aansteker met de meeste kilometers aan het einde wint.",
-            "timeAlmostUp": "Minder dan {{minutes}} min voor het spel eindigt!",
-            "timeExpired": "Het afstandsspel is voorbij — de uitslag staat vast. De reis van de aansteker kan nog doorgaan."
-        },
-        "hot_potato": {
-            "name": "Hete aardappel",
-            "rules": "Geef deze aansteker door voor hij vervalt! Je hebt {{shelfLife}} uur."
-        },
-        "leaderboard": {
-            "byPerson": "door {{name}}",
-            "checkinsHeader": "Check-ins",
-            "distanceHeader": "Afstand",
-            "individualTab": "Aanstekers",
-            "lighterCountHeader": "Aanstekers",
-            "lightersDescriptionByCheckins": "Elke rij is één aansteker, gerangschikt op het aantal ontvangen check-ins.",
-            "lightersDescriptionByDistance": "Elke rij is één aansteker, gerangschikt op de totale afgelegde afstand.",
-            "mapAfterEndLegend": "Na afloop van het spel",
-            "mapDescription": "Elke lijn is de reis van één aansteker. Vervaagde segmenten gebeurden na afloop van het spel.",
-            "mapDuringLegend": "Tijdens het spel",
-            "mapEmpty": "Nog geen reizen om te tonen.",
-            "mapReplay": "Opnieuw afspelen",
-            "mapReplaying": "Bezig…",
-            "mapTitle": "Reizen",
-            "noEntries": "Nog geen check-ins.",
-            "placeHeader": "Laatst gezien",
-            "rankHeader": "#",
-            "teamHeader": "Team",
-            "teamsDescriptionByCheckins": "Teams worden gerangschikt op het totale aantal check-ins dat al hun aanstekers samen hebben ontvangen.",
-            "teamsDescriptionByDistance": "Teams worden gerangschikt op de totale afstand die al hun aanstekers samen hebben afgelegd.",
-            "teamsTab": "Teams",
-            "title": "Ranglijst — {{name}}"
-        },
-        "modal": {
-            "gotIt": "Begrepen",
-            "title": "Speciaal spel",
-            "viewLeaderboard": "Bekijk de ranglijst"
-        },
-        "race": {
-            "name": "Race",
-            "rules": "Bereik het doel zo snel mogelijk. Locatie geverifieerd via GPS."
-        },
-        "relay": {
-            "name": "Estafette",
-            "rules": "Geef deze aansteker door aan de volgende persoon. Geen tijdslimiet."
-        }
-    },
-    "home": {
-        "cta": {
-            "body": "Ik ben Jonas, ik heb dit project gemaakt tijdens mijn vrolijke werkeloosheid. Zin om een aansteker de wereld in te sturen? Lees eerst <aboutLink>de over-pagina</aboutLink> — even contact opnemen voordat je begint met stickers printen.",
-            "heading": "Begin een reis.",
-            "link": "Over het project"
-        },
-        "errors": {
-            "like": "Zoals",
-            "missingDash": "Het streepje ontbreekt — het moet een naam zijn, een streepje, dan een nummer.",
-            "nameTooShort": "De naam vóór het streepje is te kort — minstens 3 letters nodig (je typte \"{{prefix}}\").",
-            "noNumber": "Niets na het streepje — voeg een getal van 2 cijfers toe.",
-            "notFound": "We konden <lighterName>{{id}}</lighterName> niet vinden. Check de sticker nog eens — die ziet eruit als <lighterName>{{example}}</lighterName>.",
-            "numberRequired": "Het deel na het streepje moet een getal zijn.",
-            "offMap": "Die aansteker is van de kaart verdwenen.",
-            "singleDigit": "Het getal heeft 2 cijfers nodig."
-        },
-        "eyebrow": "Vind hem. Check in. Geef hem door.",
-        "globeCaption": "20 recent actieve aanstekers — elke stip is iemands verhaal",
-        "headline": "Een aansteker met een verleden. Voeg jouw verhaal toe.",
-        "howItWorks": {
-            "heading": "Zo zit het.",
-            "step1Body": "Zie je een aansteker met een QR-sticker? Scan hem, typ de naam van de aansteker op litroute.com. Je bent van elke stad, elke hand waardoor hij ging — een klik verwijderd.",
-            "step1Title": "Vind hem.",
-            "step2Body": "Plaats een foto en een korte noot. Jouw moment — waar je was, wat je zag — wordt een blijvend hoofdstuk in het verhaal van de aansteker.",
-            "step2Title": "Check in.",
-            "step3Body": "Geef hem aan een onbekende. Laat hem achter in een café, een hostel, bij een wandelpad. Jij bepaalt het volgende hoofdstuk.",
-            "step3Title": "Geef hem door.",
-            "step4Body": "Abonneer je en krijg een mailtje als iemand hem weer vindt — waar dat ook ter wereld is. Het onschuldig stalken van een stukje metaal.",
-            "step4Title": "Blijf op de hoogte."
-        },
-        "journey": {
-            "exampleLabel": "Voorbeeld — niet jouw aansteker",
-            "heading": "Dit is wat je ziet als je er een scant.",
-            "openSlotBody": "Vind er een, check in, en jij zou hier kunnen staan.",
-            "seeReal": "<journeyLink>Bekijk de reis van een echte aansteker</journeyLink>",
-            "somewhere": "Ergens nieuws",
-            "subtext": "Dit zijn verzonnen check-ins om te laten zien hoe het werkt.",
-            "yourName": "jouw naam hier"
-        },
-        "lighterAlt": "Een aansteker op zijn zij",
-        "lighterLabel": "Hoe heet de aansteker?",
-        "stats": {
-            "activeLighters": "actieve aanstekers",
-            "checkinsLogged": "check-ins geregistreerd",
-            "freeText": "Gratis te gebruiken, in leven gehouden door lezers zoals jij. <supportLink>Steun het project</supportLink>",
-            "peopleCheckedIn": "mensen die incheckten",
-            "traveledSoFar": "afgelegd tot nu toe"
-        },
-        "subheadline": "Vind een aansteker met een QR-sticker. Scan hem om te ontdekken waar hij allemaal is geweest en wie hem in zijn bezit heeft gehad. Laat je eigen bericht achter — geef hem dan door aan de volgende onbekende.",
-        "submit": {
-            "checking": "Zoeken",
-            "default": "Bekijk de route"
-        },
-        "tryExample": "probeer \"john-93\" voor een voorbeeld"
-    },
-    "nav": {
-        "homeAriaLabel": "LitRoute startpagina",
-        "languageLabel": "Taal",
-        "mainNav": "Hoofdnavigatie",
-        "mobileNav": "Mobiele navigatie",
-        "signIn": "Aanmelden",
-        "supportAriaLabel": "Dit project steunen",
-        "toggleNav": "Navigatie aan/uit"
-    },
-    "photoUpload": {
-        "counter": "{{count}} / {{max}} foto's",
-        "dragToReorder": "Sleep om te herschikken · klik om er meer toe te voegen",
-        "empty": {
-            "addPhotos": "Foto's toevoegen",
-            "clickOrDrag": "Klik ergens of sleep & laat los",
-            "dropHere": "Laat hier los!",
-            "releaseToUpload": "Loslaten om te uploaden",
-            "showWhere": "Laat zien waar je hem vond — maximaal {{max}} foto's"
-        },
-        "existingPhoto": "Bestaande foto",
-        "label": "Foto's",
-        "maxReached": "Maximum van {{max}} foto's bereikt — verwijder er een om een andere toe te voegen.",
-        "optional": "(optioneel)",
-        "preview": "Voorbeeld",
-        "removePhoto": "Foto verwijderen",
-        "tips": {
-            "heading": "Foto-tips",
-            "hide": "Bedek of verberg de naam van de aansteker — dat is het wachtwoord van de pagina",
-            "lighter": "De aansteker in de hand of op een oppervlak geeft een mooie foto",
-            "location": "Laat zien waar je bent — een herkenningspunt, een uitzicht of je omgeving"
-        },
-        "zoneAriaAdd": "Foto-uploadzone — klik of sleep om foto's toe te voegen",
-        "zoneAriaFull": "Foto-uploadzone — maximum bereikt"
-    },
-    "supportSection": {
-        "body1": "LitRoute is een eenmansproject. Geen reclame, geen abonnementen, geen investeerders — alleen serverkosten, e-mailbezorging en opslag uit eigen zak. De aanstekers zelf ook: elke aansteker wordt met de hand gekocht en geregistreerd voordat hij aan zijn reis kan beginnen.",
-        "body2": "Heb je hier met plezier een reis gevolgd? Dan helpt een kleine bijdrage echt.",
-        "donateCta": "Tip",
-        "githubDescription": "Sponsor direct op GitHub",
-        "githubLabel": "GitHub Sponsors",
-        "kofiDescription": "Eenmalige tip, geen account nodig",
-        "kofiLabel": "Ko-fi",
-        "liberapayDescription": "Wekelijks of maandelijks",
-        "liberapayLabel": "Liberapay",
-        "otherWaysHeading": "Of help zonder uit te geven:",
-        "weblateCta": "Bijdragen",
-        "weblateDescription": "Help LitRoute in jouw taal op Weblate",
-        "weblateLabel": "Vertalen"
-    },
-    "unit": {
-        "cannotEdit": "Kan niet bewerken of verwijderen na 6 uur",
-        "checkinBtn": "Nieuwe check-in",
-        "currentLocation": "Huidige locatie",
-        "deleteBtn": "Verwijderen",
-        "deleteConfirm": "Deze check-in verwijderen?",
-        "deleteError": "Kon deze check-in niet verwijderen.",
-        "editBtn": "Bewerken",
-        "game": {
-            "leaderboardLink": "Naar de ranglijst",
-            "rankLabel": "van {{total}}",
-            "showRules": "Toon spelregels"
-        },
-        "gettingStarted": {
-            "body": "Jij bent de eerste hier. Wie hem hierna vindt, zal blij zijn dat jij langskwam.",
-            "cta": "Maak de eerste check-in",
-            "heading": "Deze aansteker is net begonnen."
-        },
-        "goToPhoto": "Ga naar foto {{index}}",
-        "nextPhoto": "Volgende foto",
-        "noCheckinsYet": "Nog geen check-ins.",
-        "notFound": {
-            "body1": "We konden <strong>{{identifier}}</strong> niet vinden.",
-            "body2": "De naam op de sticker ziet eruit als <handwriting>EMILY-07</handwriting> — check op typefouten en probeer het opnieuw.",
-            "cta": "Probeer een andere naam",
-            "heading": "Die aansteker is van de kaart verdwenen."
-        },
-        "origin": "Oorsprong",
-        "passedOn": "Je hebt deze aansteker doorgegeven — de reis gaat door.",
-        "photoAlt": "check-in foto {{index}} van {{total}}",
-        "placeNotGiven": "Plaats niet opgegeven",
-        "prevPhoto": "Vorige foto",
-        "resetView": "Weergave resetten",
-        "statsFollowers": "volgers",
-        "statsKmTraveled": "km afgelegd",
-        "statsStops": "stops",
-        "statsTeam": "team",
-        "status": {
-            "currentlyIn": "Op dit moment in {{place}}",
-            "lastSeenDaysAgo_one": "{{count}} dag geleden voor het laatst gezien in {{place}}",
-            "lastSeenDaysAgo_other": "{{count}} dagen geleden voor het laatst gezien in {{place}}",
-            "lastSeenYesterday": "Gisteren voor het laatst gezien in {{place}}"
-        },
-        "subscribe": "Abonneren",
-        "supportPrompt": "LitRoute is gratis en gemaakt door één persoon. Als je blij werd van deze (online) reis, overweeg dan <supportLink>het project te steunen</supportLink>",
-        "travelLog": "Reisverslag",
-        "unsubscribe": "Afmelden",
-        "verifiedBanner": "Je e-mail is bevestigd — je bent nu geabonneerd!"
+  "auth": {
+    "email": {
+      "emailLabel": "E-mailadres",
+      "passkey": {
+        "default": "Aanmelden met een passkey"
+      },
+      "submit": {
+        "default": "Doorgaan met e-mail",
+        "loading": "Code versturen"
+      },
+      "title": "Aanmelden of registreren"
     }
+  },
+  "checkin": {
+    "createTitle": "Nieuwe check-in",
+    "editTitle": "Check-in bewerken",
+    "form": {
+      "clickToDrop": "Klik op de kaart om een speld te plaatsen.",
+      "clickToMove": "Klik op de kaart om de speld te verplaatsen.",
+      "dismiss": "Sluiten",
+      "errors": {
+        "gpsRecapture": "Je locatie-opname is verlopen of verschoven. Tik opnieuw op 'Gebruik mijn locatie' om te vernieuwen.",
+        "gpsRequired": "Locatietoegang is vereist voor deze eenheid. Sta locatietoegang toe in je browser en probeer opnieuw.",
+        "gpsVerificationFailed": "Locatieverificatie mislukt. Probeer het opnieuw.",
+        "locationRequired": "Klik op de kaart om je locatie in te stellen.",
+        "maxPhotos": "Maximaal {{max}} foto's per check-in.",
+        "nameRequired": "Vul een naam van minstens 3 letters in zodat je check-in meetelt voor de ranglijst.",
+        "placeRequired": "Vul een plaats van minstens 3 letters in zodat je check-in meetelt voor de ranglijst.",
+        "svgNotSupported": "Alleen rasterafbeeldingen (JPEG, PNG, WebP, enz.) worden ondersteund. SVG-bestanden kunnen niet worden geüpload."
+      },
+      "gameRequiredNote": {
+        "anon": "Plaats en je naam zijn verplicht zodat je check-in meetelt voor de ranglijst.",
+        "auth": "Plaats is verplicht zodat je check-in meetelt voor de ranglijst."
+      },
+      "gpsDeniedModal": {
+        "body": "Je browser of apparaat blokkeert de locatietoegang. Om hier in te checken moet je het toestaan.",
+        "close": "Sluiten",
+        "step1": "Tik op het slot- of info-icoon naast het adres van deze site en zet Locatie op <strong>Toestaan</strong>.",
+        "step2": "Helpt dat niet? Open dan op je apparaat de instellingen voor <strong>Privacy → Locatie</strong> en zorg dat je browser is toegestaan.",
+        "step3": "Laad deze pagina opnieuw als je klaar bent.",
+        "title": "We zien je locatie niet",
+        "tryAgain": "Opnieuw proberen"
+      },
+      "gpsNotice": "Deze eenheid vereist je realtime locatie. Deze wordt vastgelegd wanneer je op Inchecken tikt.",
+      "gpsNudgeHint": "Verplaats je speld als je je exacte locatie liever niet deelt.",
+      "locationLabel": "Locatie",
+      "locationLockedOnEdit": "De locatie kan niet meer worden gewijzigd nadat een check-in is aangemaakt.",
+      "locationSet": "Locatie ingesteld",
+      "messageLabel": "Bericht",
+      "messagePlaceholder": "Waar heb je hem gevonden? Waar ben je? Wat is het volgende voor deze aansteker?",
+      "nameLabel": "Je naam (optioneel)",
+      "nameLabelRequired": "Je naam",
+      "namePlaceholder": "Hoe moeten we dit ondertekenen?",
+      "passedOnNote": "Zodra iemand anders na jou incheckt, gaat de aansteker verder — je kunt dan geen check-ins meer toevoegen.",
+      "placeLabel": "Plaats",
+      "placePlaceholder": "bijv. \"Grote Markt, Brussel\"",
+      "privacyHint": {
+        "body": "De GPS-coördinaten van je apparaat zijn gebruikt. Verplaats de speld naar een nabijgelegen plek als je je exacte positie liever niet deelt.",
+        "title": "Je exacte locatie wordt gedeeld"
+      },
+      "searchPlaceholder": "Zoek een plaats…",
+      "submit": {
+        "create": "Inchecken",
+        "creating": "Versturen",
+        "save": "Wijzigingen opslaan"
+      },
+      "useMyLocation": {
+        "default": "Mijn locatie gebruiken",
+        "loading": "Locatie zoeken"
+      }
+    },
+    "guestEmailPlaceholder": "jij@email.com",
+    "guestEmailSent": "We hebben je een bevestigingslink gestuurd — klik erop en je staat op de lijst.",
+    "guestEmailSentBack": "Zie je check-in",
+    "guestEmailSentTitle": "Check je inbox.",
+    "guestEmailSkip": "Nee bedankt — hou me niet op de hoogte.",
+    "guestEmailSocialProof_one": "Sluit je aan bij {{count}} andere persoon die deze aansteker volgt.",
+    "guestEmailSocialProof_other": "Sluit je aan bij {{count}} anderen die deze aansteker volgen.",
+    "guestEmailSubmit": "Volg deze aansteker",
+    "guestEmailSubtitle": "We sturen je een e-mail als iemand anders deze aansteker ergens anders incheckt. Dat is het — geen reclame, in één tik uitschrijven.",
+    "guestEmailTitle": "Wil je weten waar deze aansteker hierna naartoe gaat?"
+  },
+  "common": {
+    "about": "Over",
+    "back": "Terug",
+    "cancel": "Annuleren",
+    "confirm": "Bevestigen",
+    "confirming": "Bevestigen",
+    "connectedAccounts": "Gekoppelde accounts",
+    "duration": {
+      "and": "en",
+      "day_one": "{{count}} dag",
+      "day_other": "{{count}} dagen",
+      "hour_one": "{{count}} uur",
+      "hour_other": "{{count}} uur"
+    },
+    "loading": "Laden",
+    "nameLabel": "Naam",
+    "namePlaceholder": "Je naam",
+    "or": "of",
+    "password": "Wachtwoord",
+    "profile": "Profiel",
+    "remove": "Verwijderen",
+    "saving": "Opslaan",
+    "sending": "Versturen",
+    "settings": "Instellingen",
+    "signingIn": "Aanmelden",
+    "support": "Steun",
+    "twoFactorAuth": "Tweestapsverificatie",
+    "unexpectedError": "Er is een onverwachte fout opgetreden.",
+    "verificationCodeLabel": "Verificatiecode",
+    "verifying": "Verifiëren"
+  },
+  "emailConfirm": {
+    "checkingLink": "Je verificatielink controleren",
+    "confirm": {
+      "body": "Bevestig <strong>{{email}}</strong> als je e-mailadres.",
+      "failed": "Verificatie mislukt. Probeer het opnieuw.",
+      "submit": {
+        "default": "E-mailadres bevestigen"
+      },
+      "title": "Bevestig je e-mailadres"
+    },
+    "invalid": {
+      "body": "Deze bevestigingslink is ongeldig of verlopen. <requestNewLink>Vraag een nieuwe aan</requestNewLink>.",
+      "title": "Ongeldige link"
+    }
+  },
+  "footer": {
+    "tagline": "Volg de reis van je aansteker"
+  },
+  "game": {
+    "countdown": {
+      "days": "Dagen",
+      "ended": "Spel voorbij",
+      "endedOn": "Geëindigd op {{date}}",
+      "endsIn": "Het spel eindigt over",
+      "endsOn": "Eindigt op {{date}}",
+      "hours": "Uur",
+      "minutes": "Min",
+      "seconds": "Sec"
+    },
+    "distance": {
+      "name": "Afstand",
+      "rules": "Deze aansteker doet mee aan een afstandsspel dat {{duration}} duurt. Geef hem door, laat hem op nieuwe plekken fotograferen en stapel kilometers op. Je locatie wordt via GPS geverifieerd. De aansteker met de meeste kilometers aan het einde wint.",
+      "timeAlmostUp": "Minder dan {{minutes}} min voor het spel eindigt!",
+      "timeExpired": "Het afstandsspel is voorbij — de uitslag staat vast. De reis van de aansteker kan nog doorgaan."
+    },
+    "hot_potato": {
+      "name": "Hete aardappel",
+      "rules": "Geef deze aansteker door voor hij vervalt! Je hebt {{shelfLife}} uur."
+    },
+    "leaderboard": {
+      "byPerson": "door {{name}}",
+      "checkinsHeader": "Check-ins",
+      "distanceHeader": "Afstand",
+      "individualTab": "Aanstekers",
+      "lighterCountHeader": "Aanstekers",
+      "lightersDescriptionByCheckins": "Elke rij is één aansteker, gerangschikt op het aantal ontvangen check-ins.",
+      "lightersDescriptionByDistance": "Elke rij is één aansteker, gerangschikt op de totale afgelegde afstand.",
+      "mapAfterEndLegend": "Na afloop van het spel",
+      "mapDescription": "Elke lijn is de reis van één aansteker. Vervaagde segmenten gebeurden na afloop van het spel.",
+      "mapDuringLegend": "Tijdens het spel",
+      "mapEmpty": "Nog geen reizen om te tonen.",
+      "mapReplay": "Opnieuw afspelen",
+      "mapReplaying": "Bezig…",
+      "mapTitle": "Reizen",
+      "noEntries": "Nog geen check-ins.",
+      "placeHeader": "Laatst gezien",
+      "rankHeader": "#",
+      "teamHeader": "Team",
+      "teamsDescriptionByCheckins": "Teams worden gerangschikt op het totale aantal check-ins dat al hun aanstekers samen hebben ontvangen.",
+      "teamsDescriptionByDistance": "Teams worden gerangschikt op de totale afstand die al hun aanstekers samen hebben afgelegd.",
+      "teamsTab": "Teams",
+      "title": "Ranglijst — {{name}}"
+    },
+    "modal": {
+      "gotIt": "Begrepen",
+      "title": "Speciaal spel",
+      "viewLeaderboard": "Bekijk de ranglijst"
+    },
+    "race": {
+      "name": "Race",
+      "rules": "Bereik het doel zo snel mogelijk. Locatie geverifieerd via GPS."
+    },
+    "relay": {
+      "name": "Estafette",
+      "rules": "Geef deze aansteker door aan de volgende persoon. Geen tijdslimiet."
+    }
+  },
+  "home": {
+    "cta": {
+      "body": "Ik ben Jonas, ik heb dit project gemaakt tijdens mijn vrolijke werkeloosheid. Zin om een aansteker de wereld in te sturen? Lees eerst <aboutLink>de over-pagina</aboutLink> — even contact opnemen voordat je begint met stickers printen.",
+      "heading": "Begin een reis.",
+      "link": "Over het project"
+    },
+    "errors": {
+      "like": "Zoals",
+      "missingDash": "Het streepje ontbreekt — het moet een naam zijn, een streepje, dan een nummer.",
+      "nameTooShort": "De naam vóór het streepje is te kort — minstens 3 letters nodig (je typte \"{{prefix}}\").",
+      "noNumber": "Niets na het streepje — voeg een getal van 2 cijfers toe.",
+      "notFound": "We konden <lighterName>{{id}}</lighterName> niet vinden. Check de sticker nog eens — die ziet eruit als <lighterName>{{example}}</lighterName>.",
+      "numberRequired": "Het deel na het streepje moet een getal zijn.",
+      "offMap": "Die aansteker is van de kaart verdwenen.",
+      "singleDigit": "Het getal heeft 2 cijfers nodig."
+    },
+    "eyebrow": "Vind hem. Check in. Geef hem door.",
+    "globeCaption": "20 recent actieve aanstekers — elke stip is iemands verhaal",
+    "headline": "Een aansteker met een verleden. Voeg jouw verhaal toe.",
+    "howItWorks": {
+      "heading": "Zo zit het.",
+      "step1Body": "Zie je een aansteker met een QR-sticker? Scan hem, typ de naam van de aansteker op litroute.com. Je bent van elke stad, elke hand waardoor hij ging — een klik verwijderd.",
+      "step1Title": "Vind hem.",
+      "step2Body": "Plaats een foto en een korte noot. Jouw moment — waar je was, wat je zag — wordt een blijvend hoofdstuk in het verhaal van de aansteker.",
+      "step2Title": "Check in.",
+      "step3Body": "Geef hem aan een onbekende. Laat hem achter in een café, een hostel, bij een wandelpad. Jij bepaalt het volgende hoofdstuk.",
+      "step3Title": "Geef hem door.",
+      "step4Body": "Abonneer je en krijg een mailtje als iemand hem weer vindt — waar dat ook ter wereld is. Het onschuldig stalken van een stukje metaal.",
+      "step4Title": "Blijf op de hoogte."
+    },
+    "journey": {
+      "exampleLabel": "Voorbeeld — niet jouw aansteker",
+      "heading": "Dit is wat je ziet als je er een scant.",
+      "openSlotBody": "Vind er een, check in, en jij zou hier kunnen staan.",
+      "seeReal": "<journeyLink>Bekijk de reis van een echte aansteker</journeyLink>",
+      "somewhere": "Ergens nieuws",
+      "subtext": "Dit zijn verzonnen check-ins om te laten zien hoe het werkt.",
+      "yourName": "jouw naam hier"
+    },
+    "lighterAlt": "Een aansteker op zijn zij",
+    "lighterLabel": "Hoe heet de aansteker?",
+    "stats": {
+      "activeLighters": "actieve aanstekers",
+      "checkinsLogged": "check-ins geregistreerd",
+      "freeText": "Gratis te gebruiken, in leven gehouden door lezers zoals jij. <supportLink>Steun het project</supportLink>",
+      "peopleCheckedIn": "mensen die incheckten",
+      "traveledSoFar": "afgelegd tot nu toe"
+    },
+    "subheadline": "Vind een aansteker met een QR-sticker. Scan hem om te ontdekken waar hij allemaal is geweest en wie hem in zijn bezit heeft gehad. Laat je eigen bericht achter — geef hem dan door aan de volgende onbekende.",
+    "submit": {
+      "checking": "Zoeken",
+      "default": "Bekijk de route"
+    },
+    "tryExample": "probeer \"john-93\" voor een voorbeeld"
+  },
+  "nav": {
+    "homeAriaLabel": "LitRoute startpagina",
+    "languageLabel": "Taal",
+    "mainNav": "Hoofdnavigatie",
+    "mobileNav": "Mobiele navigatie",
+    "signIn": "Aanmelden",
+    "supportAriaLabel": "Dit project steunen",
+    "toggleNav": "Navigatie aan/uit"
+  },
+  "photoUpload": {
+    "counter": "{{count}} / {{max}} foto's",
+    "dragToReorder": "Sleep om te herschikken · klik om er meer toe te voegen",
+    "empty": {
+      "addPhotos": "Foto's toevoegen",
+      "clickOrDrag": "Klik ergens of sleep & laat los",
+      "dropHere": "Laat hier los!",
+      "releaseToUpload": "Loslaten om te uploaden",
+      "showWhere": "Laat zien waar je hem vond — maximaal {{max}} foto's"
+    },
+    "existingPhoto": "Bestaande foto",
+    "label": "Foto's",
+    "maxReached": "Maximum van {{max}} foto's bereikt — verwijder er een om een andere toe te voegen.",
+    "optional": "(optioneel)",
+    "preview": "Voorbeeld",
+    "removePhoto": "Foto verwijderen",
+    "tips": {
+      "heading": "Foto-tips",
+      "hide": "Bedek of verberg de naam van de aansteker — dat is het wachtwoord van de pagina",
+      "lighter": "De aansteker in de hand of op een oppervlak geeft een mooie foto",
+      "location": "Laat zien waar je bent — een herkenningspunt, een uitzicht of je omgeving"
+    },
+    "zoneAriaAdd": "Foto-uploadzone — klik of sleep om foto's toe te voegen",
+    "zoneAriaFull": "Foto-uploadzone — maximum bereikt"
+  },
+  "supportSection": {
+    "body1": "LitRoute is een eenmansproject. Geen reclame, geen abonnementen, geen investeerders — alleen serverkosten, e-mailbezorging en opslag uit eigen zak. De aanstekers zelf ook: elke aansteker wordt met de hand gekocht en geregistreerd voordat hij aan zijn reis kan beginnen.",
+    "body2": "Heb je hier met plezier een reis gevolgd? Dan helpt een kleine bijdrage echt.",
+    "donateCta": "Tip",
+    "githubDescription": "Sponsor direct op GitHub",
+    "githubLabel": "GitHub Sponsors",
+    "kofiDescription": "Eenmalige tip, geen account nodig",
+    "kofiLabel": "Ko-fi",
+    "liberapayDescription": "Wekelijks of maandelijks",
+    "liberapayLabel": "Liberapay",
+    "otherWaysHeading": "Of help zonder uit te geven:",
+    "weblateCta": "Bijdragen",
+    "weblateDescription": "Help LitRoute in jouw taal op Weblate",
+    "weblateLabel": "Vertalen"
+  },
+  "unit": {
+    "cannotEdit": "Kan niet bewerken of verwijderen na 6 uur",
+    "checkinBtn": "Nieuwe check-in",
+    "currentLocation": "Huidige locatie",
+    "deleteBtn": "Verwijderen",
+    "deleteConfirm": "Deze check-in verwijderen?",
+    "deleteError": "Kon deze check-in niet verwijderen.",
+    "editBtn": "Bewerken",
+    "game": {
+      "leaderboardLink": "Naar de ranglijst",
+      "rankLabel": "van {{total}}",
+      "showRules": "Toon spelregels"
+    },
+    "gettingStarted": {
+      "body": "Jij bent de eerste hier. Wie hem hierna vindt, zal blij zijn dat jij langskwam.",
+      "cta": "Maak de eerste check-in",
+      "heading": "Deze aansteker is net begonnen."
+    },
+    "goToPhoto": "Ga naar foto {{index}}",
+    "nextPhoto": "Volgende foto",
+    "noCheckinsYet": "Nog geen check-ins.",
+    "notFound": {
+      "body1": "We konden <strong>{{identifier}}</strong> niet vinden.",
+      "body2": "De naam op de sticker ziet eruit als <handwriting>EMILY-07</handwriting> — check op typefouten en probeer het opnieuw.",
+      "cta": "Probeer een andere naam",
+      "heading": "Die aansteker is van de kaart verdwenen."
+    },
+    "origin": "Oorsprong",
+    "passedOn": "Je hebt deze aansteker doorgegeven — de reis gaat door.",
+    "photoAlt": "check-in foto {{index}} van {{total}}",
+    "placeNotGiven": "Plaats niet opgegeven",
+    "prevPhoto": "Vorige foto",
+    "resetView": "Weergave resetten",
+    "statsFollowers": "volgers",
+    "statsKmTraveled": "km afgelegd",
+    "statsStops": "stops",
+    "statsTeam": "team",
+    "status": {
+      "currentlyIn": "Op dit moment in {{place}}",
+      "lastSeenDaysAgo_one": "{{count}} dag geleden voor het laatst gezien in {{place}}",
+      "lastSeenDaysAgo_other": "{{count}} dagen geleden voor het laatst gezien in {{place}}",
+      "lastSeenYesterday": "Gisteren voor het laatst gezien in {{place}}"
+    },
+    "subscribe": "Abonneren",
+    "supportPrompt": "LitRoute is gratis en gemaakt door één persoon. Als je blij werd van deze (online) reis, overweeg dan <supportLink>het project te steunen</supportLink>",
+    "travelLog": "Reisverslag",
+    "unsubscribe": "Afmelden",
+    "verifiedBanner": "Je e-mail is bevestigd — je bent nu geabonneerd!"
+  }
 }

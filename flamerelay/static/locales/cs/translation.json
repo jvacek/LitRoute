@@ -1,38 +1,38 @@
 {
-    "about": {
-        "aboutTitle": "O projektu"
-    },
-    "common": {
-        "about": "O projektu"
-    },
-    "game": {
-        "leaderboard": {
-            "rankHeader": "#"
-        }
-    },
-    "home": {
-        "cta": {
-            "link": "O projektu"
-        },
-        "globeCaption": "20 nedávno aktivních zapíků — každej puntík je něčí story.",
-        "stats": {
-            "activeLighters": "aktivní zapalovače"
-        }
-    },
-    "settings": {
-        "mfa": {
-            "setup": {
-                "activate": {
-                    "default": "Aktivovat",
-                    "loading": "Aktivuje se"
-                }
-            },
-            "totp": {
-                "active": "Aktivní"
-            }
-        },
-        "passkeys": {
-            "added": "Přídáno {{date}}"
-        }
+  "about": {
+    "aboutTitle": "O projektu"
+  },
+  "common": {
+    "about": "O projektu"
+  },
+  "game": {
+    "leaderboard": {
+      "rankHeader": "#"
     }
+  },
+  "home": {
+    "cta": {
+      "link": "O projektu"
+    },
+    "globeCaption": "20 nedávno aktivních zapíků — každej puntík je něčí story.",
+    "stats": {
+      "activeLighters": "aktivní zapalovače"
+    }
+  },
+  "settings": {
+    "mfa": {
+      "setup": {
+        "activate": {
+          "default": "Aktivovat",
+          "loading": "Aktivuje se"
+        }
+      },
+      "totp": {
+        "active": "Aktivní"
+      }
+    },
+    "passkeys": {
+      "added": "Přídáno {{date}}"
+    }
+  }
 }
