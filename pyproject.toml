@@ -30,7 +30,7 @@ dependencies = [
   "django-resized>=1.0.3",
   "django-simple-captcha>=0.6.3",
   "django-storages==1.14.6",
-  "django-webpack-loader==3.2.3",
+  "django-webpack-loader==3.2.4",
   "djangorestframework==3.17.1",
   "djangorestframework-gis>=1.2.1",
   "drf-spectacular==0.29.0",
@@ -43,7 +43,7 @@ dependencies = [
   "pyjwt>=2.12.1",
   "python-slugify==8.0.4",
   "redis==7.4.0",
-  "sentry-sdk==2.59.0",
+  "sentry-sdk==2.60.0",
   "webauthn>=2.0",
   "whitenoise==6.12.0",
 ]
