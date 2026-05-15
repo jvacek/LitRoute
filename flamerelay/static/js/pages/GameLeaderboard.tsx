@@ -233,7 +233,7 @@ export default function GameLeaderboard() {
         </section>
       )}
 
-      {journeys.length > 0 && maptilerKey && (
+      {journeys.length > 0 && (
         <section className="mt-8">
           <h2 className="font-heading text-xl font-bold text-char">
             {t('game.leaderboard.mapTitle')}
