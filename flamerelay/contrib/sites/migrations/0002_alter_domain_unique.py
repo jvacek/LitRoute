@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
                 max_length=100,
                 unique=True,
                 # pyrefly: ignore [missing-attribute]
-                validators=[django.contrib.sites.models._simple_domain_name_validator],
+                validators=[django.contrib.sites.models._simple_domain_name_validator],  # noqa: SLF001
                 verbose_name="domain name",
             ),
         )

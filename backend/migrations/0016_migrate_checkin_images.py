@@ -9,7 +9,6 @@ def forward(apps, schema_editor):
 
 
 def backward(apps, schema_editor):
-    CheckIn = apps.get_model("backend", "CheckIn")
     CheckInImage = apps.get_model("backend", "CheckInImage")
     for img in CheckInImage.objects.select_related("checkin").filter(order=0):
         img.checkin.image = img.image

@@ -20,7 +20,8 @@ class Migration(migrations.Migration):
             name="admin_only_checkin",
             field=models.BooleanField(
                 default=False,
-                help_text="Whether only admins can check in to this unit, primarily used for demos or for disabling lighters.",
+                help_text="Whether only admins can check in to this unit,"
+                " primarily used for demos or for disabling lighters.",
             ),
         ),
         migrations.AlterField(
@@ -36,7 +37,8 @@ class Migration(migrations.Migration):
             model_name="unit",
             name="identifier",
             field=backend.models.CaseInsensitiveCharField(
-                help_text="Unique identifier for the unit, e.g. 'alpha-01'. Must start with at least three characters and end with two digits, separated by a dash.",
+                help_text="Unique identifier for the unit, e.g. 'alpha-01'. "
+                "Must start with at least three characters and end with two digits, separated by a dash.",
                 max_length=200,
                 unique=True,
                 validators=[

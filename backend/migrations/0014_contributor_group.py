@@ -2,9 +2,9 @@ from django.db import migrations
 
 
 def create_contributor_group(apps, schema_editor):
-    from django.apps import apps as global_apps
-    from django.contrib.auth.management import create_permissions
-    from django.contrib.contenttypes.management import create_contenttypes
+    from django.apps import apps as global_apps  # noqa: PLC0415
+    from django.contrib.auth.management import create_permissions  # noqa: PLC0415
+    from django.contrib.contenttypes.management import create_contenttypes  # noqa: PLC0415
 
     app_config = global_apps.get_app_config("backend")
     create_contenttypes(app_config, verbosity=0)
