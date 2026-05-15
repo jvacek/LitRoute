@@ -32,6 +32,7 @@ from config.constants import (
     EMAIL_TASK_MAX_RETRIES,
     EMAIL_TASK_RETRY_BACKOFF_MAX_SECONDS,
     EMAIL_TASK_RETRY_BACKOFF_SECONDS,
+    EXAMPLE_IDENTIFIER,
     GAME_JOURNEYS_CACHE_KEY_PREFIX,
     GAME_JOURNEYS_CACHE_TTL,
     GAME_LEADERBOARD_CACHE_KEY_PREFIX,
@@ -311,7 +312,8 @@ def total_distance_traveled_in_km() -> float:
 
     from .models import Unit  # noqa: PLC0415
 
-    identifiers = list(Unit.objects.values_list("identifier", flat=True))
+    units = Unit.objects.exclude(identifier=EXAMPLE_IDENTIFIER)
+    identifiers = list(units.values_list("identifier", flat=True))
     keys = {unit_distance_cache_key(i): i for i in identifiers}
     cached = cache.get_many(keys.keys())
 
