@@ -70,7 +70,7 @@ class GameSerializer(serializers.ModelSerializer):
             "name",
             "mode",
             "allowed_time",
-            "max_gps_drift",
+            "gps_drift_floor",
             "shelf_life",
             "start_time",
             "end_time",

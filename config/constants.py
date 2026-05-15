@@ -34,7 +34,18 @@ FEEDBACK_ADMIN_PREVIEW_LENGTH = 80
 DISTANCE_DEFAULT_ALLOWED_TIME = 60 * 24  # 60 days in hours — Distance mode default
 HOT_POTATO_SHELF_LIFE = 24 * 5  # hours (5 days) — Hot Potato mode default
 HOT_POTATO_MIN_DISTANCE_METERS = 1000
-GAME_MAX_GPS_DRIFT_METERS = 500  # Default drift-circle radius shown to the user on the check-in map
+# Floor for the drift envelope on game-mode check-ins.
+GAME_GPS_DRIFT_FLOOR_METERS = 500
+
+# Max implied speed between consecutive check-ins on the same unit, in km/h.
+# You ain't going from berlin to beijin in 20 seconds honey...
+CHECKIN_MAX_IMPLIED_SPEED_KMH = 1000
+
+# Minimum gap between consecutive check-ins on a game-mode unit. Doubles as
+# anti-spam and as a floor that keeps the implied-speed check well-conditioned
+# (without it, a 200m pin correction five seconds later would imply ~150km/h
+# and trip the speed check).
+GAME_CHECKIN_MIN_GAP_SECONDS = 60
 
 # Game-mode check-ins must populate a real place and (for anon users) a real
 # signing name — at least this many Unicode letters or digits — so leaderboard

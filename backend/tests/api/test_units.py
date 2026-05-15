@@ -51,6 +51,6 @@ class TestUnitGameField:
         unit = UnitFactory.create(game=game)
         data = client.get(f"/api/units/{unit.identifier}/").json()["game"]
         assert data["mode"] == "race"
-        assert "max_gps_drift" in data
+        assert "gps_drift_floor" in data
         assert "allowed_time" in data
         assert "shelf_life" in data

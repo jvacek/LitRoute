@@ -252,7 +252,7 @@ def _build_leaderboard_payload(game) -> dict:
             "name": game.name,
             "mode": game.mode,
             "allowed_time": game.allowed_time,
-            "max_gps_drift": game.max_gps_drift,
+            "gps_drift_floor": game.gps_drift_floor,
             "start_time": game.start_time.isoformat(),
             "end_time": game.end_time.isoformat(),
             "sort_by": sort_field,
