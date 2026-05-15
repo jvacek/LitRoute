@@ -19,8 +19,8 @@ from config.constants import (
     CHECKIN_IMAGE_MAX_UPLOAD_BYTES,
     DISTANCE_DEFAULT_ALLOWED_TIME,
     FEEDBACK_MESSAGE_MAX_LENGTH,
+    GAME_MAX_GPS_DRIFT_METERS,
     HOT_POTATO_SHELF_LIFE,
-    LOCATION_CLAIM_MAX_DRIFT_METERS,
 )
 from flamerelay.users.models import User
 
@@ -81,7 +81,7 @@ class Game(models.Model):
     )
 
     max_gps_drift = models.PositiveIntegerField(
-        default=LOCATION_CLAIM_MAX_DRIFT_METERS,
+        default=GAME_MAX_GPS_DRIFT_METERS,
         help_text="Maximum allowed GPS drift in meters for check-ins. (Distance+Race modes)",
     )
 

@@ -83,17 +83,6 @@ class TeamSerializer(serializers.ModelSerializer):
         fields = ["name", "color"]
 
 
-class LocationClaimRequestSerializer(serializers.Serializer):
-    lat = serializers.FloatField(min_value=-90, max_value=90)
-    lng = serializers.FloatField(min_value=-180, max_value=180)
-    accuracy = serializers.FloatField(min_value=0)
-    unit_identifier = serializers.CharField(max_length=200)
-
-
-class LocationClaimResponseSerializer(serializers.Serializer):
-    token = serializers.CharField()
-
-
 class JourneyPointSerializer(serializers.Serializer):
     lng = serializers.FloatField()
     lat = serializers.FloatField()

@@ -394,7 +394,6 @@ ACCOUNT_ADAPTER = "flamerelay.users.adapters.AccountAdapter"
 ACCOUNT_RATE_LIMITS = {
     "guest_subscribe": "5/h",  # max 5 verification emails per email address per hour
     "guest_verify": "20/h/ip",  # defence-in-depth on account-creation endpoint
-    "location_claim": "20/m",  # GPS-enforced check-ins legitimately retry on jitter
 }
 # https://docs.allauth.org/en/latest/socialaccount/configuration.html
 SOCIALACCOUNT_ADAPTER = "flamerelay.users.adapters.SocialAccountAdapter"

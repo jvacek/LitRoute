@@ -11,7 +11,6 @@ from backend.api.views import (
     GlobePinsView,
     GuestSubscribeView,
     GuestVerifyView,
-    LocationClaimView,
     StatsView,
     UnitViewSet,
 )
@@ -49,7 +48,6 @@ urlpatterns = [
         UnitViewSet.as_view({"post": "subscribe", "delete": "unsubscribe"}),
         name="unit-subscribe",
     ),
-    path("location-claim/", LocationClaimView.as_view(), name="location-claim"),
     path("games/<int:pk>/leaderboard/", GameLeaderboardView.as_view(), name="game-leaderboard"),
     path("games/<int:pk>/journeys/", GameJourneysView.as_view(), name="game-journeys"),
     path("config/", ConfigView.as_view(), name="config"),

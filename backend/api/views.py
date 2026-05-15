@@ -26,7 +26,6 @@ from rest_framework.mixins import (
     RetrieveModelMixin,
     UpdateModelMixin,
 )
-from rest_framework.parsers import JSONParser
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -39,7 +38,6 @@ from config.constants import (
     CHECKIN_MAX_IMAGES,
     FEEDBACK_MESSAGE_MAX_LENGTH,
     GUEST_EMAIL_VERIFICATION_EXPIRY_SECONDS,
-    LOCATION_CLAIM_MAX_DRIFT_METERS,
     MIN_GAME_REQUIRED_WORD_CHARS,
 )
 
@@ -47,8 +45,6 @@ from .serializers import (
     CheckInSerializer,
     GameJourneysSerializer,
     LeaderboardSerializer,
-    LocationClaimRequestSerializer,
-    LocationClaimResponseSerializer,
     UnitSerializer,
 )
 
@@ -149,47 +145,6 @@ class GlobePinsView(APIView):
         from backend.services import get_cached_globe_pins  # noqa: PLC0415
 
         return Response({"pins": get_cached_globe_pins()})
-
-
-class LocationClaimView(APIView):
-    permission_classes = [AllowAny]
-    parser_classes = [JSONParser]
-
-    @extend_schema(
-        request=LocationClaimRequestSerializer,
-        responses=LocationClaimResponseSerializer,
-    )
-    def post(self, request) -> Response:
-        from backend.location_token import issue_location_claim  # noqa: PLC0415
-
-        rl_key = (
-            str(request.user.id)
-            if request.user.is_authenticated
-            else (request.headers.get("cf-connecting-ip") or request.META.get("REMOTE_ADDR", ""))
-        )
-        if not ratelimit.consume(request, action="location_claim", key=rl_key):
-            return Response(
-                {"detail": "Too many attempts. Please try again later."},
-                status=status.HTTP_429_TOO_MANY_REQUESTS,
-            )
-
-        serializer = LocationClaimRequestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        unit_identifier = serializer.validated_data["unit_identifier"]
-        get_object_or_404(Unit, identifier=unit_identifier)
-
-        user_id = request.user.id if request.user.is_authenticated else None
-        try:
-            token = issue_location_claim(
-                serializer.validated_data["lat"],
-                serializer.validated_data["lng"],
-                serializer.validated_data["accuracy"],
-                user_id,
-                unit_identifier=unit_identifier,
-            )
-        except ValueError as exc:
-            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({"token": token})
 
 
 class GameLeaderboardView(APIView):
@@ -315,23 +270,6 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         if errors:
             raise ValidationError(errors)
 
-    def _verify_gps_token(self, unit: Unit, request_data, validated_location) -> None:
-        from backend.location_token import verify_location_claim  # noqa: PLC0415
-
-        token = request_data.get("location_token")
-        if not token:
-            raise ValidationError({"location_token": "Required for this unit."})
-        try:
-            lat, lng = validated_location.y, validated_location.x
-        except (AttributeError, TypeError) as exc:
-            raise ValidationError({"location": "Invalid location format."}) from exc
-        max_drift = unit.game.max_gps_drift if unit.game else LOCATION_CLAIM_MAX_DRIFT_METERS
-        user_id = self.request.user.id if self.request.user.is_authenticated else None
-        try:
-            verify_location_claim(token, user_id, unit.identifier, lat, lng, max_drift)
-        except ValueError as exc:
-            raise ValidationError({"location_token": str(exc)}) from exc
-
     def get_permissions(self):
         if self.action in ("create", "destroy", "partial_update"):
             return [AllowAny()]
@@ -369,8 +307,7 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
             raise PermissionDenied(msg)
 
     def _check_anon_captcha(self) -> None:
-        """Anon-only Turnstile check. Runs before the GPS token so a failed
-        captcha doesn't burn the single-use token."""
+        """Anon-only Turnstile check."""
         if self.request.user.is_authenticated:
             return
         turnstile_token = self.request.data.get("turnstile_token", "")
@@ -405,15 +342,10 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
 
     def perform_create(self, serializer):
         unit = get_object_or_404(Unit.objects.select_related("game"), identifier=self.kwargs["identifier"])
-        # Order matters: every check that does NOT consume a single-use token
-        # runs first, so a 4xx on permission/captcha/image-count doesn't force
-        # the user to recapture GPS.
         self._verify_game_required_fields(unit, serializer.validated_data)
         self._verify_can_check_in(unit)
         self._check_anon_captcha()
         self._verify_image_count(self.request.FILES.getlist("images"))
-        if unit.is_gps_enforced:
-            self._verify_gps_token(unit, self.request.data, serializer.validated_data.get("location"))
 
         # Cache invalidation runs from the post_save signal in models.py.
         checkin = self._save_checkin_record(unit, serializer)
