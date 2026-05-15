@@ -32,6 +32,12 @@ module.exports = merge(commonConfig, {
         warnings: false,
         runtimeErrors: true,
       },
+      // Derive the live-reload WebSocket URL from window.location so it works
+      // when the dev server is reached over an https tunnel (e.g. Tailscale
+      // Funnel). The 0.0.0.0/0 sentinels mean "use the page's hostname/port",
+      // and `auto:` picks ws/wss based on the page protocol — without this
+      // the client tries ws:// from an https:// page and Safari blocks it.
+      webSocketURL: 'auto://0.0.0.0:0/ws',
     },
     // We need hot=false (Disable HMR) to set liveReload=true
     hot: false,

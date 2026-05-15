@@ -12,6 +12,10 @@ SECRET_KEY = env(
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
 ALLOWED_HOSTS = ["*"]
+# Trust Tailscale Funnel / Serve hostnames so POSTs from a phone hitting the
+# dev server through a tunnel aren't rejected by Django's CSRF origin check.
+# https://docs.djangoproject.com/en/dev/ref/settings/#csrf-trusted-origins
+CSRF_TRUSTED_ORIGINS = ["https://*.ts.net"]
 
 # CACHES
 # ------------------------------------------------------------------------------
