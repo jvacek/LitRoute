@@ -153,9 +153,8 @@ export default function CheckinForm({
   const [showLocationDeniedModal, setShowLocationDeniedModal] = useState(false);
   const mapRef = useRef<MapRef>(null);
   const searchRef = useRef<HTMLDivElement>(null);
-  const showTurnstile = false; // Temporarily disabled — re-enable when mobile captcha issues resolved
-  // const showTurnstile =
-  //   mode === 'create' && !isAuthenticated && !!config?.turnstileSiteKey;
+  const showTurnstile =
+    mode === 'create' && !isAuthenticated && !!config?.turnstileSiteKey;
   const showNameField = mode === 'create' && !isAuthenticated;
 
   maptilerConfig.apiKey = maptilerKey;

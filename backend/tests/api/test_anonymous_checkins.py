@@ -60,17 +60,16 @@ class TestAnonCheckinCreate:
         )
         assert res.status_code == status.HTTP_403_FORBIDDEN
 
-    # Temporarily skipped — captcha check disabled in views.py; re-enable together
-    # def test_turnstile_failure_returns_400_with_captcha_error(self, client, unit, settings):
-    #     settings.CLOUDFLARE_TURNSTILE_SECRET_KEY = "test-secret"
-    #     with patch("backend.api.views._verify_turnstile", return_value=False):
-    #         res = client.post(
-    #             f"/api/units/{unit.identifier}/checkins/",
-    #             {"location": LONDON_PAYLOAD, "turnstile_token": "bad-token"},
-    #             format="json",
-    #         )
-    #     assert res.status_code == status.HTTP_400_BAD_REQUEST
-    #     assert "captcha" in res.json()
+    def test_turnstile_failure_returns_400_with_captcha_error(self, client, unit, settings):
+        settings.CLOUDFLARE_TURNSTILE_SECRET_KEY = "test-secret"  # noqa: S105
+        with patch("backend.api.views._verify_turnstile", return_value=False):
+            res = client.post(
+                f"/api/units/{unit.identifier}/checkins/",
+                {"location": LONDON_PAYLOAD, "turnstile_token": "bad-token"},
+                format="json",
+            )
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+        assert "captcha" in res.json()
 
 
 # ── Anonymous edit ─────────────────────────────────────────────────────────────

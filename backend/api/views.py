@@ -410,7 +410,7 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         # the user to recapture GPS.
         self._verify_game_required_fields(unit, serializer.validated_data)
         self._verify_can_check_in(unit)
-        # self._check_anon_captcha()  # Temporarily disabled — re-enable when mobile captcha issues resolved
+        self._check_anon_captcha()
         self._verify_image_count(self.request.FILES.getlist("images"))
         if unit.is_gps_enforced:
             self._verify_gps_token(unit, self.request.data, serializer.validated_data.get("location"))
