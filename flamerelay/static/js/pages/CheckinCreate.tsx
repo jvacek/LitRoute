@@ -92,6 +92,7 @@ export default function CheckinCreate() {
       if (!isAuthenticated && json.edit_token) {
         storeEditToken(json.id, json.edit_token);
         setGuestCheckinId(json.id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         navigate(unitUrl);
       }
