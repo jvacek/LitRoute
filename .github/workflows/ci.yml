@@ -63,6 +63,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
+      - name: Create local env files for bake
+        run: |
+          cp .envs/.local/.django.example .envs/.local/.django
+          cp .envs/.local/.postgres.example .envs/.local/.postgres
+          echo "POSTGRES_USER=postgres" >> .envs/.local/.postgres
+          echo "POSTGRES_PASSWORD=postgres" >> .envs/.local/.postgres
+
       - name: Build and cache local backend
         uses: docker/bake-action@v7
         with:
