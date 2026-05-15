@@ -12,6 +12,7 @@
   --color-smoke: #7b8fa1;
   --color-parchment: #faf6ee;
   --color-linen: #f0ead8;
+  --color-blueprint: #c1dffb;
 
   /* Typography */
   --font-heading: 'Fraunces', Georgia, serif;
@@ -52,12 +53,21 @@ html {
 }
 
 /* Parchment outline around an alpha-channel image (used to keep the navbar
-   logo legible against the red local-environment background). */
+   logo legible against the local-environment background). */
 .logo-outline {
   filter: drop-shadow(2px 0 0 var(--color-parchment))
     drop-shadow(-2px 0 0 var(--color-parchment))
     drop-shadow(0 2px 0 var(--color-parchment))
     drop-shadow(0 -2px 0 var(--color-parchment));
+}
+
+/* Local-environment "blueprint" backdrop — deep navy with a 45° grid.
+   Used by the navbar (frontend + Django admin) when IS_LOCAL is true. */
+.blueprint-bg {
+  background-color: var(--color-blueprint);
+  background-image: url('../images/blueprint-bg.svg');
+  background-repeat: repeat;
+  background-size: 120px 120px;
 }
 
 /* Smooth scrolling */

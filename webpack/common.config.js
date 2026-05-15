@@ -42,6 +42,7 @@ module.exports = {
     new webpack.DefinePlugin({
       __GIT_COMMIT__: JSON.stringify(gitCommit),
       __GITHUB_REPO_URL__: JSON.stringify(GITHUB_REPO_URL),
+      __IS_LOCAL__: JSON.stringify(process.env.IS_LOCAL === 'true'),
     }),
   ],
   module: {

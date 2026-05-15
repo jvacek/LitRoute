@@ -11,7 +11,7 @@ export default function Navbar() {
   const { isAuthenticated } = useAuth();
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const headerBg = IS_LOCAL ? 'bg-ember' : 'bg-parchment';
+  const headerBg = IS_LOCAL ? 'blueprint-bg' : 'bg-parchment';
 
   return (
     <header className={`sticky top-0 z-50 border-b border-char/8 ${headerBg}`}>
