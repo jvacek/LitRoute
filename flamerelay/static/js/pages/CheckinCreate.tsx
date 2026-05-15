@@ -148,7 +148,6 @@ export default function CheckinCreate() {
       <CheckinForm
         mode="create"
         unitUrl={unitUrl}
-        unitIdentifier={identifier}
         maptilerKey={maptilerKey}
         isGpsEnforced={isGpsEnforced}
         gpsDriftAllowanceM={gpsDriftAllowanceM}
