@@ -12,6 +12,7 @@ from geopy.distance import geodesic
 from PIL import Image, ImageDraw
 
 from backend.models import CheckIn, CheckInImage, Game, Team, Unit
+from config.constants import EXAMPLE_IDENTIFIER
 from flamerelay.users.models import User
 
 DISTANCE_TEAMS = [
@@ -243,15 +244,15 @@ class Command(BaseCommand):
         else:
             self.stdout.write(f"Seeding as {user} ({n_units} units * {n_checkins} check-ins each)")
             for i in range(n_units):
-                identifier = "john-93" if i == 0 else _random_identifier(i)
+                identifier = EXAMPLE_IDENTIFIER if i == 0 else _random_identifier(i)
                 self._delete_units(Unit.objects.filter(identifier=identifier))
-                while identifier != "john-93" and Unit.objects.filter(identifier=identifier).exists():
+                while identifier != EXAMPLE_IDENTIFIER and Unit.objects.filter(identifier=identifier).exists():
                     identifier = _random_identifier(random.randint(0, 9999))  # noqa: S311
 
                 unit = Unit.objects.create(
                     identifier=identifier,
                     created_by=user,
-                    admin_only_checkin=identifier == "john-93",
+                    admin_only_checkin=identifier == EXAMPLE_IDENTIFIER,
                 )
                 unit.subscribers.add(user)
                 created_units.append(identifier)
