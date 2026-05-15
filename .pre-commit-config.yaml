@@ -51,7 +51,7 @@ repos:
 
   # Run the Ruff linter.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.12
+    rev: v0.15.13
     hooks:
       # Linter
       - id: ruff-check
@@ -60,7 +60,7 @@ repos:
       - id: ruff-format
 
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.21.1
+    rev: v2.21.2
     hooks:
       - id: pyproject-fmt
 
@@ -74,7 +74,7 @@ repos:
 
   - repo: https://github.com/astral-sh/uv-pre-commit
     # uv version.
-    rev: 0.11.8
+    rev: 0.11.14
     hooks:
       - id: uv-lock
 # sets up .pre-commit-ci.yaml to ensure pre-commit dependencies stay up to date
