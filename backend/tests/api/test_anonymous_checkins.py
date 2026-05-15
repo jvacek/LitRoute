@@ -62,7 +62,7 @@ class TestAnonCheckinCreate:
 
     def test_turnstile_failure_returns_400_with_captcha_error(self, client, unit, settings):
         settings.CLOUDFLARE_TURNSTILE_SECRET_KEY = "test-secret"  # noqa: S105
-        with patch("backend.api.views._verify_turnstile", return_value=False):
+        with patch("backend.api.views._helpers._verify_turnstile", return_value=False):
             res = client.post(
                 f"/api/units/{unit.identifier}/checkins/",
                 {"location": LONDON_PAYLOAD, "turnstile_token": "bad-token"},
@@ -295,7 +295,7 @@ class TestGuestVerify:
     def test_expired_token_returns_400(self, client, unit, make_checkin):
         checkin = make_checkin(unit, anonymous=True)
         token = _make_verify_token("old@example.com", unit.identifier, checkin.pk)
-        with patch("backend.api.views.GUEST_EMAIL_VERIFICATION_EXPIRY_SECONDS", new=-1):
+        with patch("backend.api.views.guest.GUEST_EMAIL_VERIFICATION_EXPIRY_SECONDS", new=-1):
             res = client.get(f"/api/guest-verify/?token={token}")
         assert res.status_code == status.HTTP_400_BAD_REQUEST
 

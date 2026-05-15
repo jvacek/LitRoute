@@ -13,14 +13,14 @@ from config.constants import FEEDBACK_MESSAGE_MAX_LENGTH
 
 @pytest.fixture
 def mute_feedback_emails():
-    with patch("backend.models.send_feedback_emails_task.apply_async") as mock:
+    with patch("backend.services.send_feedback_emails_task.apply_async") as mock:
         yield mock
 
 
 class TestAnonFeedback:
     def test_anon_post_with_valid_captcha_returns_201_and_creates_row(self, client, db, settings, mute_feedback_emails):
         settings.CLOUDFLARE_TURNSTILE_SECRET_KEY = "test-secret"  # noqa: S105
-        with patch("backend.api.views._verify_turnstile", return_value=True):
+        with patch("backend.api.views._helpers._verify_turnstile", return_value=True):
             res = client.post(
                 "/api/feedback/",
                 {"message": "Found a bug", "email": "anon@example.com", "turnstile_token": "ok"},
@@ -35,7 +35,7 @@ class TestAnonFeedback:
 
     def test_anon_post_with_bad_captcha_returns_400(self, client, db, settings, mute_feedback_emails):
         settings.CLOUDFLARE_TURNSTILE_SECRET_KEY = "test-secret"  # noqa: S105
-        with patch("backend.api.views._verify_turnstile", return_value=False):
+        with patch("backend.api.views._helpers._verify_turnstile", return_value=False):
             res = client.post(
                 "/api/feedback/",
                 {"message": "Found a bug", "email": "anon@example.com", "turnstile_token": "bad"},
@@ -86,7 +86,7 @@ class TestAuthenticatedFeedback:
 
     def test_auth_post_skips_turnstile(self, auth_client, settings, mute_feedback_emails):
         settings.CLOUDFLARE_TURNSTILE_SECRET_KEY = "test-secret"  # noqa: S105
-        with patch("backend.api.views._verify_turnstile") as mock_verify:
+        with patch("backend.api.views._helpers._verify_turnstile") as mock_verify:
             res = auth_client.post(
                 "/api/feedback/",
                 {"message": "Hi"},

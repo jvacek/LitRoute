@@ -31,8 +31,8 @@ PARIS_PAYLOAD = {"type": "Point", "coordinates": [2.3522, 48.8566]}
 def mute_checkin_emails():
     """Patch out the two Celery email tasks fired by CheckIn.save()."""
     with (
-        patch("backend.models.send_email_to_subscribers_task.apply_async"),
-        patch("backend.models.send_thank_you_email_task.apply_async"),
+        patch("backend.services.send_email_to_subscribers_task.apply_async"),
+        patch("backend.services.send_thank_you_email_task.apply_async"),
     ):
         yield
 
@@ -48,10 +48,10 @@ def _pass_turnstile():
     """Default every API call to a successful captcha. The test settings carry
     a real-looking Turnstile secret, so without this the verify call would hit
     Cloudflare for real. Tests that exercise captcha behavior open their own
-    `with patch("backend.api.views._verify_turnstile", ...)`, which rebinds
+    `with patch("backend.api.views._helpers._verify_turnstile", ...)`, which rebinds
     the attribute for the duration of the test body and shadows this fixture.
     """
-    with patch("backend.api.views._verify_turnstile", return_value=True) as mock:
+    with patch("backend.api.views._helpers._verify_turnstile", return_value=True) as mock:
         yield mock
 
 

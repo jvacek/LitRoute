@@ -14,7 +14,7 @@ from flamerelay.users.tests.factories import UserFactory
 
 @pytest.fixture
 def mute_feedback_emails():
-    with patch("backend.models.send_feedback_emails_task.apply_async") as mock:
+    with patch("backend.services.send_feedback_emails_task.apply_async") as mock:
         yield mock
 
 
@@ -25,7 +25,7 @@ def admin_user(db):
 
 class TestSendFeedbackEmailsTask:
     def test_sends_to_admin_and_submitter_when_email_present(self, admin_user):
-        with patch("backend.models.send_feedback_emails_task.apply_async"):
+        with patch("backend.services.send_feedback_emails_task.apply_async"):
             feedback = Feedback.objects.create(user=None, email="user@example.com", message="Hello there")
         send_feedback_emails_task(feedback.pk)
 
@@ -47,7 +47,7 @@ class TestSendFeedbackEmailsTask:
         UserFactory.create(is_superuser=True, is_active=False, email="inactive@example.com")  # excluded
         UserFactory.create(is_superuser=True, email="")  # blank email excluded
 
-        with patch("backend.models.send_feedback_emails_task.apply_async"):
+        with patch("backend.services.send_feedback_emails_task.apply_async"):
             feedback = Feedback.objects.create(user=None, email="", message="Hi all admins")
         send_feedback_emails_task(feedback.pk)
 
@@ -56,7 +56,7 @@ class TestSendFeedbackEmailsTask:
         assert "Hi all admins" in mail.outbox[0].body
 
     def test_sends_only_to_admin_when_email_blank(self, admin_user):
-        with patch("backend.models.send_feedback_emails_task.apply_async"):
+        with patch("backend.services.send_feedback_emails_task.apply_async"):
             feedback = Feedback.objects.create(user=None, email="", message="Anonymous note")
         send_feedback_emails_task(feedback.pk)
 
@@ -66,7 +66,7 @@ class TestSendFeedbackEmailsTask:
         assert "Anonymous note" in mail.outbox[0].body
 
     def test_skips_admin_send_when_no_superusers_exist(self, db):
-        with patch("backend.models.send_feedback_emails_task.apply_async"):
+        with patch("backend.services.send_feedback_emails_task.apply_async"):
             feedback = Feedback.objects.create(user=None, email="user@example.com", message="Hi")
         send_feedback_emails_task(feedback.pk)
         assert len(mail.outbox) == 1

@@ -1,41 +1,8 @@
-from django import forms
 from django.contrib import admin
 from django.db.models import Count
-from django.utils.html import format_html, format_html_join
+from django.utils.html import format_html_join
 
-from config.constants import FEEDBACK_ADMIN_PREVIEW_LENGTH
-
-from .models import CheckIn, CheckInImage, Feedback, Game, Team, Unit
-
-
-@admin.register(Game)
-class GameAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "mode", "allowed_time", "gps_drift_floor", "shelf_life")
-    list_filter = ("mode",)
-    search_fields = ("name",)
-
-
-class TeamAdminForm(forms.ModelForm):
-    class Meta:
-        model = Team
-        fields = ["name", "color"]
-        widgets = {"color": forms.TextInput(attrs={"type": "color"})}
-
-
-@admin.register(Team)
-class TeamAdmin(admin.ModelAdmin):
-    form = TeamAdminForm
-    list_display = ("id", "name", "color_swatch")
-    search_fields = ("name",)
-
-    @admin.display(description="Colour")
-    def color_swatch(self, obj):
-        return format_html(
-            '<span style="display:inline-block;width:14px;height:14px;border-radius:3px;'
-            'background:{};border:1px solid rgba(0,0,0,0.15);vertical-align:middle;margin-right:6px;"></span>{}',
-            obj.color,
-            obj.color,
-        )
+from backend.models import CheckIn, Unit
 
 
 class CheckInInline(admin.TabularInline):
@@ -156,61 +123,3 @@ class UnitAdmin(admin.ModelAdmin):
         super().save_related(request, form, formsets, change)
         if not change and form.instance.created_by_id:
             form.instance.subscribers.add(form.instance.created_by_id)
-
-
-@admin.action(description="Send email to subscribers")
-def send_email_to_subscribers(modeladmin, request, queryset):
-    # queryset.update(status="p")
-    obj: CheckIn
-    for obj in queryset:
-        obj.send_email_to_subscribers()
-
-
-class CheckInImageInline(admin.TabularInline):
-    model = CheckInImage
-    extra = 0
-    readonly_fields = ["thumbnail"]
-
-    @admin.display(description="Preview")
-    def thumbnail(self, obj):
-        if obj.pk and obj.image:
-            return format_html(
-                '<img src="{}" style="height:80px;border-radius:4px;">',
-                obj.image.url,
-            )
-        return "—"
-
-
-@admin.register(CheckIn)
-class CheckInAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "unit",
-        "date_created",
-        "created_by",
-        "place",
-        # "image",
-        # "message",
-        # "location",
-    )
-    list_filter = ("unit", "date_created", "created_by")
-    list_select_related = ("unit", "created_by")
-    actions = [send_email_to_subscribers]
-    inlines = [CheckInImageInline]
-
-
-@admin.register(Feedback)
-class FeedbackAdmin(admin.ModelAdmin):
-    list_display = ("id", "date_created", "email", "user", "message_preview")
-    list_select_related = ("user",)
-    search_fields = ("email", "message")
-    readonly_fields = ("date_created", "user", "email", "message")
-
-    @admin.display(description="Message")
-    def message_preview(self, obj):
-        if len(obj.message) > FEEDBACK_ADMIN_PREVIEW_LENGTH:
-            return obj.message[:FEEDBACK_ADMIN_PREVIEW_LENGTH] + "…"
-        return obj.message
-
-    def has_add_permission(self, request):
-        return False

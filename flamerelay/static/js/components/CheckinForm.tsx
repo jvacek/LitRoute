@@ -5,7 +5,6 @@ import {
   geocoding,
   type GeocodingFeature,
 } from '@maptiler/client';
-import type { Feature, Polygon } from 'geojson';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactMap, { Layer, Marker, Source } from 'react-map-gl/maplibre';
@@ -13,6 +12,8 @@ import type { MapRef } from 'react-map-gl/maplibre';
 import { useAuth } from '../AuthContext';
 import { captureGpsLocation } from '../lib/captureGpsLocation';
 import { clampToCircle } from '../lib/haversine';
+import { convertToWebP } from '../lib/imageConversion';
+import { geodesicCirclePolygon, zoomForDriftRadius } from '../lib/maps';
 import { useConfig } from '../lib/useConfig';
 import { fieldErrorClass } from '../styles';
 
@@ -30,41 +31,6 @@ function countWordChars(s: string): number {
   return (s.match(/[\p{L}\p{N}]/gu) ?? []).length;
 }
 
-// Web Mercator zoom that makes a circle of `radiusM` at `lat` cover ~60% of the
-// confirm map's 240px height. Mercator m/px = 156543.03 * cos(lat) / 2^z.
-function zoomForDriftRadius(radiusM: number, lat: number): number {
-  if (radiusM <= 0) return 16;
-  const targetDiameterPx = 144;
-  const metersPerPixel = (2 * radiusM) / targetDiameterPx;
-  const z = Math.log2(
-    (156_543.03 * Math.cos((lat * Math.PI) / 180)) / metersPerPixel,
-  );
-  return Math.max(10, Math.min(18, z));
-}
-
-function geodesicCirclePolygon(
-  lat: number,
-  lng: number,
-  radiusM: number,
-  steps = 64,
-): Feature<Polygon> {
-  const R = 6_371_000;
-  const pts: [number, number][] = [];
-  for (let i = 0; i <= steps; i++) {
-    const angle = (i / steps) * 2 * Math.PI;
-    const dLat = (radiusM / R) * (180 / Math.PI) * Math.cos(angle);
-    const dLng =
-      ((radiusM / R) * (180 / Math.PI) * Math.sin(angle)) /
-      Math.cos((lat * Math.PI) / 180);
-    pts.push([lng + dLng, lat + dLat]);
-  }
-  return {
-    type: 'Feature',
-    geometry: { type: 'Polygon', coordinates: [pts] },
-    properties: {},
-  };
-}
-
 type ConfirmStep = {
   gpsLat: number;
   gpsLng: number;
@@ -72,30 +38,6 @@ type ConfirmStep = {
   pinLng: number;
   accuracyM: number;
 } | null;
-
-async function convertToWebP(file: File): Promise<File> {
-  const bitmap = await createImageBitmap(file);
-  const canvas = document.createElement('canvas');
-  canvas.width = bitmap.width;
-  canvas.height = bitmap.height;
-  const ctx = canvas.getContext('2d')!;
-  ctx.drawImage(bitmap, 0, 0);
-  bitmap.close();
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) {
-          reject(new Error('Conversion failed'));
-          return;
-        }
-        const name = file.name.replace(/\.[^.]+$/, '.webp');
-        resolve(new File([blob], name, { type: 'image/webp' }));
-      },
-      'image/webp',
-      0.85,
-    );
-  });
-}
 
 export interface ExistingImage {
   id: number;
