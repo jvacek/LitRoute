@@ -60,7 +60,7 @@ interface GameData {
   name: string;
   mode: string;
   allowed_time: number;
-  max_gps_drift: number;
+  gps_drift_floor: number;
   shelf_life: number;
   start_time: string;
   end_time: string;

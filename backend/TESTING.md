@@ -24,6 +24,7 @@ flamerelay/users/tests/
 | `client`                                                | Unauthenticated `APIClient`.                                                                                                                                                                                         |
 | `user`                                                  | A new `User` (canonical `UserFactory` from `flamerelay/users/tests/factories.py`).                                                                                                                                   |
 | `unit`                                                  | A new `Unit` from `UnitFactory`.                                                                                                                                                                                     |
+| `gps_unit`                                              | Variant of `unit` attached to a DISTANCE-mode `Game` so the check-in API's GPS-drift validator activates.                                                                                                            |
 | `auth_client`                                           | `client` already authenticated as `user` via `force_authenticate`.                                                                                                                                                   |
 | `make_checkin`                                          | Factory function: `make_checkin(unit, user=None, *, location=LONDON, hours_ago=0, anonymous=False, **kwargs)`. Patches the two Celery email tasks; backdates `date_created` via `update()` to bypass `auto_now_add`. |
 | `mute_emails`                                           | Same Celery patch as a no-op fixture for tests that POST to the API (where the model save fires the tasks).                                                                                                          |
@@ -62,7 +63,6 @@ If a test would still pass after Django is replaced with FastAPI, it's not testi
 ## Patterns to copy
 
 - **Anti-enumeration**: `backend/tests/api/test_leaderboard.py::TestLeaderboardAntiEnumeration` — assert that without/with `?from=` only the matching row exposes its identifier.
-- **Token replay**: `backend/tests/test_location_token.py::TestVerifyLocationClaim::test_replay_raises` — first verify succeeds, second raises.
 - **Grace-period boundary**: pass `hours_ago=GRACE_PERIOD_HOURS + 1` to `make_checkin` rather than monkeypatching `date_created` inline.
 - **Signal-driven cache invalidation** (`test_caching.py`): use `django.test.TestCase` plus `captureOnCommitCallbacks(execute=True)` because invalidations are deferred via `transaction.on_commit`.
 

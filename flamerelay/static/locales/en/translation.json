@@ -105,10 +105,7 @@
       "clickToMove": "Click the map to move the pin.",
       "dismiss": "Dismiss",
       "errors": {
-        "gpsAccuracyTooLow": "GPS signal too weak. Try stepping near a window or outdoors, then tap 'Use my location' again.",
-        "gpsRecapture": "Your location capture expired or moved. Please tap 'Use my location' again to refresh it.",
         "gpsRequired": "Location access is required for this unit. Please allow location access in your browser and try again.",
-        "gpsVerificationFailed": "Location verification failed. Please try again.",
         "locationRequired": "Please click the map to set your location.",
         "maxPhotos": "Maximum {{max}} photos per check-in.",
         "nameRequired": "Please add a name with at least 3 letters so your check-in counts on the leaderboard.",
@@ -128,6 +125,12 @@
         "title": "We can't see your location",
         "tryAgain": "Try again"
       },
+      "gpsLowPrecisionModal": {
+        "body": "We're using the best location your browser gave us — it may be off by more than a kilometre. For a better fix, enable Precise Location for this browser in your device's privacy settings, then tap Try again.",
+        "title": "Approximate location",
+        "tryAgain": "Try again",
+        "useAnyway": "Use this location"
+      },
       "gpsNotice": "This unit requires your real-time location. It will be captured when you tap Check in.",
       "gpsNudgeHint": "Nudge your pin if you'd rather not share your exact location.",
       "locationLabel": "Location",
@@ -145,6 +148,7 @@
         "body": "Your device's GPS coordinates were used. Move the pin to a nearby spot if you'd rather not share your precise position.",
         "title": "Your exact location will be shared"
       },
+      "scrollUpForErrors": "Some fields above need your attention. Scroll up to fix them.",
       "searchPlaceholder": "Search for a place…",
       "submit": {
         "create": "Check in",

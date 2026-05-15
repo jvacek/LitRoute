@@ -10,7 +10,7 @@ interface Props {
     name: string;
     mode: string;
     allowed_time: number;
-    max_gps_drift: number;
+    gps_drift_floor: number;
     shelf_life: number;
     start_time: string;
     end_time: string;
@@ -31,7 +31,7 @@ export default function GameIntroModal({
 
   const body = t(config.rulesKey, {
     duration: humanizeHours(t, game.allowed_time),
-    maxDrift: game.max_gps_drift,
+    maxDrift: game.gps_drift_floor,
     shelfLife: game.shelf_life,
   });
 

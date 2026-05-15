@@ -20,10 +20,7 @@
       "clickToMove": "Klik op de kaart om de speld te verplaatsen.",
       "dismiss": "Sluiten",
       "errors": {
-        "gpsAccuracyTooLow": "Gps-signaal te zwak. Probeer naar een raam of buiten te gaan, tik dan opnieuw op 'Gebruik mijn locatie'.",
-        "gpsRecapture": "Je locatie-opname is verlopen of verschoven. Tik opnieuw op 'Gebruik mijn locatie' om te vernieuwen.",
         "gpsRequired": "Locatietoegang is vereist voor deze eenheid. Sta locatietoegang toe in je browser en probeer opnieuw.",
-        "gpsVerificationFailed": "Locatieverificatie mislukt. Probeer het opnieuw.",
         "locationRequired": "Klik op de kaart om je locatie in te stellen.",
         "maxPhotos": "Maximaal {{max}} foto's per check-in.",
         "nameRequired": "Vul een naam van minstens 3 letters in zodat je check-in meetelt voor de ranglijst.",
@@ -60,6 +57,7 @@
         "body": "De GPS-coördinaten van je apparaat zijn gebruikt. Verplaats de speld naar een nabijgelegen plek als je je exacte positie liever niet deelt.",
         "title": "Je exacte locatie wordt gedeeld"
       },
+      "scrollUpForErrors": "Sommige velden hierboven hebben aandacht nodig. Scroll omhoog om ze op te lossen.",
       "searchPlaceholder": "Zoek een plaats…",
       "submit": {
         "create": "Inchecken",

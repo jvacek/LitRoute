@@ -6,8 +6,8 @@ The router is in `config/api_router.py`. All routes are registered as manual `pa
 
 ## Testing
 
-- **Every API endpoint must have at least one test in `backend/tests/test_api_endpoints.py`**. Cover: happy path, auth requirement, and key error cases.
-- Unit/crypto logic lives in `backend/tests/test_location_token.py` (or a similar per-module file) — keep it separate from endpoint tests.
+- **Every API endpoint must have at least one test in `backend/tests/api/`**. Cover: happy path, auth requirement, and key error cases. Per-endpoint files (e.g. `test_checkins.py`, `test_location_claim.py`) keep concerns separated.
+- Logic-layer tests (model methods, validators, services, signals) live directly in `backend/tests/` — keep them out of the `api/` subtree so the request-vs-logic split stays clean.
 
 ## Notable endpoints
 

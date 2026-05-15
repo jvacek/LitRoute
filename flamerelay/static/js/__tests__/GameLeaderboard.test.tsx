@@ -29,7 +29,7 @@ function makeGame(mode: string, sortBy: 'distance_km' | 'checkin_count') {
     name: 'Test Game',
     mode,
     allowed_time: 24,
-    max_gps_drift: 100,
+    gps_drift_floor: 100,
     start_time: new Date().toISOString(),
     end_time: new Date(Date.now() + 86400000).toISOString(),
     sort_by: sortBy,

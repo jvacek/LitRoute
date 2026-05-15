@@ -40,7 +40,7 @@ interface LeaderboardData {
     name: string;
     mode: string;
     allowed_time: number;
-    max_gps_drift: number;
+    gps_drift_floor: number;
     start_time: string;
     end_time: string;
     sort_by: 'distance_km' | 'checkin_count';
@@ -130,7 +130,7 @@ export default function GameLeaderboard() {
   const rules = config
     ? t(config.rulesKey, {
         duration: humanizeHours(t, data.game.allowed_time),
-        maxDrift: formatNumber(data.game.max_gps_drift),
+        maxDrift: formatNumber(data.game.gps_drift_floor),
       })
     : null;
 

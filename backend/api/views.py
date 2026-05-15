@@ -17,6 +17,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.views import View
 from drf_spectacular.utils import OpenApiParameter, extend_schema, inline_serializer
+from geopy.distance import geodesic
 from rest_framework import serializers, status
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.mixins import (
@@ -36,7 +37,9 @@ from config.constants import (
     CHECKIN_DELETE_GRACE_PERIOD_HOURS,
     CHECKIN_EDIT_GRACE_PERIOD_HOURS,
     CHECKIN_MAX_IMAGES,
+    CHECKIN_MAX_IMPLIED_SPEED_KMH,
     FEEDBACK_MESSAGE_MAX_LENGTH,
+    GAME_CHECKIN_MIN_GAP_SECONDS,
     GUEST_EMAIL_VERIFICATION_EXPIRY_SECONDS,
     MIN_GAME_REQUIRED_WORD_CHARS,
 )
@@ -315,6 +318,73 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         if not _verify_turnstile(turnstile_token, remote_ip):
             raise serializers.ValidationError({"captcha": ["Captcha verification failed. Please try again."]})
 
+    def _verify_gps_drift(self, unit: Unit, validated_data) -> None:
+        """Game-mode units must submit a device-reported GPS coordinate plus
+        an accuracy radius. We accept the pin if it sits inside either the
+        game's configured drift envelope OR the user's own reported accuracy
+        circle — whichever is larger. The accuracy fallback means honest users
+        with coarse Wi-Fi/cell fixes can still drop the pin where they
+        actually are, while clean fixes stay tightly bounded."""
+        if not unit.is_gps_enforced:
+            return
+        gps_location = validated_data.get("gps_location")
+        gps_accuracy_m = validated_data.get("gps_accuracy_m")
+        if gps_location is None or gps_accuracy_m is None:
+            raise ValidationError({"gps_location": ["GPS coordinates and accuracy are required for this check-in."]})
+        pin = validated_data["location"]
+        # PointField uses (x=lng, y=lat); geopy expects (lat, lng).
+        pin_m = geodesic((pin.y, pin.x), (gps_location.y, gps_location.x)).meters
+        allowance_m = max(unit.game.gps_drift_floor, gps_accuracy_m)
+        if pin_m > allowance_m:
+            raise ValidationError(
+                {
+                    "location": [
+                        f"The pin is {int(pin_m)}m from your reported GPS position, beyond the {int(allowance_m)}m "
+                        "tolerance. Move the pin closer to where you actually are."
+                    ]
+                }
+            )
+
+    def _verify_checkin_gap(self, unit: Unit) -> None:
+        """Game-mode units require a minimum gap between consecutive check-ins.
+        Anti-spam, and also keeps `_verify_implied_speed` well-conditioned —
+        without this floor, a 200m pin correction five seconds later would
+        imply ~150 km/h and trip the speed check."""
+        if not unit.is_gps_enforced:
+            return
+        previous = unit.checkin_set.order_by("-date_created").first()
+        if previous is None:
+            return
+        elapsed_s = (timezone.now() - previous.date_created).total_seconds()
+        if elapsed_s < GAME_CHECKIN_MIN_GAP_SECONDS:
+            raise ValidationError(
+                {
+                    "location": [
+                        f"Please wait at least {GAME_CHECKIN_MIN_GAP_SECONDS} seconds "
+                        "between check-ins on this lighter."
+                    ]
+                }
+            )
+
+    def _verify_implied_speed(self, unit: Unit, validated_data) -> None:
+        """Reject game-mode check-ins that imply travel faster than is
+        physically plausible since the previous check-in on this unit. Catches
+        blatant location fakery (e.g. claimed in Berlin then Beijing minutes
+        later). Scoped to game-mode because non-game units have no leaderboard
+        to cheat on — the data-integrity payoff doesn't justify constraining
+        a casual flow. The minimum-gap check above guarantees `elapsed > 0`."""
+        if not unit.is_gps_enforced:
+            return
+        previous = unit.checkin_set.order_by("-date_created").first()
+        if previous is None:
+            return
+        new_pin = validated_data["location"]
+        prev_pin = previous.location
+        elapsed_hours = (timezone.now() - previous.date_created).total_seconds() / 3600.0
+        distance_km = geodesic((new_pin.y, new_pin.x), (prev_pin.y, prev_pin.x)).km
+        if distance_km / elapsed_hours > CHECKIN_MAX_IMPLIED_SPEED_KMH:
+            raise ValidationError({"location": ["That location seems a little... off?"]})
+
     def _verify_image_count(self, image_files) -> None:
         if len(image_files) > CHECKIN_MAX_IMAGES:
             raise serializers.ValidationError({"images": [f"You can upload at most {CHECKIN_MAX_IMAGES} images."]})
@@ -346,6 +416,9 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
         self._verify_can_check_in(unit)
         self._check_anon_captcha()
         self._verify_image_count(self.request.FILES.getlist("images"))
+        self._verify_gps_drift(unit, serializer.validated_data)
+        self._verify_checkin_gap(unit)
+        self._verify_implied_speed(unit, serializer.validated_data)
 
         # Cache invalidation runs from the post_save signal in models.py.
         checkin = self._save_checkin_record(unit, serializer)

@@ -73,6 +73,16 @@ def unit(db):
 
 
 @pytest.fixture
+def gps_unit(db):
+    """Variant of `unit` attached to a GPS-enforced game (DISTANCE mode) so
+    the check-in API's drift validator activates."""
+    from backend.factories import GameFactory  # noqa: PLC0415
+    from backend.models import Game  # noqa: PLC0415
+
+    return UnitFactory.create(game=GameFactory.create(mode=Game.Modes.DISTANCE))
+
+
+@pytest.fixture
 def auth_client(client, user):
     client.force_authenticate(user=user)
     return client

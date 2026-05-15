@@ -20,6 +20,10 @@ class CheckInSerializer(serializers.ModelSerializer):
     created_by_name = serializers.SerializerMethodField()
     images = CheckInImageSerializer(many=True, read_only=True)
     location = GeometryField()
+    # Write-only: the device-reported GPS coordinates and accuracy are used
+    # for server-side drift/speed validation but never exposed in responses.
+    gps_location = GeometryField(required=False, allow_null=True, write_only=True)
+    gps_accuracy_m = serializers.IntegerField(required=False, allow_null=True, min_value=0, write_only=True)
 
     class Meta:
         model = CheckIn
@@ -32,6 +36,8 @@ class CheckInSerializer(serializers.ModelSerializer):
             "message",
             "place",
             "location",
+            "gps_location",
+            "gps_accuracy_m",
             "within_edit_grace_period",
             "anonymous_name",
         ]
@@ -44,8 +50,20 @@ class CheckInSerializer(serializers.ModelSerializer):
             "images",
         ]
 
+    def create(self, validated_data):
+        # gps_location and gps_accuracy_m are validation-only — they live on
+        # the payload to support the server-side drift/speed checks but are
+        # never persisted (storing the raw device GPS would defeat the whole
+        # point of the pin-nudge UX, which is to let users avoid sharing their
+        # exact position).
+        validated_data.pop("gps_location", None)
+        validated_data.pop("gps_accuracy_m", None)
+        return super().create(validated_data)
+
     def update(self, instance, validated_data):
         validated_data.pop("location", None)
+        validated_data.pop("gps_location", None)
+        validated_data.pop("gps_accuracy_m", None)
         return super().update(instance, validated_data)
 
     def get_created_by_username(self, obj: CheckIn) -> str | None:

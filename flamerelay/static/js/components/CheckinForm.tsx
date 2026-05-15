@@ -11,16 +11,16 @@ import { useTranslation } from 'react-i18next';
 import ReactMap, { Layer, Marker, Source } from 'react-map-gl/maplibre';
 import type { MapRef } from 'react-map-gl/maplibre';
 import { useAuth } from '../AuthContext';
+import { captureGpsLocation } from '../lib/captureGpsLocation';
 import { clampToCircle } from '../lib/haversine';
 import { useConfig } from '../lib/useConfig';
 import { fieldErrorClass } from '../styles';
 
 import LocationDeniedModal from './LocationDeniedModal';
+import LowPrecisionLocationModal from './LowPrecisionLocationModal';
 import PhotoUpload from './PhotoUpload';
 
 const MAX_IMAGES = 5;
-// Accuracy threshold: readings coarser than this are retried (network positioning vs real GPS).
-const GPS_MAX_ACCURACY_M = 100;
 // Game-mode required fields must contain at least this many word characters
 // (Unicode letters or numbers) so the leaderboard isn't populated with junk
 // like "..." or "ab".
@@ -70,6 +70,7 @@ type ConfirmStep = {
   gpsLng: number;
   pinLat: number;
   pinLng: number;
+  accuracyM: number;
 } | null;
 
 async function convertToWebP(file: File): Promise<File> {
@@ -114,7 +115,7 @@ interface CheckinFormProps {
   unitUrl: string;
   maptilerKey: string;
   isGpsEnforced?: boolean;
-  gpsDriftAllowanceM: number;
+  gpsDriftFloorM: number;
   onSubmit: (data: FormData) => Promise<Record<string, string[]> | null>;
 }
 
@@ -124,7 +125,7 @@ export default function CheckinForm({
   unitUrl,
   maptilerKey,
   isGpsEnforced = false,
-  gpsDriftAllowanceM,
+  gpsDriftFloorM,
   onSubmit,
 }: CheckinFormProps) {
   const { t } = useTranslation();
@@ -149,6 +150,7 @@ export default function CheckinForm({
   const [searchOpen, setSearchOpen] = useState(false);
   const [confirmStep, setConfirmStep] = useState<ConfirmStep>(null);
   const [showLocationDeniedModal, setShowLocationDeniedModal] = useState(false);
+  const [showLowPrecisionModal, setShowLowPrecisionModal] = useState(false);
   // Animated pin position used only during the snap-to-edge animation.
   // null = no animation running; Marker renders from confirmStep directly.
   const [snapAnim, setSnapAnim] = useState<{ lat: number; lng: number } | null>(
@@ -247,26 +249,32 @@ export default function CheckinForm({
   }
 
   function handleGeolocate() {
-    if (!navigator.geolocation) return;
     setGeolocating(true);
     setShowPrivacyHint(true);
-    navigator.geolocation.getCurrentPosition(
-      ({ coords: { latitude: lat, longitude: lng } }) => {
-        setLocation(`${lat},${lng}`);
-        setGeolocating(false);
-        mapRef.current?.flyTo({ center: [lng, lat], zoom: 15, duration: 1000 });
-      },
-      () => {
+    captureGpsLocation().then((result) => {
+      setGeolocating(false);
+      if (result.kind === 'no-geolocation' || result.kind === 'denied') {
+        setShowLocationDeniedModal(true);
+        setShowPrivacyHint(false);
+        return;
+      }
+      if (result.kind === 'no-fix') {
         setErrors((e) => ({
           ...e,
-          location: [
-            'Could not get your location. Please allow location access and try again.',
-          ],
+          location: [t('checkin.form.errors.gpsRequired')],
         }));
-        setGeolocating(false);
         setShowPrivacyHint(false);
-      },
-    );
+        return;
+      }
+      const { latitude, longitude } = result.position;
+      setLocation(`${latitude},${longitude}`);
+      mapRef.current?.flyTo({
+        center: [longitude, latitude],
+        zoom: 15,
+        duration: 1000,
+      });
+      if (result.isLowPrecision) setShowLowPrecisionModal(true);
+    });
   }
 
   useEffect(() => {
@@ -348,59 +356,28 @@ export default function CheckinForm({
   }
 
   function handleGpsCapture() {
-    if (!navigator.geolocation) {
-      setShowLocationDeniedModal(true);
-      return;
-    }
     setSubmitting(true);
     setErrors({});
-
-    // maximumAge: 60_000 on the first attempt sidesteps the Chrome-on-macOS
-    // CoreLocation hang on back-to-back calls. If the cached position has
-    // accuracy > GPS_MAX_ACCURACY_M we retry with maximumAge: 0 to force a
-    // fresh hardware fix, keeping submitting=true through the retry.
-    function attempt(opts: PositionOptions) {
-      navigator.geolocation.getCurrentPosition(
-        ({ coords: { latitude: lat, longitude: lng, accuracy } }) => {
-          if (accuracy > GPS_MAX_ACCURACY_M) {
-            if (opts.maximumAge !== 0) {
-              attempt({ ...opts, maximumAge: 0 });
-              return;
-            }
-            setErrors({
-              location: [t('checkin.form.errors.gpsAccuracyTooLow')],
-            });
-            setSubmitting(false);
-            return;
-          }
-          setConfirmStep({
-            gpsLat: lat,
-            gpsLng: lng,
-            pinLat: lat,
-            pinLng: lng,
-          });
-          setSubmitting(false);
-        },
-        (err) => {
-          // PERMISSION_DENIED + POSITION_UNAVAILABLE both mean the user has to
-          // leave the tab and change a system-wide setting; show the help modal.
-          // TIMEOUT is transient (slow GPS lock, weak signal) — keep it inline
-          // so the user can retry from the placeholder without dismissing a modal.
-          if (
-            err.code === err.PERMISSION_DENIED ||
-            err.code === err.POSITION_UNAVAILABLE
-          ) {
-            setShowLocationDeniedModal(true);
-          } else {
-            setErrors({ location: [t('checkin.form.errors.gpsRequired')] });
-          }
-          setSubmitting(false);
-        },
-        opts,
-      );
-    }
-
-    attempt({ enableHighAccuracy: true, maximumAge: 60_000, timeout: 15_000 });
+    captureGpsLocation().then((result) => {
+      setSubmitting(false);
+      if (result.kind === 'no-geolocation' || result.kind === 'denied') {
+        setShowLocationDeniedModal(true);
+        return;
+      }
+      if (result.kind === 'no-fix') {
+        setErrors({ location: [t('checkin.form.errors.gpsRequired')] });
+        return;
+      }
+      const { latitude, longitude, accuracyM } = result.position;
+      setConfirmStep({
+        gpsLat: latitude,
+        gpsLng: longitude,
+        pinLat: latitude,
+        pinLng: longitude,
+        accuracyM,
+      });
+      if (result.isLowPrecision) setShowLowPrecisionModal(true);
+    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -408,13 +385,14 @@ export default function CheckinForm({
 
     if (isGpsEnforced) {
       // The submit button is disabled until confirmStep is set, so the only
-      // way this branch fires without a token is Enter-in-text-field. Bail.
+      // way this branch fires without a captured fix is Enter-in-text-field.
+      // Bail.
       if (!confirmStep) return;
 
       // Game-mode requires Place (everyone) and Name (anonymous only) so the
       // check-in can be attributed on the leaderboard. Reject fewer than
       // MIN_REQUIRED_WORD_CHARS letters/digits so users can't sneak past with
-      // "..." or "ab". Validate before burning the single-use location_token.
+      // "..." or "ab".
       const requiredFieldErrors: Record<string, string[]> = {};
       if (countWordChars(place) < MIN_REQUIRED_WORD_CHARS) {
         requiredFieldErrors.place = [t('checkin.form.errors.placeRequired')];
@@ -442,6 +420,14 @@ export default function CheckinForm({
           coordinates: [confirmStep.pinLng, confirmStep.pinLat],
         }),
       );
+      data.append(
+        'gps_location',
+        JSON.stringify({
+          type: 'Point',
+          coordinates: [confirmStep.gpsLng, confirmStep.gpsLat],
+        }),
+      );
+      data.append('gps_accuracy_m', String(Math.round(confirmStep.accuracyM)));
       data.append('place', place);
       data.append('message', message);
       if (showNameField && anonymousName.trim()) {
@@ -524,6 +510,14 @@ export default function CheckinForm({
     };
   }, [location]);
 
+  // Mirrors the server-side rule `max(game.gps_drift_floor, gps_accuracy_m)`
+  // so a user with a coarse fix can nudge their pin anywhere inside their
+  // accuracy circle (and the drawn circle reflects what the server will
+  // actually accept). Falls back to the floor while there's no fix yet.
+  const effectiveDriftM = confirmStep
+    ? Math.max(gpsDriftFloorM, confirmStep.accuracyM)
+    : gpsDriftFloorM;
+
   const confirmCircleGeoJSON = useMemo(() => {
     if (!confirmStep)
       return { type: 'FeatureCollection' as const, features: [] };
@@ -533,11 +527,11 @@ export default function CheckinForm({
         geodesicCirclePolygon(
           confirmStep.gpsLat,
           confirmStep.gpsLng,
-          gpsDriftAllowanceM,
+          effectiveDriftM,
         ),
       ],
     };
-  }, [confirmStep, gpsDriftAllowanceM]);
+  }, [confirmStep, effectiveDriftM]);
 
   const newImages = imageKeys.map((key, i) => ({
     key,
@@ -739,10 +733,7 @@ export default function CheckinForm({
                 initialViewState={{
                   longitude: confirmStep.gpsLng,
                   latitude: confirmStep.gpsLat,
-                  zoom: zoomForDriftRadius(
-                    gpsDriftAllowanceM,
-                    confirmStep.gpsLat,
-                  ),
+                  zoom: zoomForDriftRadius(effectiveDriftM, confirmStep.gpsLat),
                 }}
                 style={{ height: '240px', width: '100%' }}
                 onClick={(e) => {
@@ -750,7 +741,7 @@ export default function CheckinForm({
                   const [clampedLat, clampedLng] = clampToCircle(
                     confirmStep.gpsLat,
                     confirmStep.gpsLng,
-                    gpsDriftAllowanceM,
+                    effectiveDriftM,
                     lat,
                     lng,
                   );
@@ -807,7 +798,7 @@ export default function CheckinForm({
                     const [clampedLat, clampedLng] = clampToCircle(
                       confirmStep.gpsLat,
                       confirmStep.gpsLng,
-                      gpsDriftAllowanceM,
+                      effectiveDriftM,
                       lat,
                       lng,
                     );
@@ -1000,6 +991,19 @@ export default function CheckinForm({
         />
       )}
 
+      {/* Mobile users may have field errors scrolled out of view above the
+          submit button. Nudge them to scroll up when any field-level error
+          (other than the ones already rendered above this point) is present.
+          Kept directly above the button so it's the last thing they see
+          before tapping. */}
+      {(errors.location ||
+        errors.place ||
+        errors.message ||
+        errors.anonymous_name ||
+        errors.images) && (
+        <p className={fieldErrorClass}>{t('checkin.form.scrollUpForErrors')}</p>
+      )}
+
       <div className="flex gap-3">
         <button
           type="submit"
@@ -1028,6 +1032,17 @@ export default function CheckinForm({
           onRetry={() => {
             setShowLocationDeniedModal(false);
             handleGpsCapture();
+          }}
+        />
+      )}
+
+      {showLowPrecisionModal && (
+        <LowPrecisionLocationModal
+          onDismiss={() => setShowLowPrecisionModal(false)}
+          onRetry={() => {
+            setShowLowPrecisionModal(false);
+            if (isGpsEnforced) handleGpsCapture();
+            else handleGeolocate();
           }}
         />
       )}

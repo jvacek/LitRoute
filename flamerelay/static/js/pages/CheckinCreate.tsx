@@ -32,9 +32,7 @@ export default function CheckinCreate() {
   const [guestCheckinId, setGuestCheckinId] = useState<number | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [isGpsEnforced, setIsGpsEnforced] = useState(false);
-  const [gpsDriftAllowanceM, setGpsDriftAllowanceM] = useState<number | null>(
-    null,
-  );
+  const [gpsDriftFloorM, setGpsDriftFloorM] = useState<number | null>(null);
   const [gameTimeWarning, setGameTimeWarning] = useState<string | null>(null);
   const [team, setTeam] = useState<TeamRef | null>(null);
   const [subscriberCount, setSubscriberCount] = useState(0);
@@ -53,7 +51,7 @@ export default function CheckinCreate() {
           game: {
             name: string;
             mode: string;
-            max_gps_drift: number;
+            gps_drift_floor: number;
             allowed_time: number;
             end_time: string;
           } | null;
@@ -61,7 +59,7 @@ export default function CheckinCreate() {
         setIsGpsEnforced(data.is_gps_enforced ?? false);
         setTeam(data.team ?? null);
         setSubscriberCount(data.subscriber_count ?? 0);
-        setGpsDriftAllowanceM(data.game?.max_gps_drift ?? 0);
+        setGpsDriftFloorM(data.game?.gps_drift_floor ?? 0);
         if (data.game?.mode === 'distance' && data.game.end_time) {
           const remainingMinutes =
             (new Date(data.game.end_time).getTime() - Date.now()) / 60_000;
@@ -123,7 +121,7 @@ export default function CheckinCreate() {
     );
   }
 
-  if (gpsDriftAllowanceM === null) {
+  if (gpsDriftFloorM === null) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-16 text-center text-smoke">
         {t('common.loading')}…
@@ -150,7 +148,7 @@ export default function CheckinCreate() {
         unitUrl={unitUrl}
         maptilerKey={maptilerKey}
         isGpsEnforced={isGpsEnforced}
-        gpsDriftAllowanceM={gpsDriftAllowanceM}
+        gpsDriftFloorM={gpsDriftFloorM}
         onSubmit={handleSubmit}
       />
     </main>

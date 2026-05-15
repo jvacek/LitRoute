@@ -116,7 +116,7 @@ export default function CheckinEdit() {
         initialData={initialData}
         unitUrl={unitUrl}
         maptilerKey={maptilerKey}
-        gpsDriftAllowanceM={0}
+        gpsDriftFloorM={0}
         onSubmit={handleSubmit}
       />
     </main>

@@ -20,10 +20,7 @@
       "clickToMove": "Cliquez sur la carte pour déplacer le repère.",
       "dismiss": "Ignorer",
       "errors": {
-        "gpsAccuracyTooLow": "Signal GPS trop faible. Essayez de vous approcher d'une fenêtre ou de sortir, puis touchez à nouveau « Utiliser ma position ».",
-        "gpsRecapture": "Votre capture de position a expiré ou s'est déplacée. Touchez à nouveau « Utiliser ma position » pour la rafraîchir.",
         "gpsRequired": "L'accès à la localisation est requis pour cette unité. Autorisez l'accès à la localisation dans votre navigateur et réessayez.",
-        "gpsVerificationFailed": "La vérification de localisation a échoué. Veuillez réessayer.",
         "locationRequired": "Cliquez sur la carte pour définir votre position.",
         "maxPhotos": "Maximum {{max}} photos par enregistrement.",
         "nameRequired": "Ajoutez un nom d'au moins 3 lettres pour que votre enregistrement compte au classement.",
@@ -60,6 +57,7 @@
         "body": "Les coordonnées GPS de votre appareil ont été utilisées. Déplacez le repère vers un endroit proche si vous préférez ne pas partager votre position exacte.",
         "title": "Votre position exacte sera partagée"
       },
+      "scrollUpForErrors": "Certains champs ci-dessus nécessitent votre attention. Faites défiler vers le haut pour les corriger.",
       "searchPlaceholder": "Rechercher un lieu…",
       "submit": {
         "create": "S'enregistrer",
