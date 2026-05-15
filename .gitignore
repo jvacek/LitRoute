@@ -279,6 +279,8 @@ flamerelay/static/webpack_bundles/
 webpack-stats.json
 .env
 .envs/*
-.envs/.local/
+!.envs/.local
+.envs/.local/*
+!.envs/.local/*.example
 headless_example_project/
 scripts/.pull-prod-dump.sql.gz
