@@ -25,6 +25,7 @@ from config.constants import (
     CHECKIN_MAX_IMAGES,
     CHECKIN_MAX_IMPLIED_SPEED_KMH,
     GAME_CHECKIN_MIN_GAP_SECONDS,
+    MIN_GAME_REQUIRED_NAME_CHARS,
     MIN_GAME_REQUIRED_WORD_CHARS,
 )
 
@@ -52,10 +53,11 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
             ]
         if not self.request.user.is_authenticated:
             anon_name = validated_data.get("anonymous_name") or ""
-            if len(_LETTER_OR_DIGIT_RE.findall(anon_name)) < MIN_GAME_REQUIRED_WORD_CHARS:
+            # Single letter/digit is enough — initials and CJK single-glyph
+            # names are legitimate.
+            if len(_LETTER_OR_DIGIT_RE.findall(anon_name)) < MIN_GAME_REQUIRED_NAME_CHARS:
                 errors["anonymous_name"] = [
-                    f"Name is required ({MIN_GAME_REQUIRED_WORD_CHARS}+ letters or digits) "
-                    "so this check-in can be attributed on the leaderboard.",
+                    "Name is required so this check-in can be attributed on the leaderboard.",
                 ]
         if errors:
             raise ValidationError(errors)

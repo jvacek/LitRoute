@@ -339,10 +339,9 @@ export default function CheckinForm({
       if (countWordChars(place) < MIN_REQUIRED_WORD_CHARS) {
         requiredFieldErrors.place = [t('checkin.form.errors.placeRequired')];
       }
-      if (
-        showNameField &&
-        countWordChars(anonymousName) < MIN_REQUIRED_WORD_CHARS
-      ) {
+      // Name only needs one letter/digit — initials and CJK single-glyph
+      // names are legitimate.
+      if (showNameField && countWordChars(anonymousName) < 1) {
         requiredFieldErrors.anonymous_name = [
           t('checkin.form.errors.nameRequired'),
         ];

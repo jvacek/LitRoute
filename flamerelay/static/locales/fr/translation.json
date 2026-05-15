@@ -23,7 +23,7 @@
         "gpsRequired": "L'accès à la localisation est requis pour cette unité. Autorisez l'accès à la localisation dans votre navigateur et réessayez.",
         "locationRequired": "Cliquez sur la carte pour définir votre position.",
         "maxPhotos": "Maximum {{max}} photos par enregistrement.",
-        "nameRequired": "Ajoutez un nom d'au moins 3 lettres pour que votre enregistrement compte au classement.",
+        "nameRequired": "Ajoutez un nom pour que votre enregistrement compte au classement.",
         "placeRequired": "Ajoutez un lieu d'au moins 3 lettres pour que votre enregistrement compte au classement.",
         "svgNotSupported": "Seules les images matricielles (JPEG, PNG, WebP, etc.) sont prises en charge. Les fichiers SVG ne peuvent pas être téléversés."
       },

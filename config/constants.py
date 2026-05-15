@@ -47,10 +47,14 @@ CHECKIN_MAX_IMPLIED_SPEED_KMH = 1000
 # and trip the speed check).
 GAME_CHECKIN_MIN_GAP_SECONDS = 60
 
-# Game-mode check-ins must populate a real place and (for anon users) a real
-# signing name — at least this many Unicode letters or digits — so leaderboard
-# rows aren't junk like "..." or "ab". Mirrored on the frontend.
+# Game-mode check-ins must populate a real place — at least this many Unicode
+# letters or digits — so leaderboard rows aren't junk like "..." or "ab".
+# Mirrored on the frontend.
 MIN_GAME_REQUIRED_WORD_CHARS = 3
+
+# Anon signing name only needs one letter/digit — initials, single-character
+# nicknames, and CJK single-glyph names are all legitimate.
+MIN_GAME_REQUIRED_NAME_CHARS = 1
 
 GAME_LEADERBOARD_CACHE_TTL = 5 * 60  # 5 minutes
 GAME_LEADERBOARD_CACHE_KEY_PREFIX = "game:leaderboard"
