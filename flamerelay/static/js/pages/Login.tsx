@@ -88,7 +88,21 @@ export default function Login() {
   );
 
   useEffect(() => {
-    const urlCode = new URLSearchParams(window.location.search).get('code');
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('error')) {
+      // Allauth redirects here with ?error=&error_process=login when the OAuth
+      // state cookie is lost (SameSite drops, slow flows, mobile webview handoff).
+      setErrors([{ message: t('auth.errors.socialLoginFailed') }]);
+      params.delete('error');
+      params.delete('error_process');
+      const qs = params.toString();
+      window.history.replaceState(
+        {},
+        '',
+        window.location.pathname + (qs ? `?${qs}` : ''),
+      );
+    }
+    const urlCode = params.get('code');
     if (urlCode) {
       setLoading(true);
       confirmLoginCode(urlCode)

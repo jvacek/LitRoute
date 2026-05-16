@@ -407,6 +407,10 @@ MFA_ADAPTER = "flamerelay.users.adapters.MFAAdapter"
 HEADLESS_ONLY = True
 HEADLESS_FRONTEND_URLS = {
     "account_signup": "/accounts/signup/",
+    # Fallback when the OAuth state cookie is lost (SameSite drops, expired
+    # state, cross-context redirects on Android Chrome). Allauth redirects
+    # here with ?error=<code>&error_process=login; Login.tsx surfaces it.
+    "socialaccount_login_error": "/accounts/login/",
 }
 
 # django-rest-framework

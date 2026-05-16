@@ -72,6 +72,7 @@
       "passkeyFailed": "Passkey sign-in was cancelled or failed. Try signing in with your email instead.",
       "passkeyMfaFailed": "Passkey authentication failed. Try your authenticator code instead.",
       "sendFailed": "Failed to send code. Try again.",
+      "socialLoginFailed": "Sign-in with that provider didn't complete. Please try again.",
       "somethingWrong": "Something went wrong.",
       "verifyFailed": "Failed to verify login code. Please try again."
     },
