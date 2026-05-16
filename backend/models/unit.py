@@ -7,6 +7,8 @@ from .fields import CaseInsensitiveCharField
 from .game import Game
 from .team import Team
 
+_UNFETCHED = object()
+
 
 class Unit(models.Model):
     identifier = CaseInsensitiveCharField(
@@ -59,15 +61,17 @@ class Unit(models.Model):
     def is_gps_enforced(self) -> bool:
         return self.game.is_gps_enforced if self.game else False
 
-    def can_user_check_in(self, user) -> bool:
+    def can_user_check_in(self, user, *, previous=_UNFETCHED) -> bool:
+        # `previous` lets callers that already hold the unit's most recent
+        # check-in skip the extra SELECT (see CheckInViewSet.perform_create).
         if not user or not getattr(user, "pk", None):
             return True  # anonymous always allowed; admin_only_checkin checked upstream
         if user.is_superuser:
             return True
-        qs = self.checkin_set.order_by("-date_created")
-        last = qs.first()
-        if last is not None and last.created_by_id != user.pk:
-            return not qs.filter(created_by=user).exists()
+        if previous is _UNFETCHED:
+            previous = self.checkin_set.order_by("-date_created").first()
+        if previous is not None and previous.created_by_id != user.pk:
+            return not self.checkin_set.filter(created_by=user).exists()
         return True
 
     def get_distance_traveled(self) -> float:
