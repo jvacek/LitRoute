@@ -1,70 +1,119 @@
 {
-    "about": {
-        "aboutTitle": "O projektu"
+  "about": {
+    "aboutTitle": "O projektu",
+    "header": "Pro ty, co po sobě naschvál nechávaj věci",
+    "qa": {
+      "followAlong": {
+        "a": "Na <instagramLink>Instagramu (@lit_route)</instagramLink>, na <redditLink>Redditu (r/litroute)</redditLink>, a na <discordLink>Discrodu</discordLink>"
+      },
+      "help": {
+        "a3": "Můžeš taky pomoct s přkeladem do jiných jazyků i bez znalostí programovaní. Překlady se upravují skrz <weblateLink>Weblate</weblateLink>.",
+        "q": "Můžu nějak pomoct?"
+      },
+      "how": {
+        "a": "Splácáno za pomocí Django a Reactu. Je to Open Source — <githubLink>koukni na GitHub repo</githubLink>. Můžeš klidně poslat PRs po otveření issue.",
+        "q": "Jak?"
+      },
+      "money": {
+        "a1": "Popravdě, netuším. Nějak o to nemám zájem. Radši bych to financoval z vlastního a zpropitnýho.",
+        "a2": "Tohle je můj malej koníček na kterým pracuju jen tak z hecu, kdyby z toho měly bejt peníze tak z toho rychle přijde i stres, a toho bych se radši vyvaroval.",
+        "a3": "Tak jako tak, tvoje data nebudou nikdy sdílená nebo prodaná.",
+        "q": "Chceš z tohodle nějak vydělávat?"
+      },
+      "secure": {
+        "a2": "Nevěříš mi? Kód je volně přístupnej. Můžeš si i zpriovoznit svůj vlastní LitRoute, jen tomu prosím říkej nějak jinak.",
+        "q": "Je to bezpečný?"
+      },
+      "translate": {
+        "a": "Rozhraní je v tuto chvíli dostupný v Angličtině a Francoužštině. Překlady jsou spravovány komunitou skrz <weblateLink>Weblate</weblateLink> — chceš-li pomoc s překládáním LitRoute do novýho jazyka, s radostí to přijmu.",
+        "q": "Je to dostupný v jinejch jazicích?"
+      },
+      "who": {
+        "a": "Jmenuju se Jonáš. Můžeš mi <emailLink>poslat email</emailLink> nebo mě zastihnout na <mastodonLink>@jvacek@fosstodon.org</mastodonLink>",
+        "q": "Kdo?"
+      },
+      "why": {
+        "a": "Protože prostě jako. Jsem zrvona byl flák-městnanec a říkal jsem si: co kdyby ti zapík moh říct odkaď doputoval?",
+        "q": "Proč?"
+      }
     },
-    "common": {
-        "about": "O projektu",
-        "back": "Nazpět",
-        "cancel": "Zrušit",
-        "confirm": "Potvrdit",
-        "confirming": "Potvrzení",
-        "connectedAccounts": "Připojené účty",
-        "duration": {
-            "and": "a",
-            "day_few": "{{count}} dny",
-            "day_one": "{{count}} den",
-            "day_other": "{{count}} dnů",
-            "hour_few": "{{count}} hodiny",
-            "hour_one": "{{count}} hodina",
-            "hour_other": "{{count}} hodin"
-        },
-        "loading": "Náčet",
-        "nameLabel": "Jméno",
-        "namePlaceholder": "Tvoje jméno",
-        "or": "nebo",
-        "password": "Heslo",
-        "profile": "Profil",
-        "remove": "Smazat",
-        "saving": "Ukládání",
-        "sending": "Posílání",
-        "settings": "Nastavení",
-        "support": "Podpořit",
-        "twoFactorAuth": "Dvoufázový ověření",
-        "unexpectedError": "Nějaká neočekávaná chyba"
+    "subheader": "Zapík putuje z ruky do ruky. Každý komu projde rukou si ho začekuje — fotka, místo a nějaká zpráva. Tady tu pouť můžeš sledovat.",
+    "supportHeading": "Podpoř tenhle projekt"
+  },
+  "common": {
+    "about": "O projektu",
+    "back": "Nazpět",
+    "cancel": "Zrušit",
+    "confirm": "Potvrdit",
+    "confirming": "Potvrzení",
+    "connectedAccounts": "Připojené účty",
+    "duration": {
+      "and": "a",
+      "day_few": "{{count}} dny",
+      "day_one": "{{count}} den",
+      "day_other": "{{count}} dnů",
+      "hour_few": "{{count}} hodiny",
+      "hour_one": "{{count}} hodina",
+      "hour_other": "{{count}} hodin"
     },
-    "game": {
-        "leaderboard": {
-            "rankHeader": "#"
-        }
-    },
-    "home": {
-        "cta": {
-            "link": "O projektu"
-        },
-        "globeCaption": "20 nedávno aktivních zapíků — každej puntík je něčí story.",
-        "stats": {
-            "activeLighters": "aktivní zapalovače"
-        }
-    },
-    "photoUpload": {
-        "empty": {
-            "addPhotos": "Přidat fotky"
-        }
-    },
-    "settings": {
-        "mfa": {
-            "setup": {
-                "activate": {
-                    "default": "Aktivovat",
-                    "loading": "Aktivuje se"
-                }
-            },
-            "totp": {
-                "active": "Aktivní"
-            }
-        },
-        "passkeys": {
-            "added": "Přídáno {{date}}"
-        }
+    "loading": "Náčet",
+    "nameLabel": "Jméno",
+    "namePlaceholder": "Tvoje jméno",
+    "or": "nebo",
+    "password": "Heslo",
+    "profile": "Profil",
+    "remove": "Smazat",
+    "saving": "Ukládání",
+    "sending": "Posílání",
+    "settings": "Nastavení",
+    "support": "Podpořit",
+    "twoFactorAuth": "Dvoufázový ověření",
+    "unexpectedError": "Nějaká neočekávaná chyba"
+  },
+  "game": {
+    "leaderboard": {
+      "rankHeader": "#"
     }
+  },
+  "home": {
+    "cta": {
+      "link": "O projektu"
+    },
+    "globeCaption": "20 nedávno aktivních zapíků — každej puntík je něčí story.",
+    "stats": {
+      "activeLighters": "aktivní zapalovače"
+    }
+  },
+  "photoUpload": {
+    "empty": {
+      "addPhotos": "Přidat fotky"
+    }
+  },
+  "settings": {
+    "mfa": {
+      "setup": {
+        "activate": {
+          "default": "Aktivovat",
+          "loading": "Aktivuje se"
+        }
+      },
+      "totp": {
+        "active": "Aktivní"
+      }
+    },
+    "passkeys": {
+      "added": "Přídáno {{date}}"
+    }
+  },
+  "unit": {
+    "statsTeam": "tým",
+    "status": {
+      "currentlyIn": "Zrovna v {{place}}",
+      "lastSeenDaysAgo_few": "Naposledy viděno před {{count}} dny v {{place}}",
+      "lastSeenDaysAgo_one": "Naposledy viděno před {{count}} dnem v {{place}}",
+      "lastSeenDaysAgo_other": "Naposledy viděno před {{count}} dny v {{place}}",
+      "lastSeenYesterday": "Naposledy viděno v {{place}}"
+    },
+    "subscribe": "Odebírat"
+  }
 }
