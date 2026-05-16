@@ -28,6 +28,11 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 LOCALES_DIR = REPO_ROOT / "flamerelay/static/locales"
 EN_PATH = LOCALES_DIR / "en/translation.json"
 
+# CLDR plural categories (i18next suffix scheme). Locales with richer plural
+# rules than EN (e.g. Czech: one/few/many/other) can carry extra suffixed
+# variants of any base key that is pluralized in EN.
+PLURAL_SUFFIXES = ("_zero", "_one", "_two", "_few", "_many", "_other")
+
 
 def walk_keys(obj: dict, prefix: str = ""):
     for k, v in obj.items():
@@ -36,6 +41,19 @@ def walk_keys(obj: dict, prefix: str = ""):
             yield from walk_keys(v, key)
         else:
             yield key
+
+
+def plural_base(key: str) -> str | None:
+    """If `key` ends with a CLDR plural suffix, return the base path. Else None."""
+    for suffix in PLURAL_SUFFIXES:
+        if key.endswith(suffix):
+            return key[: -len(suffix)]
+    return None
+
+
+def collect_plural_bases(en_keys: set[str]) -> set[str]:
+    """Base paths (without plural suffix) that have at least one plural form in EN."""
+    return {base for k in en_keys if (base := plural_base(k)) is not None}
 
 
 def sort_recursive(d: dict) -> dict:
@@ -47,21 +65,31 @@ def sort_recursive(d: dict) -> dict:
     return out
 
 
-def filter_to_en(en_keys: set[str], locale: dict, prefix: str = "") -> tuple[dict, list[str]]:
-    """Drop any leaf paths not present in en_keys. Return (filtered, dropped_paths)."""
+def filter_to_en(
+    en_keys: set[str],
+    en_plural_bases: set[str],
+    locale: dict,
+    prefix: str = "",
+) -> tuple[dict, list[str]]:
+    """Drop any leaf paths not present in en_keys. Return (filtered, dropped_paths).
+
+    Plural variants are kept even when the exact suffixed key is absent from EN, as
+    long as the base path is pluralized in EN — locales like Czech need _few/_many
+    forms that EN (one/other only) does not.
+    """
     out: dict = {}
     dropped: list[str] = []
     for k, v in locale.items():
         key = f"{prefix}.{k}" if prefix else k
         if isinstance(v, dict):
-            sub, sub_dropped = filter_to_en(en_keys, v, key)
+            sub, sub_dropped = filter_to_en(en_keys, en_plural_bases, v, key)
             if sub:
                 out[k] = sub
             elif not sub_dropped:
                 # Empty dict in source with no children dropped — preserve it.
                 out[k] = {}
             dropped.extend(sub_dropped)
-        elif key in en_keys:
+        elif key in en_keys or ((base := plural_base(key)) is not None and base in en_plural_bases):
             out[k] = v
         else:
             dropped.append(key)
@@ -92,6 +120,7 @@ def main() -> int:
 
     en_data = json.loads(EN_PATH.read_text())
     en_keys = set(walk_keys(en_data))
+    en_plural_bases = collect_plural_bases(en_keys)
 
     changed: list[Path] = []
     had_dropped = False
@@ -105,7 +134,7 @@ def main() -> int:
             new_data = sort_recursive(data)
             dropped: list[str] = []
         else:
-            filtered, dropped = filter_to_en(en_keys, data)
+            filtered, dropped = filter_to_en(en_keys, en_plural_bases, data)
             new_data = sort_recursive(filtered)
 
         new_text = serialize(new_data)

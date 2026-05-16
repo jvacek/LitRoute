@@ -31,8 +31,8 @@ const allSource = walkTsFiles(sourceDir)
   .join('\n');
 
 const unused = leafPaths(en).filter((key) => {
-  // Plural keys (ending _one/_other) are referenced by their base key in source
-  const lookup = key.replace(/_(one|other)$/, '');
+  // Plural keys (CLDR suffixes) are referenced by their base key in source
+  const lookup = key.replace(/_(zero|one|two|few|many|other)$/, '');
   return (
     !allSource.includes(`'${lookup}'`) && !allSource.includes(`"${lookup}"`)
   );
