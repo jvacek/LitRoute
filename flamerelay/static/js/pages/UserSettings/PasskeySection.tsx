@@ -10,14 +10,15 @@ import {
   beginPasskeyRegistration,
   completePasskeyRegistration,
   deletePasskey,
-  reauthenticateWithCode,
-  reauthenticateWithPassword,
-  requestLoginCode,
   type AllauthError,
-  type AllauthResponse,
   type WebAuthnPasskey,
 } from '../../lib/allauthApi';
+import {
+  needsReauth,
+  useReauthentication,
+} from '../../lib/useReauthentication';
 import { NonFieldErrors } from '../../components/AllauthErrors';
+import { ReauthForm } from '../../components/ReauthForm';
 import {
   inputClass,
   labelClass,
@@ -26,13 +27,7 @@ import {
   primaryBtnMd,
 } from '../../styles';
 
-type PasskeyView = 'list' | 'adding' | 'reauth';
-
-function needsReauth(resp: AllauthResponse): boolean {
-  if (resp.status !== 401 || !resp.data || Array.isArray(resp.data))
-    return false;
-  return resp.data.flows?.some((f) => f.id === 'reauthenticate') ?? false;
-}
+type PasskeyView = 'list' | 'adding';
 
 export default function PasskeySection() {
   const { t } = useTranslation();
@@ -43,11 +38,12 @@ export default function PasskeySection() {
   const [newName, setNewName] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const [reauthEmail, setReauthEmail] = useState('');
-  const [reauthHasPassword, setReauthHasPassword] = useState(false);
-  const [reauthCode, setReauthCode] = useState('');
-  const [reauthCodeSent, setReauthCodeSent] = useState(false);
-  const [reauthPassword, setReauthPassword] = useState('');
+  const reauth = useReauthentication({
+    setErrors,
+    setBusy,
+    onSuccess: () => setView('adding'),
+    onCancel: () => setView('list'),
+  });
 
   const supported = browserSupportsWebAuthn();
 
@@ -69,19 +65,6 @@ export default function PasskeySection() {
     loadPasskeys();
   }, []);
 
-  function enterReauth(resp: AllauthResponse) {
-    const data = resp.data as
-      | { user?: { email?: string; has_usable_password?: boolean } }
-      | undefined;
-    setReauthEmail((data?.user?.email as string | undefined) ?? '');
-    setReauthHasPassword(data?.user?.has_usable_password === true);
-    setReauthCode('');
-    setReauthCodeSent(false);
-    setReauthPassword('');
-    setErrors([]);
-    setView('reauth');
-  }
-
   async function addPasskey(e: React.FormEvent) {
     e.preventDefault();
     setErrors([]);
@@ -89,7 +72,7 @@ export default function PasskeySection() {
     try {
       const resp = await beginPasskeyRegistration();
       if (needsReauth(resp)) {
-        enterReauth(resp);
+        reauth.fromResponse(resp);
         return;
       }
       if (resp.status !== 200 && resp.status !== 201) {
@@ -151,63 +134,6 @@ export default function PasskeySection() {
     }
   }
 
-  async function handleSendReauthCode() {
-    setErrors([]);
-    setBusy(true);
-    try {
-      const result = await requestLoginCode(reauthEmail);
-      if (result.ok) {
-        setReauthCodeSent(true);
-      } else {
-        setErrors([
-          {
-            message: result.detail ?? t('settings.reauth.failedSend'),
-          },
-        ]);
-      }
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleReauthByCode(e: React.FormEvent) {
-    e.preventDefault();
-    setErrors([]);
-    setBusy(true);
-    try {
-      const resp = await reauthenticateWithCode(reauthCode);
-      if (resp.status === 200) {
-        setReauthCode('');
-        setView('adding');
-      } else {
-        setErrors(
-          resp.errors ?? [{ message: t('settings.reauth.invalidCode') }],
-        );
-      }
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function handleReauthByPassword(e: React.FormEvent) {
-    e.preventDefault();
-    setErrors([]);
-    setBusy(true);
-    try {
-      const resp = await reauthenticateWithPassword(reauthPassword);
-      if (resp.status === 200) {
-        setReauthPassword('');
-        setView('adding');
-      } else {
-        setErrors(
-          resp.errors ?? [{ message: t('settings.reauth.incorrectPassword') }],
-        );
-      }
-    } finally {
-      setBusy(false);
-    }
-  }
-
   if (!supported) {
     return (
       <p className="text-sm text-char/60">
@@ -220,104 +146,14 @@ export default function PasskeySection() {
     return <p className="text-sm text-char/50">{t('common.loading')}…</p>;
   }
 
-  if (view === 'reauth') {
-    const cancelReauth = () => {
-      setView('list');
-      setErrors([]);
-    };
+  if (reauth.state.active) {
     return (
-      <div className="space-y-4">
-        <NonFieldErrors errors={errors} />
-        <p className="text-sm text-char/70">
-          {t('settings.passkeys.reauth.description')}
-        </p>
-        {reauthHasPassword ? (
-          <form onSubmit={handleReauthByPassword} className="space-y-3">
-            <div>
-              <label htmlFor="reauth-password" className={labelClass}>
-                {t('common.password')}
-              </label>
-              <input
-                id="reauth-password"
-                type="password"
-                autoComplete="current-password"
-                value={reauthPassword}
-                onChange={(e) => setReauthPassword(e.target.value)}
-                required
-                className={inputClass}
-              />
-            </div>
-            <div className="flex gap-2">
-              <button type="submit" disabled={busy} className={primaryBtnMd}>
-                {busy ? `${t('common.confirming')}…` : t('common.confirm')}
-              </button>
-              <button
-                type="button"
-                onClick={cancelReauth}
-                className={outlineBtnMd}
-              >
-                {t('common.cancel')}
-              </button>
-            </div>
-          </form>
-        ) : !reauthCodeSent ? (
-          <div className="space-y-3">
-            <button
-              type="button"
-              onClick={handleSendReauthCode}
-              disabled={busy}
-              className={primaryBtnMd}
-            >
-              {busy
-                ? `${t('common.sending')}…`
-                : t('settings.passkeys.reauth.sendCode.default', {
-                    email: reauthEmail,
-                  })}
-            </button>
-            <button
-              type="button"
-              onClick={cancelReauth}
-              className="block text-sm text-char/50 hover:text-char"
-            >
-              {t('common.cancel')}
-            </button>
-          </div>
-        ) : (
-          <form onSubmit={handleReauthByCode} className="space-y-3">
-            <p className="text-sm text-char/70">
-              {t('settings.passkeys.reauth.codeSent', { email: reauthEmail })}
-            </p>
-            <div>
-              <label htmlFor="reauth-code" className={labelClass}>
-                {t('common.verificationCodeLabel')}
-              </label>
-              <input
-                id="reauth-code"
-                type="text"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                value={reauthCode}
-                onChange={(e) => setReauthCode(e.target.value)}
-                placeholder="123456"
-                required
-                className={`${inputClass} text-center tracking-widest`}
-              />
-            </div>
-            <div className="flex gap-2">
-              <button type="submit" disabled={busy} className={primaryBtnMd}>
-                {busy ? `${t('common.confirming')}…` : t('common.confirm')}
-              </button>
-              <button
-                type="button"
-                onClick={cancelReauth}
-                className={outlineBtnMd}
-              >
-                {t('common.cancel')}
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
+      <ReauthForm
+        controls={reauth}
+        busy={busy}
+        tPrefix="settings.passkeys.reauth"
+        errorBanner={<NonFieldErrors errors={errors} />}
+      />
     );
   }
 
