@@ -6,7 +6,7 @@ Read before adding i18n keys, consolidating strings, or running any of the `*-tr
 
 - `flamerelay/static/locales/en/translation.json` is the source of truth — **always add new keys there first**.
 - `flamerelay/static/locales/fr/translation.json` (and any future locales) hold translator output. Direct edits to non-EN locale files in this repo are fine: **Weblate ingests them on its next sync**, and translator-side changes come back as automated GitHub-bot PRs.
-- `lint-translations.py` runs as a pre-commit hook on every locale file: it sorts keys alphabetically at every level (EN included) and **drops any non-EN keys that EN no longer has** (orphaned translations from renamed/removed source strings).
+- `lint-translations.py` runs as a pre-commit hook on every locale file: it sorts keys alphabetically at every level (EN included) and **drops any non-EN keys that EN no longer has** (orphaned translations from renamed/removed source strings). CLDR plural variants (`_zero`/`_one`/`_two`/`_few`/`_many`/`_other`) are kept even when the exact suffix is absent from EN, as long as the base key is pluralized in EN — Czech needs `day_few`/`day_many` etc. that EN (one/other only) does not.
 
 ## Scripts
 
