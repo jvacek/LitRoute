@@ -1,38 +1,70 @@
 {
-  "about": {
-    "aboutTitle": "O projektu"
-  },
-  "common": {
-    "about": "O projektu"
-  },
-  "game": {
-    "leaderboard": {
-      "rankHeader": "#"
-    }
-  },
-  "home": {
-    "cta": {
-      "link": "O projektu"
+    "about": {
+        "aboutTitle": "O projektu"
     },
-    "globeCaption": "20 nedávno aktivních zapíků — každej puntík je něčí story.",
-    "stats": {
-      "activeLighters": "aktivní zapalovače"
-    }
-  },
-  "settings": {
-    "mfa": {
-      "setup": {
-        "activate": {
-          "default": "Aktivovat",
-          "loading": "Aktivuje se"
+    "common": {
+        "about": "O projektu",
+        "back": "Nazpět",
+        "cancel": "Zrušit",
+        "confirm": "Potvrdit",
+        "confirming": "Potvrzení",
+        "connectedAccounts": "Připojené účty",
+        "duration": {
+            "and": "a",
+            "day_few": "{{count}} dny",
+            "day_one": "{{count}} den",
+            "day_other": "{{count}} dnů",
+            "hour_few": "{{count}} hodiny",
+            "hour_one": "{{count}} hodina",
+            "hour_other": "{{count}} hodin"
+        },
+        "loading": "Náčet",
+        "nameLabel": "Jméno",
+        "namePlaceholder": "Tvoje jméno",
+        "or": "nebo",
+        "password": "Heslo",
+        "profile": "Profil",
+        "remove": "Smazat",
+        "saving": "Ukládání",
+        "sending": "Posílání",
+        "settings": "Nastavení",
+        "support": "Podpořit",
+        "twoFactorAuth": "Dvoufázový ověření",
+        "unexpectedError": "Nějaká neočekávaná chyba"
+    },
+    "game": {
+        "leaderboard": {
+            "rankHeader": "#"
         }
-      },
-      "totp": {
-        "active": "Aktivní"
-      }
     },
-    "passkeys": {
-      "added": "Přídáno {{date}}"
+    "home": {
+        "cta": {
+            "link": "O projektu"
+        },
+        "globeCaption": "20 nedávno aktivních zapíků — každej puntík je něčí story.",
+        "stats": {
+            "activeLighters": "aktivní zapalovače"
+        }
+    },
+    "photoUpload": {
+        "empty": {
+            "addPhotos": "Přidat fotky"
+        }
+    },
+    "settings": {
+        "mfa": {
+            "setup": {
+                "activate": {
+                    "default": "Aktivovat",
+                    "loading": "Aktivuje se"
+                }
+            },
+            "totp": {
+                "active": "Aktivní"
+            }
+        },
+        "passkeys": {
+            "added": "Přídáno {{date}}"
+        }
     }
-  }
 }
