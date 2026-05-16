@@ -25,7 +25,6 @@ class CheckInInline(admin.TabularInline):
 @admin.register(Unit)
 class UnitAdmin(admin.ModelAdmin):
     list_display = (
-        "id",
         "identifier",
         "date_created",
         "created_by",
