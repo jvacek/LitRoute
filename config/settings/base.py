@@ -277,7 +277,7 @@ CONTENT_SECURITY_POLICY = {
             "https://*.vis.earthdata.nasa.gov",
             "https://gitc.earthdata.nasa.gov",
         ],
-        "connect-src": ["'self'", "https://api.maptiler.com"],
+        "connect-src": ["'self'", "https://api.maptiler.com", "https://*.ingest.us.sentry.io"],
         "worker-src": ["blob:"],
         "frame-ancestors": ["'none'"],
         "object-src": ["'none'"],
@@ -460,6 +460,11 @@ MAPTILER_KEY = env("MAPTILER_KEY", default="")
 # CLOUDFLARE_TURNSTILE_SECRET_KEY = None
 
 # RECAPTCHA_USE_SSL = True
+
+# Sentry (frontend init reads these via context processor → spa.html meta tags)
+# ------------------------------------------------------------------------------
+SENTRY_DSN_FRONTEND = env("SENTRY_DSN_FRONTEND", default="")
+SENTRY_ENVIRONMENT = env("SENTRY_ENVIRONMENT", default="local")
 
 DJANGORESIZED_DEFAULT_KEEP_META = False
 DJANGORESIZED_DEFAULT_FORCE_FORMAT = "WEBP"

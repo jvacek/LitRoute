@@ -704,6 +704,7 @@
       "lastSeenYesterday": "Last seen yesterday in {{place}}"
     },
     "subscribe": "Subscribe",
+    "subscribeError": "Could not update your subscription. Please try again.",
     "supportPrompt": "LitRoute is free and built by one person. If this journey made you smile, consider <supportLink>supporting it</supportLink>",
     "travelLog": "Travel log",
     "unsubscribe": "Unsubscribe",

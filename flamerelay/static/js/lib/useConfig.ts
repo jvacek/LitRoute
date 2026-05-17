@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 
+import { reportError } from './sentry';
+
 export interface Config {
   maptilerKey: string;
   allowRegistration: boolean;
@@ -17,7 +19,7 @@ function fetchConfig(): Promise<Config> {
       })
       .catch((err: unknown) => {
         configPromise = null;
-        console.error('Failed to load app config:', err);
+        reportError(err, { where: 'useConfig.fetch' });
         return {
           maptilerKey: '',
           allowRegistration: false,

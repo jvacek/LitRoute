@@ -70,3 +70,7 @@ CACHE_SINGLEFLIGHT_LOCK_POLL_SECONDS = 0.2
 # payload, accessed less often than the leaderboard table, longer TTL.
 GAME_JOURNEYS_CACHE_TTL = 10 * 60  # 10 minutes
 GAME_JOURNEYS_CACHE_KEY_PREFIX = "game:journeys"
+
+# Sentry tunnel — short timeout so a slow ingest endpoint can't stall the
+# user's request thread.
+SENTRY_TUNNEL_FORWARD_TIMEOUT_SECONDS = 5

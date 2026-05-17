@@ -85,7 +85,6 @@ export default function GameLeaderboard() {
         if (cancelled) return;
         if (d) setData(d);
       })
-      .catch(console.error)
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
@@ -109,8 +108,7 @@ export default function GameLeaderboard() {
       .then((d) => {
         if (cancelled || !d) return;
         setJourneys(d.journeys);
-      })
-      .catch(console.error);
+      });
     return () => {
       cancelled = true;
     };

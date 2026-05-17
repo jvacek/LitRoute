@@ -18,6 +18,7 @@ import { getGameConfig } from '../lib/gameConfig';
 import { haversineKm } from '../lib/haversine';
 import { formatKm, formatNumber } from '../lib/numbers';
 import i18n from '../i18n';
+import { reportError } from '../lib/sentry';
 import { useConfig } from '../lib/useConfig';
 
 interface CheckInImage {
@@ -201,11 +202,9 @@ export default function Unit() {
                 setGameRank(entry.rank);
                 setGameTotal(board.individual.length);
               },
-            )
-            .catch(console.error);
+            );
         }
       })
-      .catch(console.error)
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
@@ -319,10 +318,18 @@ export default function Unit() {
     setSubscribeLoading(true);
     try {
       const method = unit?.is_subscribed ? 'DELETE' : 'POST';
-      await apiFetch(`/api/units/${identifier}/subscribe/`, { method });
+      const r = await apiFetch(`/api/units/${identifier}/subscribe/`, {
+        method,
+      });
+      if (!r.ok) {
+        const body = await r.json().catch(() => ({}));
+        alert(body?.detail ?? t('unit.subscribeError'));
+        return;
+      }
       setUnit((u) => (u ? { ...u, is_subscribed: !u.is_subscribed } : u));
     } catch (e) {
-      console.error(e);
+      reportError(e, { where: 'Unit.subscribe' });
+      alert(t('unit.subscribeError'));
     } finally {
       setSubscribeLoading(false);
     }

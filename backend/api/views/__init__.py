@@ -3,6 +3,7 @@ from .config import ConfigView, GlobePinsView, StatsView
 from .feedback import FeedbackView
 from .games import GameJourneysView, GameLeaderboardView
 from .guest import GuestSubscribeView, GuestVerifyView
+from .sentry_tunnel import sentry_tunnel
 from .units import UnitViewSet
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "GuestVerifyView",
     "StatsView",
     "UnitViewSet",
+    "sentry_tunnel",
 ]

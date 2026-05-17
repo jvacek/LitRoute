@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { useAuth } from '../AuthContext';
 import { getEditToken } from '../lib/editTokens';
+import { reportError } from '../lib/sentry';
 import { useConfig } from '../lib/useConfig';
 import CheckinForm, {
   type CheckinFormInitialData,
@@ -71,7 +72,10 @@ export default function CheckinEdit() {
           images: checkin.images,
         });
       })
-      .catch(console.error)
+      .catch((err: unknown) => {
+        reportError(err, { where: 'CheckinEdit.load' });
+        setNotFound(true);
+      })
       .finally(() => setLoading(false));
   }, [identifier, checkinIdNum, isAuthenticated, editToken, unitUrl, navigate]);
 

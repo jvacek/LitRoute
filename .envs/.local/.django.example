@@ -12,3 +12,9 @@ REDIS_URL=redis://redis:6379/0
 # Flower
 CELERY_FLOWER_USER=changeme
 CELERY_FLOWER_PASSWORD=changeme
+
+# Sentry
+# ------------------------------------------------------------------------------
+# SENTRY_DSN=                # Django (backend) project DSN — production only
+# SENTRY_DSN_FRONTEND=       # React (frontend) project DSN — set locally to test integration
+# SENTRY_ENVIRONMENT=local   # tag for filtering in the Sentry UI

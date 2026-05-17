@@ -122,6 +122,7 @@ CONTENT_SECURITY_POLICY["DIRECTIVES"]["connect-src"] = [
     "ws://localhost:3000",
     "http://localhost:3000",
     "https://api.maptiler.com",
+    "https://*.ingest.us.sentry.io",
 ]
 
 

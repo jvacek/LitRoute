@@ -13,6 +13,7 @@ from backend.api.views import (
     GuestVerifyView,
     StatsView,
     UnitViewSet,
+    sentry_tunnel,
 )
 from flamerelay.users.api.views import (
     AccountSubscriptionsView,
@@ -58,4 +59,5 @@ urlpatterns = [
     path("units/<str:identifier>/guest-subscribe/", GuestSubscribeView.as_view(), name="guest-subscribe"),
     path("guest-verify/", GuestVerifyView.as_view(), name="guest-verify"),
     path("feedback/", FeedbackView.as_view(), name="feedback"),
+    path("sentry/envelope/", sentry_tunnel, name="sentry-tunnel"),
 ]

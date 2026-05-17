@@ -7,6 +7,9 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const GITHUB_REPO_URL = 'https://github.com/jvacek/flamerelay';
 
 function getGitCommit() {
+  // CI / Docker build passes GIT_HASH as a build arg; .git is not in the
+  // client-builder Docker context, so the git command falls back to empty there.
+  if (process.env.GIT_HASH) return process.env.GIT_HASH;
   try {
     return execSync('git rev-parse HEAD').toString().trim();
   } catch {

@@ -27,8 +27,7 @@ export default function UserDetail() {
   useEffect(() => {
     fetch('/api/account/subscriptions/')
       .then((r) => (r.ok ? r.json() : null))
-      .then((data: SubscribedUnit[] | null) => setSubscribedUnits(data ?? []))
-      .catch(console.error);
+      .then((data: SubscribedUnit[] | null) => setSubscribedUnits(data ?? []));
   }, []);
 
   const displayName = name || username;

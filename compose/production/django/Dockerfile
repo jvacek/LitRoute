@@ -10,7 +10,21 @@ RUN --mount=type=cache,target=/root/.npm npm ci
 COPY ./tsconfig.json ${APP_HOME}/
 COPY ./webpack ${APP_HOME}/webpack
 COPY ./flamerelay/static ${APP_HOME}/flamerelay/static
-RUN --mount=type=cache,target=/app/.webpack_cache npm run build
+
+# Build-time secrets for Sentry source map upload. ARG-only (no ENV) keeps the
+# auth token out of the final image's layer history. The trailing inline env
+# assignments scope them to this single RUN command. SENTRY_PROJECT_FRONTEND
+# is renamed to SENTRY_PROJECT for the plugin (which reads it by default).
+ARG GIT_HASH=""
+ARG SENTRY_AUTH_TOKEN=""
+ARG SENTRY_ORG=""
+ARG SENTRY_PROJECT_FRONTEND=""
+RUN --mount=type=cache,target=/app/.webpack_cache \
+    GIT_HASH="$GIT_HASH" \
+    SENTRY_AUTH_TOKEN="$SENTRY_AUTH_TOKEN" \
+    SENTRY_ORG="$SENTRY_ORG" \
+    SENTRY_PROJECT="$SENTRY_PROJECT_FRONTEND" \
+    npm run build
 
 # define an alias for the specific python version used in this file.
 FROM ghcr.io/astral-sh/uv:python3.14-bookworm-slim AS python-build-stage

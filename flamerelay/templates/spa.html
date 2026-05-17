@@ -12,6 +12,10 @@
     <meta name="description"
           content="Track a lighter's journey across the world." />
     <meta name="author" content="Jonas Vacek" />
+    {% if SENTRY_DSN_FRONTEND %}
+      <meta name="sentry-dsn" content="{{ SENTRY_DSN_FRONTEND }}" />
+      <meta name="sentry-environment" content="{{ SENTRY_ENVIRONMENT }}" />
+    {% endif %}
     {% if IS_LOCAL %}
       <link rel="icon"
             href="{% static 'images/favicons/local-favicon-32x32.png' %}"

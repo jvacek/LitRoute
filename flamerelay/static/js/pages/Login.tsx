@@ -22,6 +22,7 @@ import {
 import { apiFetch } from '../api';
 import { FieldErrors, NonFieldErrors } from '../components/AllauthErrors';
 import SocialProviders from '../components/SocialProviders';
+import { reportError } from '../lib/sentry';
 import { inputClass, labelClass, primaryBtn } from '../styles';
 import { useAuth } from '../AuthContext';
 
@@ -107,28 +108,25 @@ export default function Login() {
       setLoading(true);
       confirmLoginCode(urlCode)
         .then((resp) => handleAuthResponse(resp))
-        .catch(() => {
+        .catch((err: unknown) => {
+          reportError(err, { where: 'Login.confirmCodeFromUrl' });
           setErrors([{ message: t('auth.errors.verifyFailed') }]);
         })
         .finally(() => setLoading(false));
       return;
     }
-    getSession()
-      .then((resp) => {
-        if (resp.meta?.is_authenticated) {
-          void checkNameThenRedirect();
-        } else if (hasPendingFlow(resp, 'mfa_authenticate')) {
-          getWebAuthnMfaOptions()
-            .then((r) => {
-              if (r.status === 200) setMfaHasWebAuthn(true);
-            })
-            .catch(() => {});
-          setStep('mfa');
-        } else if (hasPendingFlow(resp, 'login_by_code')) {
-          setStep('code');
-        }
-      })
-      .catch(() => {});
+    getSession().then((resp) => {
+      if (resp.meta?.is_authenticated) {
+        void checkNameThenRedirect();
+      } else if (hasPendingFlow(resp, 'mfa_authenticate')) {
+        getWebAuthnMfaOptions().then((r) => {
+          if (r.status === 200) setMfaHasWebAuthn(true);
+        });
+        setStep('mfa');
+      } else if (hasPendingFlow(resp, 'login_by_code')) {
+        setStep('code');
+      }
+    });
   }, [checkNameThenRedirect, handleAuthResponse, t]);
 
   useEffect(() => {

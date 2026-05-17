@@ -77,9 +77,7 @@ export default function SocialProviders({ callbackUrl }: SocialProvidersProps) {
   const [providers, setProviders] = useState<SocialProvider[]>([]);
 
   useEffect(() => {
-    getConfig()
-      .then((cfg) => setProviders(cfg.socialaccount?.providers ?? []))
-      .catch(console.error);
+    getConfig().then((cfg) => setProviders(cfg.socialaccount?.providers ?? []));
   }, []);
 
   if (!providers.length) return null;

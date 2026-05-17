@@ -6,6 +6,7 @@
     "@babel/preset-env": "^7.16.5",
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
+    "@sentry/webpack-plugin": "^5.3.0",
     "@svgr/webpack": "^8.1.0",
     "@tailwindcss/postcss": "^4.2.2",
     "@testing-library/jest-dom": "^6.9.1",
@@ -85,6 +86,7 @@
   "dependencies": {
     "@maptiler/client": "^3.0.2",
     "@marsidev/react-turnstile": "^1.1.0",
+    "@sentry/react": "^10.53.1",
     "@simplewebauthn/browser": "^13.3.0",
     "cobe": "^2.0.1",
     "i18next": "^26.2.0",

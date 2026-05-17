@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { useAuth } from '../AuthContext';
+import { reportError } from '../lib/sentry';
 
 export default function UserForm() {
   const { t } = useTranslation();
@@ -19,7 +20,6 @@ export default function UserForm() {
     fetch('/api/account/')
       .then((r) => r.json())
       .then((data: { name: string }) => setName(data.name ?? ''))
-      .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
 
@@ -44,8 +44,8 @@ export default function UserForm() {
         setErrors(body as Record<string, string[]>);
       }
     } catch (e) {
-      console.error(e);
-      setErrors({ non_field_errors: ['An unexpected error occurred.'] });
+      reportError(e, { where: 'UserForm.submit' });
+      setErrors({ non_field_errors: [t('common.unexpectedError')] });
     } finally {
       setSubmitting(false);
     }

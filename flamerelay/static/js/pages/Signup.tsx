@@ -7,6 +7,7 @@ import brusselsImg from '../assets/journey/brussels.webp';
 import { FieldErrors, NonFieldErrors } from '../components/AllauthErrors';
 import { useAuth } from '../AuthContext';
 import { getSession, type AllauthError } from '../lib/allauthApi';
+import { reportError } from '../lib/sentry';
 import { inputClass, labelClass, primaryBtn } from '../styles';
 
 export default function Signup() {
@@ -34,14 +35,16 @@ export default function Signup() {
               setName(me.name ?? '');
               setReady(true);
             })
-            .catch(() => {
+            .catch((err: unknown) => {
+              reportError(err, { where: 'Signup.fetchAccount' });
               if (mounted) navigate('/accounts/login/');
             });
         } else {
           navigate('/accounts/login/');
         }
       })
-      .catch(() => {
+      .catch((err: unknown) => {
+        reportError(err, { where: 'Signup.getSession' });
         if (mounted) navigate('/accounts/login/');
       });
     return () => {

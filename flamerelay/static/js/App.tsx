@@ -31,6 +31,8 @@ import UserDetail from './pages/UserDetail';
 import UserForm from './pages/UserForm';
 import UserSettings from './pages/UserSettings';
 
+// Capture is handled by Sentry.reactErrorHandler() wired into createRoot's
+// onCaughtError; this boundary only renders the fallback UI.
 class ErrorBoundary extends Component<
   { children: React.ReactNode },
   { hasError: boolean }

@@ -126,6 +126,9 @@ jobs:
             django.cache-from=type=gha,scope=prod-django
             django.cache-to=type=gha,scope=prod-django,mode=max
             django.args.GIT_HASH=${{ github.sha }}
+            django.args.SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+            django.args.SENTRY_ORG=${{ secrets.SENTRY_ORG }}
+            django.args.SENTRY_PROJECT_FRONTEND=${{ secrets.SENTRY_PROJECT_FRONTEND }}
 
       - name: Build and push Postgres image
         uses: docker/bake-action@v7

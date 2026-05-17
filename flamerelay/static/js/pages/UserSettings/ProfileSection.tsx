@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../../api';
+import { reportError } from '../../lib/sentry';
 import { inputClass } from '../../styles';
 
 export default function ProfileSection() {
@@ -15,7 +16,6 @@ export default function ProfileSection() {
     apiFetch('/api/account/')
       .then((r) => r.json())
       .then((data: { name: string }) => setName(data.name ?? ''))
-      .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
 
@@ -36,8 +36,9 @@ export default function ProfileSection() {
         const body = (await res.json()) as Record<string, string[]>;
         setErrors(body);
       }
-    } catch {
-      setErrors({ non_field_errors: ['An unexpected error occurred.'] });
+    } catch (err) {
+      reportError(err, { where: 'ProfileSection.submit' });
+      setErrors({ non_field_errors: [t('common.unexpectedError')] });
     } finally {
       setSubmitting(false);
     }
