@@ -7,7 +7,7 @@ from sentry_sdk.integrations.logging import LoggingIntegration, ignore_logger
 from sentry_sdk.integrations.redis import RedisIntegration
 
 from .base import *  # noqa: F403
-from .base import DATABASES, GIT_HASH, INSTALLED_APPS, REDIS_URL, SENTRY_ENVIRONMENT, SPECTACULAR_SETTINGS, env
+from .base import DATABASES, GIT_HASH, INSTALLED_APPS, REDIS_URL, SPECTACULAR_SETTINGS, env
 
 # GENERAL
 # ------------------------------------------------------------------------------
@@ -174,10 +174,8 @@ LOGGING = {
 
 # Sentry
 # ------------------------------------------------------------------------------
-# SENTRY_DSN_FRONTEND and SENTRY_ENVIRONMENT are defined in base.py so all
-# environments expose them to the SPA via the context processor. Backend Sentry
-# init below is production-only.
 SENTRY_DSN = env("SENTRY_DSN")
+SENTRY_ENVIRONMENT = "production"
 SENTRY_LOG_LEVEL = env.int("DJANGO_SENTRY_LOG_LEVEL", logging.INFO)
 
 sentry_logging = LoggingIntegration(

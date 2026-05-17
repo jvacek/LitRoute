@@ -463,8 +463,9 @@ MAPTILER_KEY = env("MAPTILER_KEY", default="")
 
 # Sentry (frontend init reads these via context processor → spa.html meta tags)
 # ------------------------------------------------------------------------------
+# SENTRY_ENVIRONMENT is hardcoded per settings module (local/test/production)
+# rather than read from env — each settings module *is* the environment.
 SENTRY_DSN_FRONTEND = env("SENTRY_DSN_FRONTEND", default="")
-SENTRY_ENVIRONMENT = env("SENTRY_ENVIRONMENT", default="local")
 
 DJANGORESIZED_DEFAULT_KEEP_META = False
 DJANGORESIZED_DEFAULT_FORCE_FORMAT = "WEBP"
