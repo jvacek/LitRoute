@@ -30,11 +30,6 @@ if (SENTRY_DSN) {
         createRoutesFromChildren,
         matchRoutes,
       }),
-      Sentry.replayIntegration({
-        maskAllText: false,
-        maskAllInputs: true,
-        blockAllMedia: true,
-      }),
     ],
     tracesSampleRate: 1.0,
     // Same-origin relative URLs only — adds sentry-trace + baggage headers
@@ -44,6 +39,21 @@ if (SENTRY_DSN) {
     replaysSessionSampleRate: 0.0,
     replaysOnErrorSampleRate: 1.0,
   });
+
+  // Replay's ~150 KB minified bundle is loaded after first paint to keep the
+  // entry small. Errors before the integration lands are still captured;
+  // they just won't carry replay footage.
+  const loadReplay = () =>
+    import('./lib/sentryReplay')
+      .then((m) => m.enableReplay())
+      .catch(() => {
+        // Swallow chunk-load failures — replay is a nice-to-have.
+      });
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(loadReplay, { timeout: 2000 });
+  } else {
+    setTimeout(loadReplay, 1000);
+  }
 }
 
 const appRoot = document.getElementById('app-root');
