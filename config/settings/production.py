@@ -195,7 +195,8 @@ sentry_sdk.init(
     integrations=integrations,
     environment=SENTRY_ENVIRONMENT,
     release=GIT_HASH or None,
-    traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
+    send_default_pii=True,
+    traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.1),
 )
 
 # Capture django-redis cache exceptions via the dedicated `sentry_redis_events`

@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react';
 import {
   createContext,
   useCallback,
@@ -43,14 +44,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (resp.ok) {
         const me = (await resp.json()) as AuthUser;
         setUser(me);
+        Sentry.setUser({ username: me.username });
         if (me.language && me.language !== i18n.resolvedLanguage) {
           void i18n.changeLanguage(me.language);
         }
       } else {
         setUser(null);
+        Sentry.setUser(null);
       }
     } catch {
       setUser(null);
+      Sentry.setUser(null);
     } finally {
       setLoading(false);
     }
