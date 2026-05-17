@@ -7,7 +7,7 @@ from sentry_sdk.integrations.logging import LoggingIntegration, ignore_logger
 from sentry_sdk.integrations.redis import RedisIntegration
 
 from .base import *  # noqa: F403
-from .base import DATABASES, INSTALLED_APPS, REDIS_URL, SENTRY_ENVIRONMENT, SPECTACULAR_SETTINGS, env
+from .base import DATABASES, GIT_HASH, INSTALLED_APPS, REDIS_URL, SENTRY_ENVIRONMENT, SPECTACULAR_SETTINGS, env
 
 # GENERAL
 # ------------------------------------------------------------------------------
@@ -194,6 +194,7 @@ sentry_sdk.init(
     dsn=SENTRY_DSN,
     integrations=integrations,
     environment=SENTRY_ENVIRONMENT,
+    release=GIT_HASH or None,
     traces_sample_rate=env.float("SENTRY_TRACES_SAMPLE_RATE", default=0.0),
 )
 
