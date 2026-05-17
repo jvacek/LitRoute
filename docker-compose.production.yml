@@ -19,6 +19,12 @@ services:
       - /srv/flamerelay/media:/app/flamerelay/media
     ports:
       - '127.0.0.1:8000:5000'
+    # Host /etc/resolv.conf is owned by Tailscale and points only at MagicDNS,
+    # which doesn't resolve public names unless an admin sets global nameservers.
+    # Pin DNS here so Turnstile siteverify and other outbound calls work.
+    dns:
+      - 1.1.1.1
+      - 1.0.0.1
     command: /start
 
   postgres:
