@@ -284,3 +284,4 @@ webpack-stats.json
 !.envs/.local/*.example
 headless_example_project/
 scripts/.pull-prod-dump.sql.gz
+scripts/.verify-prod-backup/
