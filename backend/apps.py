@@ -7,12 +7,11 @@ class BackendConfig(AppConfig):
     name = "backend"
 
     def ready(self):
+        import sentry_sdk  # noqa: PLC0415
         from django.conf import settings  # noqa: PLC0415
 
         if not getattr(settings, "SENTRY_DSN", None):
             return
-
-        import sentry_sdk  # noqa: PLC0415
 
         media_root = settings.MEDIA_ROOT
         if not os.access(media_root, os.W_OK):

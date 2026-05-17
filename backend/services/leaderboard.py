@@ -1,3 +1,5 @@
+from django.db.models import Count, OuterRef, Q, Subquery
+from django.db.models.functions import Coalesce
 from geopy.distance import geodesic as distance
 
 from config.constants import GAME_LEADERBOARD_CACHE_TTL
@@ -49,8 +51,6 @@ def compute_game_leaderboard(game) -> dict:
 
 
 def _build_leaderboard_payload(game) -> dict:
-    from django.db.models import Count, OuterRef, Q, Subquery  # noqa: PLC0415
-    from django.db.models.functions import Coalesce  # noqa: PLC0415
 
     from backend.models import CheckIn, Game, Unit  # noqa: PLC0415
 

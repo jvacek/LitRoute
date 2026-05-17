@@ -3,6 +3,7 @@ guest subscribe + email verification, and Turnstile CAPTCHA gating."""
 
 from __future__ import annotations
 
+import uuid
 from unittest.mock import patch
 
 from allauth.account.models import EmailAddress
@@ -30,7 +31,6 @@ def _make_verify_token(email: str, unit_identifier: str, checkin_id: int) -> str
 
 class TestAnonCheckinCreate:
     def test_201_and_edit_token_returned(self, client, unit, mute_emails):
-        import uuid  # noqa: PLC0415
 
         res = client.post(
             f"/api/units/{unit.identifier}/checkins/",

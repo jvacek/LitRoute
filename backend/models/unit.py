@@ -1,6 +1,8 @@
+from django.core.cache import cache
 from django.core.validators import RegexValidator
 from django.db import models
 
+from config.constants import UNIT_DISTANCE_CACHE_TTL
 from flamerelay.users.models import User
 
 from .fields import CaseInsensitiveCharField
@@ -75,10 +77,8 @@ class Unit(models.Model):
         return True
 
     def get_distance_traveled(self) -> float:
-        from django.core.cache import cache  # noqa: PLC0415
 
         from backend.services import distance_traveled_in_km, unit_distance_cache_key  # noqa: PLC0415
-        from config.constants import UNIT_DISTANCE_CACHE_TTL  # noqa: PLC0415
 
         key = unit_distance_cache_key(self.identifier)
         cached = cache.get(key)

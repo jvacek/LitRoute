@@ -5,6 +5,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.gis.geos import Point
+from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -257,8 +258,6 @@ class Command(BaseCommand):
                 unit.subscribers.add(user)
                 created_units.append(identifier)
                 created_checkins += self._populate_unit_checkins(unit, user, n_checkins, now)
-
-        from django.core.cache import cache  # noqa: PLC0415
 
         cache.clear()
         self.stdout.write(

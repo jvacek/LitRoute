@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 
@@ -42,8 +43,6 @@ def invalidate_caches_on_checkin_delete(sender, instance, **kwargs):
 @receiver(post_delete, sender=CheckInImage)
 def delete_checkin_image_file(sender, instance, **kwargs):
     if instance.image:
-        from django.db import transaction  # noqa: PLC0415
-
         from backend.services import delete_checkin_image_file_task  # noqa: PLC0415
 
         image_name = instance.image.name

@@ -1,7 +1,12 @@
 from anymail.exceptions import AnymailRequestsAPIError
 from celery import Task, shared_task
 from celery.utils.log import get_task_logger
+from django.contrib.auth import get_user_model
+from django.contrib.sites.models import Site
 from django.core import mail
+from django.core.files.storage import default_storage
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 from config.constants import (
     EMAIL_TASK_MAX_RETRIES,
@@ -22,7 +27,6 @@ class EmailTask(Task):
 
 @shared_task(name="backend.services.delete_checkin_image_file_task", serializer="json")
 def delete_checkin_image_file_task(image_name: str) -> None:
-    from django.core.files.storage import default_storage  # noqa: PLC0415
 
     try:
         default_storage.delete(image_name)
@@ -33,7 +37,6 @@ def delete_checkin_image_file_task(image_name: str) -> None:
 @shared_task(name="backend.services.cleanup_orphaned_checkin_images")
 def cleanup_orphaned_checkin_images():
     """Delete files in checkins/ storage that have no matching CheckInImage row."""
-    from django.core.files.storage import default_storage  # noqa: PLC0415
 
     from backend.models import CheckInImage  # noqa: PLC0415
 
@@ -54,9 +57,6 @@ def cleanup_orphaned_checkin_images():
 
 @shared_task(name="backend.services.send_email_to_subscribers_task", base=EmailTask, serializer="json")
 def send_email_to_subscribers_task(checkin_id: int):
-    from django.contrib.sites.models import Site  # noqa: PLC0415
-    from django.template.loader import render_to_string  # noqa: PLC0415
-    from django.utils.html import strip_tags  # noqa: PLC0415
 
     from backend.models import CheckIn  # noqa: PLC0415
 
@@ -94,15 +94,12 @@ def send_email_to_subscribers_task(checkin_id: int):
 
 
 def render_thank_you_email(checkin, site) -> str:
-    from django.template.loader import render_to_string  # noqa: PLC0415
 
     return render_to_string("backend/email_thank_you_checkin.html", {"instance": checkin, "site": site})
 
 
 @shared_task(name="backend.services.send_thank_you_email_task", base=EmailTask, serializer="json")
 def send_thank_you_email_task(checkin_id: int):
-    from django.contrib.sites.models import Site  # noqa: PLC0415
-    from django.utils.html import strip_tags  # noqa: PLC0415
 
     from backend.models import CheckIn  # noqa: PLC0415
 
@@ -134,9 +131,6 @@ def send_thank_you_email_task(checkin_id: int):
 
 @shared_task(name="backend.services.send_guest_verification_email_task", base=EmailTask, serializer="json")
 def send_guest_verification_email_task(token: str, email: str, unit_identifier: str, base_url: str):
-    from django.contrib.sites.models import Site  # noqa: PLC0415
-    from django.template.loader import render_to_string  # noqa: PLC0415
-    from django.utils.html import strip_tags  # noqa: PLC0415
 
     site = Site.objects.get_current()
     verification_url = f"{base_url}/api/guest-verify/?token={token}"
@@ -157,10 +151,6 @@ def send_guest_verification_email_task(token: str, email: str, unit_identifier: 
 
 @shared_task(name="backend.services.send_feedback_emails_task", base=EmailTask, serializer="json")
 def send_feedback_emails_task(feedback_id: int):
-    from django.contrib.auth import get_user_model  # noqa: PLC0415
-    from django.contrib.sites.models import Site  # noqa: PLC0415
-    from django.template.loader import render_to_string  # noqa: PLC0415
-    from django.utils.html import strip_tags  # noqa: PLC0415
 
     from backend.models import Feedback  # noqa: PLC0415
 

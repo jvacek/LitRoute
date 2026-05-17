@@ -17,7 +17,10 @@ from django.core.cache import cache
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from backend.factories import UnitFactory
+from backend.factories import (
+    GameFactory,
+    UnitFactory,
+)
 from backend.models import CheckIn
 from flamerelay.users.tests.factories import UserFactory
 
@@ -76,7 +79,6 @@ def unit(db):
 def gps_unit(db):
     """Variant of `unit` attached to a GPS-enforced game (DISTANCE mode) so
     the check-in API's drift validator activates."""
-    from backend.factories import GameFactory  # noqa: PLC0415
     from backend.models import Game  # noqa: PLC0415
 
     return UnitFactory.create(game=GameFactory.create(mode=Game.Modes.DISTANCE))

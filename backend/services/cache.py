@@ -1,5 +1,8 @@
 import time
 
+from django.core.cache import cache
+from django.db import transaction
+
 from config.constants import (
     CACHE_SINGLEFLIGHT_LOCK_POLL_ATTEMPTS,
     CACHE_SINGLEFLIGHT_LOCK_POLL_SECONDS,
@@ -32,7 +35,6 @@ def cached_with_lock(cache_key: str, compute_fn, ttl: int, *, lock_ttl: int = CA
     exists. The lock is released in a `finally` so a crashing computer can't
     permanently wedge readers.
     """
-    from django.core.cache import cache  # noqa: PLC0415
 
     cached = cache.get(cache_key)
     if cached is not None:
@@ -62,8 +64,6 @@ def invalidate_checkin_caches(unit_identifier: str, game_id: int | None = None) 
     entries before commit lets a concurrent reader repopulate them from the
     pre-commit DB state, leaving stale data for the rest of the TTL.
     """
-    from django.core.cache import cache  # noqa: PLC0415
-    from django.db import transaction  # noqa: PLC0415
 
     keys = [unit_distance_cache_key(unit_identifier), STATS_CACHE_KEY, GLOBE_PINS_CACHE_KEY]
     if game_id:

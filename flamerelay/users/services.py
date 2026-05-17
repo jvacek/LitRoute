@@ -7,9 +7,13 @@ from allauth.account.models import EmailAddress
 from allauth.mfa.models import Authenticator
 from allauth.socialaccount.models import SocialAccount
 from celery import shared_task
+from django.contrib.sites.models import Site
 from django.core import mail
+from django.core.cache import cache
 from django.core.files.storage import default_storage
 from django.db import transaction
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 from backend.models import CheckIn, CheckInImage
 
@@ -26,9 +30,6 @@ _REMOVED_ITEMS = [
 
 @shared_task(serializer="json")
 def send_account_deletion_email_task(email: str) -> None:
-    from django.contrib.sites.models import Site  # noqa: PLC0415
-    from django.template.loader import render_to_string  # noqa: PLC0415
-    from django.utils.html import strip_tags  # noqa: PLC0415
 
     site = Site.objects.get_current()
     html_message = render_to_string(
@@ -47,7 +48,6 @@ def send_account_deletion_email_task(email: str) -> None:
 
 
 def anonymize_user(user) -> None:
-    from django.core.cache import cache  # noqa: PLC0415
 
     from backend.services import game_journeys_cache_key, game_leaderboard_cache_key  # noqa: PLC0415
 

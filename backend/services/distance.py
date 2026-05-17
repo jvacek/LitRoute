@@ -1,6 +1,10 @@
+from django.core.cache import cache
 from geopy.distance import geodesic as distance
 
-from config.constants import EXAMPLE_IDENTIFIER
+from config.constants import (
+    EXAMPLE_IDENTIFIER,
+    UNIT_DISTANCE_CACHE_TTL,
+)
 
 from .cache import unit_distance_cache_key
 
@@ -15,7 +19,6 @@ def distance_traveled_in_km(unit) -> float:
 
 def total_distance_traveled_in_km() -> float:
     """Sum of per-unit cached distances. Computes and caches any misses individually."""
-    from django.core.cache import cache  # noqa: PLC0415
 
     from backend.models import Unit  # noqa: PLC0415
 
@@ -33,7 +36,6 @@ def total_distance_traveled_in_km() -> float:
             dist = distance_traveled_in_km(unit)
             to_set[unit_distance_cache_key(unit.identifier)] = dist
             total += dist
-        from config.constants import UNIT_DISTANCE_CACHE_TTL  # noqa: PLC0415
 
         cache.set_many(to_set, UNIT_DISTANCE_CACHE_TTL)
 

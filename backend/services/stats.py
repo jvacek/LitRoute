@@ -1,3 +1,7 @@
+from django.contrib.auth import get_user_model
+from django.contrib.gis.db.models.fields import PointField as GeoPointField
+from django.db.models import Count, OuterRef, Subquery
+
 from config.constants import (
     GLOBE_PINS_CACHE_KEY,
     GLOBE_PINS_CACHE_TTL,
@@ -15,9 +19,6 @@ def get_cached_stats() -> dict:
 
 
 def _compute_stats() -> dict:
-    from django.contrib.auth import get_user_model  # noqa: PLC0415
-    from django.db.models import Count  # noqa: PLC0415
-
     from backend.models import CheckIn, Unit  # noqa: PLC0415
 
     user_model = get_user_model()
@@ -37,8 +38,6 @@ def get_cached_globe_pins() -> list[dict]:
 
 
 def _compute_globe_pins() -> list[dict]:
-    from django.contrib.gis.db.models.fields import PointField as GeoPointField  # noqa: PLC0415
-    from django.db.models import Count, OuterRef, Subquery  # noqa: PLC0415
 
     from backend.models import CheckIn, Unit  # noqa: PLC0415
 

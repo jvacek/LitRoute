@@ -1,11 +1,15 @@
+from allauth.account.models import EmailAddress
+from allauth.account.utils import perform_login
 from allauth.core import ratelimit
 from django.core import signing
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.validators import validate_email
+from django.http import HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from django.views import View
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import serializers, status
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -31,7 +35,6 @@ class GuestSubscribeView(APIView):
         },
     )
     def post(self, request, identifier):
-        from rest_framework.authentication import SessionAuthentication  # noqa: PLC0415
 
         from backend.services import send_guest_verification_email_task  # noqa: PLC0415
 
@@ -69,9 +72,6 @@ class GuestSubscribeView(APIView):
 
 class GuestVerifyView(View):
     def get(self, request):
-        from allauth.account.models import EmailAddress  # noqa: PLC0415
-        from allauth.account.utils import perform_login  # noqa: PLC0415
-        from django.http import HttpResponseBadRequest, HttpResponseForbidden  # noqa: PLC0415
 
         if not ratelimit.consume(request, action="guest_verify"):
             return HttpResponseForbidden("Too many attempts. Please try again later.")
