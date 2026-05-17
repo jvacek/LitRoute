@@ -235,7 +235,7 @@
       "activeLighters": "briquets actifs",
       "checkinsLogged": "enregistrements faits",
       "freeText": "Gratuit, maintenu en vie par des lecteurs comme vous. <supportLink>Soutenir le projet</supportLink>",
-      "peopleCheckedIn": "personnes qui se sont enregistrées",
+      "peopleFollowing": "personnes abonnées",
       "traveledSoFar": "parcourus jusqu'ici"
     },
     "subheadline": "Trouvez un briquet avec un autocollant QR. Scannez-le pour découvrir partout où il est passé et toutes les personnes qui l'ont tenu. Laissez votre propre note — puis passez-le au prochain inconnu.",

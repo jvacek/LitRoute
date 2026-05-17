@@ -20,7 +20,7 @@ class TestStatsView:
         data = client.get("/api/stats/").json()
         assert "active_unit_count" in data
         assert "checkin_count" in data
-        assert "contributing_user_count" in data
+        assert "followers" in data
         assert "total_distance_traveled_km" in data
 
     def test_reflects_created_data(self, client, db, make_checkin):

@@ -112,7 +112,7 @@ class GuestVerifyView(View):
                     break
         # Per-instance save (not queryset.update) so the post_save signal
         # fires and the cache invalidation in models.py runs. Stats also
-        # needs to invalidate (contributing_user_count changes when a guest
+        # needs to invalidate (subscribers changes when a guest
         # claim flips created_by from null to a user); the signal handles
         # that via invalidate_checkin_caches.
         for c in checkins:

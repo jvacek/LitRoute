@@ -38,7 +38,7 @@ class StatsView(APIView):
             fields={
                 "active_unit_count": serializers.IntegerField(),
                 "checkin_count": serializers.IntegerField(),
-                "contributing_user_count": serializers.IntegerField(),
+                "followers": serializers.IntegerField(),
                 "total_distance_traveled_km": serializers.FloatField(),
             },
         )

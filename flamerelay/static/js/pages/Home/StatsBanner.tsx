@@ -6,7 +6,7 @@ import { GlobePin, SpinningGlobe } from './SpinningGlobe';
 export interface Stats {
   active_unit_count: number;
   checkin_count: number;
-  contributing_user_count: number;
+  followers: number;
   total_distance_traveled_km: number;
 }
 
@@ -32,8 +32,8 @@ export function StatsBanner({
     },
     { value: fmt(stats?.checkin_count), label: t('home.stats.checkinsLogged') },
     {
-      value: fmt(stats?.contributing_user_count),
-      label: t('home.stats.peopleCheckedIn'),
+      value: fmt(stats?.followers),
+      label: t('home.stats.peopleFollowing'),
     },
     {
       value: stats?.total_distance_traveled_km
