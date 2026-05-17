@@ -1,4 +1,4 @@
-import { Component, useEffect } from 'react';
+import { Component, Suspense, lazy, useEffect } from 'react';
 import {
   BrowserRouter,
   Outlet,
@@ -14,22 +14,27 @@ import doodlesSrc from './assets/backgrounds/pattern.webp';
 import About from './pages/About';
 import ContributorGuide from './pages/ContributorGuide';
 import Support from './pages/Support';
-import CheckinCreate from './pages/CheckinCreate';
-import CheckinEdit from './pages/CheckinEdit';
 import EmailConfirm from './pages/EmailConfirm';
 import ErrorPage from './pages/ErrorPage';
 import Feedback from './pages/Feedback';
-import GameLeaderboard from './pages/GameLeaderboard';
-import Home from './pages/Home';
-import Login from './pages/Login';
 import Privacy from './pages/Privacy';
 import Signup from './pages/Signup';
 import SocialConnections from './pages/SocialConnections';
 import Terms from './pages/Terms';
-import Unit from './pages/Unit';
 import UserDetail from './pages/UserDetail';
 import UserForm from './pages/UserForm';
-import UserSettings from './pages/UserSettings';
+
+// Heavy or rarely-visited routes are lazy-loaded so the QR-landing payload
+// (mostly the navbar/footer shell + Home dependencies) stays small. Home
+// pulls in `cobe`; Unit/Checkin* pull in maplibre-gl; Login/UserSettings pull
+// in @simplewebauthn/browser and qrcode.
+const Home = lazy(() => import('./pages/Home'));
+const Unit = lazy(() => import('./pages/Unit'));
+const CheckinCreate = lazy(() => import('./pages/CheckinCreate'));
+const CheckinEdit = lazy(() => import('./pages/CheckinEdit'));
+const GameLeaderboard = lazy(() => import('./pages/GameLeaderboard'));
+const Login = lazy(() => import('./pages/Login'));
+const UserSettings = lazy(() => import('./pages/UserSettings'));
 
 // Capture is handled by Sentry.reactErrorHandler() wired into createRoot's
 // onCaughtError; this boundary only renders the fallback UI.
@@ -69,7 +74,9 @@ function Layout() {
       />
       <Navbar />
       <div key={pathname} className="page-enter flex-1">
-        <Outlet />
+        <Suspense fallback={<div className="min-h-[60vh]" aria-busy="true" />}>
+          <Outlet />
+        </Suspense>
       </div>
       <Footer />
     </div>

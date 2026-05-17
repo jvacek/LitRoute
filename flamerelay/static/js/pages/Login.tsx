@@ -2,11 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  startAuthentication,
-  browserSupportsWebAuthn,
-  WebAuthnAbortService,
-} from '@simplewebauthn/browser';
-import {
   requestLoginCode,
   confirmLoginCode,
   mfaAuthenticate,
@@ -31,6 +26,25 @@ type Step = 'email' | 'code' | 'mfa';
 interface MeData {
   username: string;
   name: string;
+}
+
+// @simplewebauthn/browser ships ~20KB gzipped of credential plumbing. The
+// vast majority of /accounts/login/ visitors never touch a passkey, so we
+// load it on demand instead of pulling it into the Login chunk.
+function browserSupportsWebAuthn() {
+  return (
+    typeof window !== 'undefined' &&
+    typeof window.PublicKeyCredential === 'function'
+  );
+}
+
+type WebAuthnModule = typeof import('@simplewebauthn/browser');
+let webAuthnModulePromise: Promise<WebAuthnModule> | null = null;
+function loadWebAuthn(): Promise<WebAuthnModule> {
+  if (!webAuthnModulePromise) {
+    webAuthnModulePromise = import('@simplewebauthn/browser');
+  }
+  return webAuthnModulePromise;
 }
 
 export default function Login() {
@@ -134,12 +148,16 @@ export default function Login() {
     conditionalPasskeyStarted.current = true;
 
     async function startConditionalPasskey() {
+      // Check conditional mediation availability with the native API before
+      // pulling in the @simplewebauthn/browser bundle — keeps non-passkey
+      // users from downloading it.
       if (
         !window.PublicKeyCredential?.isConditionalMediationAvailable ||
         !(await window.PublicKeyCredential.isConditionalMediationAvailable())
       )
         return;
       try {
+        const { startAuthentication } = await loadWebAuthn();
         const options = await getPasskeyLoginOptions();
         const credential = await startAuthentication({
           optionsJSON: options,
@@ -152,14 +170,22 @@ export default function Login() {
     }
 
     void startConditionalPasskey();
-    return () => WebAuthnAbortService.cancelCeremony();
+    return () => {
+      // Only cancel if the module was actually loaded — otherwise there's
+      // no ceremony in flight to abort.
+      webAuthnModulePromise?.then(({ WebAuthnAbortService }) =>
+        WebAuthnAbortService.cancelCeremony(),
+      );
+    };
   }, [handleAuthResponse]);
 
   async function signInWithPasskey() {
-    WebAuthnAbortService.cancelCeremony();
     setErrors([]);
     setLoading(true);
     try {
+      const { startAuthentication, WebAuthnAbortService } =
+        await loadWebAuthn();
+      WebAuthnAbortService.cancelCeremony();
       const options = await getPasskeyLoginOptions();
       const credential = await startAuthentication({ optionsJSON: options });
       handleAuthResponse(await passkeyLogin(credential));
@@ -172,7 +198,9 @@ export default function Login() {
 
   async function sendCode(e: React.FormEvent) {
     e.preventDefault();
-    WebAuthnAbortService.cancelCeremony();
+    webAuthnModulePromise?.then(({ WebAuthnAbortService }) =>
+      WebAuthnAbortService.cancelCeremony(),
+    );
     setErrors([]);
     setLoading(true);
     try {
@@ -227,6 +255,7 @@ export default function Login() {
                 setErrors([]);
                 setLoading(true);
                 try {
+                  const { startAuthentication } = await loadWebAuthn();
                   const optResp = await getWebAuthnMfaOptions();
                   const credential = await startAuthentication({
                     optionsJSON: (

@@ -28,13 +28,69 @@ module.exports = {
   context: path.join(__dirname, '../'),
   entry: {
     project: path.resolve(__dirname, '../flamerelay/static/js/project'),
-    vendors: path.resolve(__dirname, '../flamerelay/static/js/vendors'),
   },
   output: {
     path: path.resolve(__dirname, '../flamerelay/static/webpack_bundles/'),
     publicPath: '/static/webpack_bundles/',
     filename: 'js/[name]-[fullhash].js',
     chunkFilename: 'js/[name]-[hash].js',
+  },
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        // The shared map stack (used by Unit/Checkin/Game lazy routes) goes
+        // into one long-lived chunk so a deploy that doesn't touch maps
+        // doesn't bust the browser cache for it.
+        maplibre: {
+          test: /[\\/]node_modules[\\/](maplibre-gl|react-map-gl|@vis\.gl[\\/]react-maplibre|@maptiler)[\\/]/,
+          name: 'vendor-maplibre',
+          chunks: 'all',
+          priority: 30,
+        },
+        // Sentry SDK + its internal packages (browser-utils, replay, etc.)
+        // are initialized in project.tsx so they always land in the entry.
+        sentry: {
+          test: /[\\/]node_modules[\\/](@sentry|@sentry-internal)[\\/]/,
+          name: 'vendor-sentry',
+          chunks: 'initial',
+          priority: 30,
+        },
+        react: {
+          test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/,
+          name: 'vendor-react',
+          chunks: 'initial',
+          priority: 30,
+        },
+        // i18n is bootstrapped in project.tsx → entry-only.
+        i18n: {
+          test: /[\\/]node_modules[\\/](i18next|react-i18next|i18next-browser-languagedetector)[\\/]/,
+          name: 'vendor-i18n',
+          chunks: 'initial',
+          priority: 30,
+        },
+        // Other node_modules used by 2+ async chunks — extracted so common
+        // deps load once. Single-use async deps stay in their owning chunk
+        // (e.g. cobe with Home, @simplewebauthn with Login, qrcode with
+        // UserSettings) so visitors only pay for what they actually use.
+        asyncVendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors-async',
+          chunks: 'async',
+          minChunks: 2,
+          priority: 10,
+          reuseExistingChunk: true,
+        },
+        // Everything else from node_modules pulled into the entry path.
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'initial',
+          priority: 5,
+          reuseExistingChunk: true,
+        },
+      },
+    },
   },
   plugins: [
     new BundleTracker({
