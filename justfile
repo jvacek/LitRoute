@@ -82,7 +82,7 @@ webpack-rebuild file="flamerelay/static/js/project.tsx":
 node-reinstall:
     @echo "Reinstalling node_modules..."
     @docker compose rm -f -s -v node
-    @docker compose up -d node
+    @docker compose up --force-recreate -d node
 
 # generate-favicons: Render PNG/ICO variants from the SVG source, then collect into staticfiles.
 generate-favicons:

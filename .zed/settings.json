@@ -25,5 +25,24 @@
   },
   "file_types": {
     "Django": ["**/templates/**/*.html"]
-  }
+  },
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/.svn",
+    "**/.hg",
+    "**/.jj",
+    "**/CVS",
+    "**/.DS_Store",
+    "**/Thumbs.db",
+    "**/.classpath",
+    "**/.settings",
+    ".ipython",
+    ".pytest_cache",
+    "node_modules",
+    "__pycache__",
+    ".webpack_cache",
+    ".venv",
+    ".ruff_cache",
+    ".vscode"
+  ]
 }

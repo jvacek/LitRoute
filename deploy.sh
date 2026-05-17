@@ -1,5 +1,5 @@
 #!/bin/bash
-pushd ~/Git/FlameRelay
+pushd ~/Git/FlameRelay || exit 1
 git fetch
 git reset --hard origin/main
 # mkdir -p /srv/flamerelay/media
