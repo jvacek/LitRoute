@@ -42,7 +42,7 @@ class Unit(models.Model):
     team = models.ForeignKey(
         Team, on_delete=models.SET_NULL, null=True, blank=True, help_text="Optional team that the unit belongs to"
     )
-    subscribers = models.ManyToManyField(User, related_name="subscribed_units", blank=True)
+    followers = models.ManyToManyField(User, related_name="followed_units", blank=True)
     admin_only_checkin = models.BooleanField(
         default=False,
         help_text="Whether only admins can check in to this unit, primarily used for demos or for disabling lighters.",

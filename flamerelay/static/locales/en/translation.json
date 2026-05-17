@@ -169,7 +169,7 @@
     "guestEmailSocialProof_one": "Join {{count}} other person following this lighter.",
     "guestEmailSocialProof_other": "Join {{count}} others following this lighter.",
     "guestEmailSubmit": "Follow this lighter",
-    "guestEmailSubtitle": "We'll email you when someone else checks this lighter in somewhere new. That's it — no marketing, unsubscribe with one tap.",
+    "guestEmailSubtitle": "We'll email you when someone else checks this lighter in somewhere new. That's it — no marketing, unfollow with one tap.",
     "guestEmailTitle": "Want to know where this lighter goes next?"
   },
   "common": {
@@ -224,7 +224,7 @@
         "tip": "Pick names with one obvious spelling — avoid ambiguous ones like Steven vs. Stephen or Jeffrey vs. Jeffery. If someone has to guess to find the URL, you've already lost them."
       },
       "firstCheckin": {
-        "a": "Visit your unit's page and make the first check-in yourself. This seeds the journey and gives the next person something to see when they scan the code. You were automatically subscribed when you created the unit, so you'll get an email every time someone checks in.",
+        "a": "Visit your unit's page and make the first check-in yourself. This seeds the journey and gives the next person something to see when they scan the code. You automatically follow the unit when you create it, so you'll get an email every time someone checks in.",
         "q": "Make the first check-in"
       },
       "handOff": {
@@ -416,7 +416,7 @@
       "step2Title": "Check in.",
       "step3Body": "Hand it to a stranger. Leave it at a coffee shop, a hostel, a trailhead. You decide the next chapter.",
       "step3Title": "Pass it on.",
-      "step4Body": "Subscribe and get an email the next time someone finds it — wherever in the world that turns out to be. Low-stakes stalking of a piece of metal.",
+      "step4Body": "Follow the lighter and get an email the next time someone finds it — wherever in the world that turns out to be. Low-stakes stalking of a piece of metal.",
       "step4Title": "Follow along."
     },
     "journey": {
@@ -500,7 +500,7 @@
         "item2": "Remove your name and profile information",
         "item3": "Delete all photos you've uploaded to check-ins",
         "item4": "Erase all messages you've left on check-ins",
-        "item5": "Unsubscribe you from all units",
+        "item5": "Stop emails from every lighter you follow",
         "keepAnon": "The locations and timestamps of your check-ins will be kept anonymously so the relay's travel history stays intact.",
         "placeholder": "DELETE",
         "submit": {
@@ -641,7 +641,7 @@
     "subheader": "LitRoute is free and independent. Here's what keeps it running."
   },
   "supportSection": {
-    "body1": "LitRoute is a one-person project. There are no ads, no subscriptions, and no investors — just server costs, email delivery, and storage coming out of my own pocket. That includes the lighters themselves: each one is bought and registered by hand before it can start its journey.",
+    "body1": "LitRoute is a one-person project. There are no ads, no paid plans, and no investors — just server costs, email delivery, and storage coming out of my own pocket. That includes the lighters themselves: each one is bought and registered by hand before it can start its journey.",
     "body2": "If you've enjoyed following a journey here, a small contribution goes a long way.",
     "donateCta": "Tip",
     "githubDescription": "Sponsor directly on GitHub",
@@ -668,6 +668,8 @@
     "deleteConfirm": "Delete this check-in?",
     "deleteError": "Could not delete this check-in.",
     "editBtn": "Edit",
+    "follow": "Follow",
+    "followError": "Could not follow. Please try again.",
     "game": {
       "leaderboardLink": "Go to leaderboard",
       "rankLabel": "of {{total}}",
@@ -703,21 +705,19 @@
       "lastSeenDaysAgo_other": "Last seen {{count}} days ago in {{place}}",
       "lastSeenYesterday": "Last seen yesterday in {{place}}"
     },
-    "subscribe": "Subscribe",
-    "subscribeError": "Could not update your subscription. Please try again.",
     "supportPrompt": "LitRoute is free and built by one person. If this journey made you smile, consider <supportLink>supporting it</supportLink>",
     "travelLog": "Travel log",
-    "unsubscribe": "Unsubscribe",
-    "verifiedBanner": "Your email is confirmed — you're now subscribed!"
+    "unfollow": "Unfollow",
+    "verifiedBanner": "Your email is confirmed — you're following the journey!"
   },
   "userDetail": {
     "admin": "Admin",
     "checkins_one": "{{count}} check-in",
     "checkins_other": "{{count}} check-ins",
     "contributorGuide": "Contributor guide",
-    "noSubscriptions": "You're not subscribed to any units yet.",
-    "signOut": "Sign out",
-    "subscribedUnits": "Subscribed Units"
+    "followedUnits": "Lighters You Follow",
+    "noFollows": "You're not following any lighters yet.",
+    "signOut": "Sign out"
   },
   "userForm": {
     "submit": {

@@ -64,9 +64,9 @@ interface TeamRef {
 interface UnitData {
   identifier: string;
   checkin_count: number;
-  subscriber_count: number;
+  follower_count: number;
   distance_traveled_km: number;
-  is_subscribed: boolean;
+  is_following: boolean;
   can_check_in: boolean | null;
   is_gps_enforced: boolean;
   team: TeamRef | null;
@@ -132,7 +132,7 @@ export default function Unit() {
   const [gameTotal, setGameTotal] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [subscribeLoading, setSubscribeLoading] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
   const [mapResetKey, setMapResetKey] = useState(0);
   const [mapIsReset, setMapIsReset] = useState(true);
   const [visibleIds, setVisibleIds] = useState<Set<number>>(new Set());
@@ -308,30 +308,30 @@ export default function Unit() {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  async function handleSubscribe() {
+  async function handleFollow() {
     if (!isAuthenticated) {
       navigate(
         `/accounts/login/?next=${encodeURIComponent(`/unit/${identifier}/`)}`,
       );
       return;
     }
-    setSubscribeLoading(true);
+    setFollowLoading(true);
     try {
-      const method = unit?.is_subscribed ? 'DELETE' : 'POST';
-      const r = await apiFetch(`/api/units/${identifier}/subscribe/`, {
+      const method = unit?.is_following ? 'DELETE' : 'POST';
+      const r = await apiFetch(`/api/units/${identifier}/follow/`, {
         method,
       });
       if (!r.ok) {
         const body = await r.json().catch(() => ({}));
-        alert(body?.detail ?? t('unit.subscribeError'));
+        alert(body?.detail ?? t('unit.followError'));
         return;
       }
-      setUnit((u) => (u ? { ...u, is_subscribed: !u.is_subscribed } : u));
+      setUnit((u) => (u ? { ...u, is_following: !u.is_following } : u));
     } catch (e) {
-      reportError(e, { where: 'Unit.subscribe' });
-      alert(t('unit.subscribeError'));
+      reportError(e, { where: 'Unit.follow' });
+      alert(t('unit.followError'));
     } finally {
-      setSubscribeLoading(false);
+      setFollowLoading(false);
     }
   }
 
@@ -459,7 +459,7 @@ export default function Unit() {
                 </div>
                 <div>
                   <div className="font-heading text-2xl font-bold text-white">
-                    {formatNumber(unit.subscriber_count)}
+                    {formatNumber(unit.follower_count)}
                   </div>
                   <div className="mt-0.5 text-xs uppercase tracking-wide text-white/40">
                     {t('unit.statsFollowers')}
@@ -508,17 +508,15 @@ export default function Unit() {
                   </p>
                 )}
                 <button
-                  onClick={handleSubscribe}
-                  disabled={subscribeLoading}
+                  onClick={handleFollow}
+                  disabled={followLoading}
                   className={`rounded-btn px-[18px] py-[7px] text-sm font-medium tracking-wide transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50 ${
-                    unit.is_subscribed
+                    unit.is_following
                       ? 'bg-ember text-white'
                       : 'border border-white/20 bg-white/15 text-white'
                   }`}
                 >
-                  {unit.is_subscribed
-                    ? t('unit.unsubscribe')
-                    : t('unit.subscribe')}
+                  {unit.is_following ? t('unit.unfollow') : t('unit.follow')}
                 </button>
 
                 {unit.game && (
@@ -782,7 +780,7 @@ export default function Unit() {
             <GuestEmailCapture
               identifier={identifier}
               checkinId={claimingCheckinId}
-              subscriberCount={unit?.subscriber_count ?? 0}
+              followerCount={unit?.follower_count ?? 0}
               onDone={() => setClaimingCheckinId(null)}
             />
           </div>

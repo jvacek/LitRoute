@@ -69,7 +69,7 @@ There are two CSRF-aware fetch wrappers — use the right one for the right API:
 
 ```ts
 import { apiFetch } from '../api';
-await apiFetch(`/api/units/${identifier}/subscribe/`, { method: 'POST' });
+await apiFetch(`/api/units/${identifier}/follow/`, { method: 'POST' });
 
 import { logout } from '../lib/allauthApi';
 await logout(); // calls DELETE /_allauth/browser/v1/auth/session

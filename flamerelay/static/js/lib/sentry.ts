@@ -8,7 +8,7 @@ import * as Sentry from '@sentry/react';
  * states (401, 404) should be handled with explicit code paths, not reported.
  *
  * `context` is attached to the Sentry event as the `extra` payload — pass a
- * short string describing the call site (e.g. `{ where: 'Unit.subscribe' }`)
+ * short string describing the call site (e.g. `{ where: 'Unit.follow' }`)
  * so issues group cleanly in the Sentry UI.
  */
 export function reportError(

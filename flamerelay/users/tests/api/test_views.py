@@ -106,14 +106,14 @@ class TestDeleteAccount:
 
         mock_delete.assert_called_once_with("checkins/test.jpg")
 
-    def test_anonymize_removes_subscriptions(self, user: User):
+    def test_anonymize_removes_follows(self, user: User):
         unit = UnitFactory.create()
-        unit.subscribers.add(user)
+        unit.followers.add(user)
 
         with patch("django.core.files.storage.default_storage.delete"):
             anonymize_user(user)
 
-        assert not unit.subscribers.filter(pk=user.pk).exists()
+        assert not unit.followers.filter(pk=user.pk).exists()
 
     def test_delete_me_endpoint_returns_204(self, user: User):
         client = APIClient()

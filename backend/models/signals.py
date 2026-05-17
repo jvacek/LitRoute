@@ -10,15 +10,15 @@ from .unit import Unit
 
 
 @receiver(post_save, sender=Unit)
-def subscribe_creator_on_unit_create(sender, instance, created, **kwargs):
+def follow_creator_on_unit_create(sender, instance, created, **kwargs):
     if created:
-        instance.subscribers.add(instance.created_by)
+        instance.followers.add(instance.created_by)
 
 
 @receiver(post_save, sender=CheckIn)
-def send_email_to_subscribers_signal(sender, instance, created, **kwargs):
+def send_email_to_followers_signal(sender, instance, created, **kwargs):
     if created:
-        instance.send_email_to_subscribers(**kwargs)
+        instance.send_email_to_followers(**kwargs)
 
 
 @receiver(post_save, sender=CheckIn)

@@ -106,6 +106,7 @@
     }
   },
   "unit": {
+    "follow": "Sledovat",
     "statsTeam": "tým",
     "status": {
       "currentlyIn": "Zrovna v {{place}}",
@@ -113,7 +114,6 @@
       "lastSeenDaysAgo_one": "Naposledy viděno před {{count}} dnem v {{place}}",
       "lastSeenDaysAgo_other": "Naposledy viděno před {{count}} dny v {{place}}",
       "lastSeenYesterday": "Naposledy viděno v {{place}}"
-    },
-    "subscribe": "Odebírat"
+    }
   }
 }

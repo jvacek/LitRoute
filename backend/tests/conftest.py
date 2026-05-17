@@ -34,7 +34,7 @@ PARIS_PAYLOAD = {"type": "Point", "coordinates": [2.3522, 48.8566]}
 def mute_checkin_emails():
     """Patch out the two Celery email tasks fired by CheckIn.save()."""
     with (
-        patch("backend.services.send_email_to_subscribers_task.apply_async"),
+        patch("backend.services.send_email_to_followers_task.apply_async"),
         patch("backend.services.send_thank_you_email_task.apply_async"),
     ):
         yield

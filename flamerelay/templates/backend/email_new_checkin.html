@@ -84,14 +84,14 @@
   {% include "backend/email_cta_button.html" with cta_text="View the lighter →" %}
 {% endblock body %}
 {% block footer_text %}
-  You're receiving this because you subscribed to this lighter on LitRoute.
+  You're receiving this because you follow this lighter on LitRoute.
 {% endblock footer_text %}
 {% block footer_links %}
-  <a href="https://{{ site.domain }}/unit/{{ instance.unit.identifier }}/?action=unsubscribe"
+  <a href="https://{{ site.domain }}/unit/{{ instance.unit.identifier }}/?action=unfollow"
      style="color: #e8a030;
-            text-decoration: underline">Unsubscribe from this lighter</a>
+            text-decoration: underline">Unfollow this lighter</a>
   ·
   <a href="https://{{ site.domain }}/profile/"
      style="color: #e8a030;
-            text-decoration: underline">Manage subscriptions</a>
+            text-decoration: underline">Manage lighters you follow</a>
 {% endblock footer_links %}

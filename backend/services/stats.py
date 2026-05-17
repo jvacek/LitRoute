@@ -28,7 +28,7 @@ def _compute_stats() -> dict:
         .exclude(checkin_count__lt=1)
         .count(),
         "checkin_count": CheckIn.objects.count(),
-        "followers": user_model.objects.filter(subscribed_units__isnull=False).distinct().count(),
+        "followers": user_model.objects.filter(followed_units__isnull=False).distinct().count(),
         "total_distance_traveled_km": total_distance_traveled_in_km(),
     }
 

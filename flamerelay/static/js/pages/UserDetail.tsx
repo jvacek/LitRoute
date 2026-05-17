@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { logout } from '../lib/allauthApi';
 
-interface SubscribedUnit {
+interface FollowedUnit {
   identifier: string;
   checkin_count: number;
 }
@@ -20,14 +20,14 @@ export default function UserDetail() {
   const { t } = useTranslation();
   const { username, name, adminUrl, refresh } = useAuth();
   const navigate = useNavigate();
-  const [subscribedUnits, setSubscribedUnits] = useState<
-    SubscribedUnit[] | null
-  >(null);
+  const [followedUnits, setFollowedUnits] = useState<FollowedUnit[] | null>(
+    null,
+  );
 
   useEffect(() => {
-    fetch('/api/account/subscriptions/')
+    fetch('/api/account/follows/')
       .then((r) => (r.ok ? r.json() : null))
-      .then((data: SubscribedUnit[] | null) => setSubscribedUnits(data ?? []));
+      .then((data: FollowedUnit[] | null) => setFollowedUnits(data ?? []));
   }, []);
 
   const displayName = name || username;
@@ -92,13 +92,13 @@ export default function UserDetail() {
 
       <section className="mt-10 border-t border-char/10 pt-8">
         <h2 className="font-heading mb-4 text-xl font-semibold text-char">
-          {t('userDetail.subscribedUnits')}
+          {t('userDetail.followedUnits')}
         </h2>
-        {subscribedUnits === null ? null : subscribedUnits.length === 0 ? (
-          <p className="text-smoke">{t('userDetail.noSubscriptions')}</p>
+        {followedUnits === null ? null : followedUnits.length === 0 ? (
+          <p className="text-smoke">{t('userDetail.noFollows')}</p>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">
-            {subscribedUnits.map((unit) => (
+            {followedUnits.map((unit) => (
               <li key={unit.identifier}>
                 <Link
                   to={`/unit/${unit.identifier}/`}

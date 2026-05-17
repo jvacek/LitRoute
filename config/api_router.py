@@ -9,14 +9,14 @@ from backend.api.views import (
     GameJourneysView,
     GameLeaderboardView,
     GlobePinsView,
-    GuestSubscribeView,
+    GuestFollowView,
     GuestVerifyView,
     StatsView,
     UnitViewSet,
     sentry_tunnel,
 )
 from flamerelay.users.api.views import (
-    AccountSubscriptionsView,
+    AccountFollowsView,
     AccountView,
     RequestCodeView,
     SocialAccountDisconnectView,
@@ -28,7 +28,7 @@ app_name = "api"
 urlpatterns = [
     *router.urls,
     path("account/", AccountView.as_view(), name="account"),
-    path("account/subscriptions/", AccountSubscriptionsView.as_view(), name="account-subscriptions"),
+    path("account/follows/", AccountFollowsView.as_view(), name="account-follows"),
     path(
         "units/<str:identifier>/",
         UnitViewSet.as_view({"get": "retrieve"}),
@@ -45,9 +45,9 @@ urlpatterns = [
         name="checkin-detail",
     ),
     path(
-        "units/<str:identifier>/subscribe/",
-        UnitViewSet.as_view({"post": "subscribe", "delete": "unsubscribe"}),
-        name="unit-subscribe",
+        "units/<str:identifier>/follow/",
+        UnitViewSet.as_view({"post": "follow", "delete": "unfollow"}),
+        name="unit-follow",
     ),
     path("games/<int:pk>/leaderboard/", GameLeaderboardView.as_view(), name="game-leaderboard"),
     path("games/<int:pk>/journeys/", GameJourneysView.as_view(), name="game-journeys"),
@@ -56,7 +56,7 @@ urlpatterns = [
     path("globe-pins/", GlobePinsView.as_view(), name="globe-pins"),
     path("auth/code/request/", RequestCodeView.as_view(), name="auth-code-request"),
     path("account/social-accounts/", SocialAccountDisconnectView.as_view(), name="account-social-accounts"),
-    path("units/<str:identifier>/guest-subscribe/", GuestSubscribeView.as_view(), name="guest-subscribe"),
+    path("units/<str:identifier>/guest-follow/", GuestFollowView.as_view(), name="guest-follow"),
     path("guest-verify/", GuestVerifyView.as_view(), name="guest-verify"),
     path("feedback/", FeedbackView.as_view(), name="feedback"),
     path("sentry/envelope/", sentry_tunnel, name="sentry-tunnel"),

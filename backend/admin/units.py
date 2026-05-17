@@ -29,17 +29,17 @@ class UnitAdmin(admin.ModelAdmin):
         "date_created",
         "created_by",
         "team",
-        "subscriber_count",
+        "follower_count",
         "checkin_count",
     )
     list_filter = ("date_created", "created_by", "team")
     list_select_related = ("team", "created_by")
-    filter_horizontal = ["subscribers"]
+    filter_horizontal = ["followers"]
     inlines = [CheckInInline]
 
-    @admin.display(description="Subscribers", ordering="subscriber_count")
-    def subscriber_count(self, obj):
-        return obj.subscriber_count
+    @admin.display(description="Followers", ordering="follower_count")
+    def follower_count(self, obj):
+        return obj.follower_count
 
     @admin.display(description="Check-ins", ordering="checkin_count")
     def checkin_count(self, obj):
@@ -64,7 +64,7 @@ class UnitAdmin(admin.ModelAdmin):
 
     def get_exclude(self, request, obj=None):
         if self._is_contributor(request):
-            return ["subscribers"]
+            return ["followers"]
         return super().get_exclude(request, obj)
 
     def get_list_filter(self, request):
@@ -77,7 +77,7 @@ class UnitAdmin(admin.ModelAdmin):
             super()
             .get_queryset(request)
             .annotate(
-                subscriber_count=Count("subscribers", distinct=True),
+                follower_count=Count("followers", distinct=True),
                 checkin_count=Count("checkin", distinct=True),
             )
         )
@@ -121,4 +121,4 @@ class UnitAdmin(admin.ModelAdmin):
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
         if not change and form.instance.created_by_id:
-            form.instance.subscribers.add(form.instance.created_by_id)
+            form.instance.followers.add(form.instance.created_by_id)

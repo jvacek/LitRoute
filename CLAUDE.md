@@ -12,7 +12,7 @@
 
 ## Project Overview
 
-flamerelay (brand name: **LitRoute**) is a Django app for tracking "lighters" (Units) as they travel between locations. Users check in a unit with a location, up to 5 images, and a message; subscribers get email notifications; a map shows the travel history.
+flamerelay (brand name: **LitRoute**) is a Django app for tracking "lighters" (Units) as they travel between locations. Users check in a unit with a location, up to 5 images, and a message; followers get email notifications; a map shows the travel history.
 
 ## Tech Stack
 

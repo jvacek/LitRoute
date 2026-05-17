@@ -205,7 +205,7 @@ class Command(BaseCommand):
                     team=team,
                     game=game,
                 )
-                unit.subscribers.add(user)
+                unit.followers.add(user)
                 created_units.append(identifier)
                 created_checkins += self._populate_unit_checkins(unit, user, n_checkins, now, start_city=start_city)
         return created_units, created_checkins
@@ -255,7 +255,7 @@ class Command(BaseCommand):
                     created_by=user,
                     admin_only_checkin=identifier == EXAMPLE_IDENTIFIER,
                 )
-                unit.subscribers.add(user)
+                unit.followers.add(user)
                 created_units.append(identifier)
                 created_checkins += self._populate_unit_checkins(unit, user, n_checkins, now)
 

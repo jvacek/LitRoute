@@ -15,12 +15,12 @@ function LighterIllustration() {
 export default function GuestEmailCapture({
   identifier,
   checkinId,
-  subscriberCount,
+  followerCount,
   onDone,
 }: {
   identifier: string;
   checkinId: number;
-  subscriberCount: number;
+  followerCount: number;
   onDone: () => void;
 }) {
   const { t } = useTranslation();
@@ -34,7 +34,7 @@ export default function GuestEmailCapture({
     setLoading(true);
     setError('');
     try {
-      const res = await apiFetch(`/api/units/${identifier}/guest-subscribe/`, {
+      const res = await apiFetch(`/api/units/${identifier}/guest-follow/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, checkin_id: checkinId }),
@@ -78,9 +78,9 @@ export default function GuestEmailCapture({
         {t('checkin.guestEmailTitle')}
       </h1>
       <p className="mb-6 text-smoke">{t('checkin.guestEmailSubtitle')}</p>
-      {subscriberCount > 0 && (
+      {followerCount > 0 && (
         <p className="mb-4 text-sm font-medium text-amber">
-          {t('checkin.guestEmailSocialProof', { count: subscriberCount })}
+          {t('checkin.guestEmailSocialProof', { count: followerCount })}
         </p>
       )}
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">

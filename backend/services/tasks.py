@@ -55,15 +55,15 @@ def cleanup_orphaned_checkin_images():
     return deleted
 
 
-@shared_task(name="backend.services.send_email_to_subscribers_task", base=EmailTask, serializer="json")
-def send_email_to_subscribers_task(checkin_id: int):
+@shared_task(name="backend.services.send_email_to_followers_task", base=EmailTask, serializer="json")
+def send_email_to_followers_task(checkin_id: int):
 
     from backend.models import CheckIn  # noqa: PLC0415
 
     try:
         checkin = CheckIn.objects.select_related("unit").get(pk=checkin_id)
     except CheckIn.DoesNotExist:
-        logger.info("CheckIn %d no longer exists, skipping subscriber emails", checkin_id)
+        logger.info("CheckIn %d no longer exists, skipping follower emails", checkin_id)
         return
 
     site = Site.objects.get_current()
@@ -71,10 +71,10 @@ def send_email_to_subscribers_task(checkin_id: int):
     from_email = f"LitRoute <noreply@{site.domain}>"
 
     messages = []
-    subscribers = checkin.unit.subscribers.all()
+    followers = checkin.unit.followers.all()
     if checkin.created_by_id:
-        subscribers = subscribers.exclude(pk=checkin.created_by_id)
-    for user in subscribers:
+        followers = followers.exclude(pk=checkin.created_by_id)
+    for user in followers:
         html_message = render_to_string(
             "backend/email_new_checkin.html", {"instance": checkin, "user": user, "site": site}
         )
@@ -88,7 +88,7 @@ def send_email_to_subscribers_task(checkin_id: int):
             }
         )
 
-    logger.info("Sending %d emails to subscribers for checkin %d", len(messages), checkin_id)
+    logger.info("Sending %d emails to followers for checkin %d", len(messages), checkin_id)
     for message in messages:
         mail.send_mail(**message, fail_silently=False)
 

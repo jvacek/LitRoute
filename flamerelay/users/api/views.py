@@ -35,14 +35,14 @@ class AccountView(generics.RetrieveUpdateDestroyAPIView):
         anonymize_user(instance)
 
 
-class AccountSubscriptionsView(generics.ListAPIView):
+class AccountFollowsView(generics.ListAPIView):
     serializer_class = UnitSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return self.request.user.subscribed_units.annotate(
+        return self.request.user.followed_units.annotate(
             checkin_count=Count("checkin", distinct=True),
-            subscriber_count=Count("subscribers", distinct=True),
+            follower_count=Count("followers", distinct=True),
         )
 
 

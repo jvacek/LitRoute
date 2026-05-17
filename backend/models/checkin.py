@@ -4,7 +4,7 @@ from django.db import models
 from django.utils import timezone
 from django_resized import ResizedImageField
 
-from backend.services import send_email_to_subscribers_task, send_thank_you_email_task
+from backend.services import send_email_to_followers_task, send_thank_you_email_task
 from config.constants import (
     CHECKIN_ANONYMOUS_NAME_MAX_LENGTH,
     CHECKIN_EMAIL_DELAY_SECONDS,
@@ -34,10 +34,10 @@ class CheckIn(models.Model):
     def get_absolute_url(self) -> str:
         return f"/unit/{self.unit.identifier}/"
 
-    def send_email_to_subscribers(self, **kwargs):
+    def send_email_to_followers(self, **kwargs):
 
         countdown = 0 if settings.DEBUG else CHECKIN_EMAIL_DELAY_SECONDS
-        send_email_to_subscribers_task.apply_async(args=[self.pk], countdown=countdown)
+        send_email_to_followers_task.apply_async(args=[self.pk], countdown=countdown)
         send_thank_you_email_task.apply_async(args=[self.pk], countdown=countdown)
 
 

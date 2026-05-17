@@ -215,7 +215,7 @@
       "step2Title": "Check in.",
       "step3Body": "Geef hem aan een onbekende. Laat hem achter in een café, een hostel, bij een wandelpad. Jij bepaalt het volgende hoofdstuk.",
       "step3Title": "Geef hem door.",
-      "step4Body": "Abonneer je en krijg een mailtje als iemand hem weer vindt — waar dat ook ter wereld is. Het onschuldig stalken van een stukje metaal.",
+      "step4Body": "Volg de aansteker en krijg een mailtje als iemand hem weer vindt — waar dat ook ter wereld is. Het onschuldig stalken van een stukje metaal.",
       "step4Title": "Blijf op de hoogte."
     },
     "journey": {
@@ -233,7 +233,7 @@
       "activeLighters": "actieve aanstekers",
       "checkinsLogged": "check-ins geregistreerd",
       "freeText": "Gratis te gebruiken, in leven gehouden door lezers zoals jij. <supportLink>Steun het project</supportLink>",
-      "peopleFollowing": "mensen geabonneerd",
+      "peopleFollowing": "mensen die volgen",
       "traveledSoFar": "afgelegd tot nu toe"
     },
     "subheadline": "Vind een aansteker met een QR-sticker. Scan hem om te ontdekken waar hij allemaal is geweest en wie hem in zijn bezit heeft gehad. Laat je eigen bericht achter — geef hem dan door aan de volgende onbekende.",
@@ -278,7 +278,7 @@
     "zoneAriaFull": "Foto-uploadzone — maximum bereikt"
   },
   "supportSection": {
-    "body1": "LitRoute is een eenmansproject. Geen reclame, geen abonnementen, geen investeerders — alleen serverkosten, e-mailbezorging en opslag uit eigen zak. De aanstekers zelf ook: elke aansteker wordt met de hand gekocht en geregistreerd voordat hij aan zijn reis kan beginnen.",
+    "body1": "LitRoute is een eenmansproject. Geen reclame, geen betaalde abonnementen, geen investeerders — alleen serverkosten, e-mailbezorging en opslag uit eigen zak. De aanstekers zelf ook: elke aansteker wordt met de hand gekocht en geregistreerd voordat hij aan zijn reis kan beginnen.",
     "body2": "Heb je hier met plezier een reis gevolgd? Dan helpt een kleine bijdrage echt.",
     "donateCta": "Tip",
     "githubDescription": "Sponsor direct op GitHub",
@@ -300,6 +300,7 @@
     "deleteConfirm": "Deze check-in verwijderen?",
     "deleteError": "Kon deze check-in niet verwijderen.",
     "editBtn": "Bewerken",
+    "follow": "Volgen",
     "game": {
       "leaderboardLink": "Naar de ranglijst",
       "rankLabel": "van {{total}}",
@@ -335,10 +336,9 @@
       "lastSeenDaysAgo_other": "{{count}} dagen geleden voor het laatst gezien in {{place}}",
       "lastSeenYesterday": "Gisteren voor het laatst gezien in {{place}}"
     },
-    "subscribe": "Abonneren",
     "supportPrompt": "LitRoute is gratis en gemaakt door één persoon. Als je blij werd van deze (online) reis, overweeg dan <supportLink>het project te steunen</supportLink>",
     "travelLog": "Reisverslag",
-    "unsubscribe": "Afmelden",
-    "verifiedBanner": "Je e-mail is bevestigd — je bent nu geabonneerd!"
+    "unfollow": "Niet meer volgen",
+    "verifiedBanner": "Je e-mail is bevestigd — je volgt deze aansteker nu!"
   }
 }

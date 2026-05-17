@@ -77,7 +77,7 @@
     "guestEmailSocialProof_one": "Rejoignez {{count}} autre personne qui suit ce briquet.",
     "guestEmailSocialProof_other": "Rejoignez {{count}} autres personnes qui suivent ce briquet.",
     "guestEmailSubmit": "Suivre ce briquet",
-    "guestEmailSubtitle": "On vous enverra un e-mail quand quelqu'un d'autre s'enregistrera ailleurs avec ce briquet. C'est tout — pas de marketing, désabonnement en un clic.",
+    "guestEmailSubtitle": "On vous enverra un e-mail quand quelqu'un d'autre s'enregistrera ailleurs avec ce briquet. C'est tout — pas de marketing, un clic pour ne plus suivre.",
     "guestEmailTitle": "Vous voulez savoir où ce briquet ira ensuite ?"
   },
   "common": {
@@ -217,7 +217,7 @@
       "step2Title": "Enregistrez-vous.",
       "step3Body": "Donnez-le à un inconnu. Laissez-le dans un café, une auberge, un sentier de randonnée. Vous choisissez le prochain chapitre.",
       "step3Title": "Passez-le.",
-      "step4Body": "Abonnez-vous et recevez un e-mail la prochaine fois que quelqu'un le trouve — où que ce soit dans le monde. Du suivi discret d'un morceau de métal.",
+      "step4Body": "Suivez-le et recevez un e-mail la prochaine fois que quelqu'un le trouve — où que ce soit dans le monde. Du suivi discret d'un morceau de métal.",
       "step4Title": "Suivez l'aventure."
     },
     "journey": {
@@ -235,7 +235,7 @@
       "activeLighters": "briquets actifs",
       "checkinsLogged": "enregistrements faits",
       "freeText": "Gratuit, maintenu en vie par des lecteurs comme vous. <supportLink>Soutenir le projet</supportLink>",
-      "peopleFollowing": "personnes abonnées",
+      "peopleFollowing": "personnes qui suivent",
       "traveledSoFar": "parcourus jusqu'ici"
     },
     "subheadline": "Trouvez un briquet avec un autocollant QR. Scannez-le pour découvrir partout où il est passé et toutes les personnes qui l'ont tenu. Laissez votre propre note — puis passez-le au prochain inconnu.",
@@ -280,7 +280,7 @@
     "zoneAriaFull": "Zone de téléversement — maximum atteint"
   },
   "supportSection": {
-    "body1": "LitRoute est un projet solo. Pas de pub, pas d'abonnements, pas d'investisseurs — juste les coûts de serveur, d'envoi d'e-mails et de stockage qui viennent de ma poche. Y compris les briquets eux-mêmes : chacun est acheté et enregistré à la main avant de pouvoir commencer son voyage.",
+    "body1": "LitRoute est un projet solo. Pas de pub, pas de formules payantes, pas d'investisseurs — juste les coûts de serveur, d'envoi d'e-mails et de stockage qui viennent de ma poche. Y compris les briquets eux-mêmes : chacun est acheté et enregistré à la main avant de pouvoir commencer son voyage.",
     "body2": "Si vous avez aimé suivre un voyage ici, une petite contribution fait toute la différence.",
     "donateCta": "Soutenir",
     "githubDescription": "Sponsorisez directement sur GitHub",
@@ -302,6 +302,7 @@
     "deleteConfirm": "Supprimer cet enregistrement ?",
     "deleteError": "Impossible de supprimer cet enregistrement.",
     "editBtn": "Modifier",
+    "follow": "Suivre",
     "game": {
       "leaderboardLink": "Aller au classement",
       "rankLabel": "sur {{total}}",
@@ -327,7 +328,7 @@
     "placeNotGiven": "Lieu non précisé",
     "prevPhoto": "Photo précédente",
     "resetView": "Réinitialiser la vue",
-    "statsFollowers": "abonnés",
+    "statsFollowers": "qui suivent",
     "statsKmTraveled": "km parcourus",
     "statsStops": "arrêts",
     "statsTeam": "équipe",
@@ -337,10 +338,9 @@
       "lastSeenDaysAgo_other": "Vu pour la dernière fois il y a {{count}} jours à {{place}}",
       "lastSeenYesterday": "Vu pour la dernière fois hier à {{place}}"
     },
-    "subscribe": "S'abonner",
     "supportPrompt": "LitRoute est gratuit et fait par une seule personne. Si ce voyage vous a fait sourire, pensez à <supportLink>le soutenir</supportLink>",
     "travelLog": "Journal de voyage",
-    "unsubscribe": "Se désabonner",
-    "verifiedBanner": "Votre e-mail est confirmé — vous êtes maintenant abonné !"
+    "unfollow": "Ne plus suivre",
+    "verifiedBanner": "Votre e-mail est confirmé — vous suivez maintenant ce briquet !"
   }
 }

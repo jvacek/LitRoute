@@ -18,20 +18,20 @@ from backend.models import CheckIn, Unit
 from config.constants import GUEST_EMAIL_VERIFICATION_EXPIRY_SECONDS
 
 
-class GuestSubscribeView(APIView):
+class GuestFollowView(APIView):
     permission_classes = [AllowAny]
 
     @extend_schema(
         request=inline_serializer(
-            name="GuestSubscribeRequest",
+            name="GuestFollowRequest",
             fields={
                 "email": serializers.EmailField(),
                 "checkin_id": serializers.IntegerField(),
             },
         ),
         responses={
-            201: inline_serializer(name="GuestSubscribeSuccess", fields={"detail": serializers.CharField()}),
-            400: inline_serializer(name="GuestSubscribeError", fields={"detail": serializers.CharField()}),
+            201: inline_serializer(name="GuestFollowSuccess", fields={"detail": serializers.CharField()}),
+            400: inline_serializer(name="GuestFollowError", fields={"detail": serializers.CharField()}),
         },
     )
     def post(self, request, identifier):
@@ -52,7 +52,7 @@ class GuestSubscribeView(APIView):
         if not checkin_id:
             return Response({"detail": "checkin_id is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if not ratelimit.consume(request, action="guest_subscribe", key=email):
+        if not ratelimit.consume(request, action="guest_follow", key=email):
             return Response(
                 {"detail": "Too many attempts. Please try again later."},
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -99,7 +99,7 @@ class GuestVerifyView(View):
         )
 
         unit = get_object_or_404(Unit, identifier=unit_identifier)
-        unit.subscribers.add(user)
+        unit.followers.add(user)
 
         # explicit list for cache snapshot
         checkins = list(CheckIn.objects.filter(pk=checkin_id, unit=unit, created_by__isnull=True))
@@ -112,7 +112,7 @@ class GuestVerifyView(View):
                     break
         # Per-instance save (not queryset.update) so the post_save signal
         # fires and the cache invalidation in models.py runs. Stats also
-        # needs to invalidate (subscribers changes when a guest
+        # needs to invalidate (followers changes when a guest
         # claim flips created_by from null to a user); the signal handles
         # that via invalidate_checkin_caches.
         for c in checkins:

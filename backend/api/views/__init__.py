@@ -2,7 +2,7 @@ from .checkins import CheckInViewSet
 from .config import ConfigView, GlobePinsView, StatsView
 from .feedback import FeedbackView
 from .games import GameJourneysView, GameLeaderboardView
-from .guest import GuestSubscribeView, GuestVerifyView
+from .guest import GuestFollowView, GuestVerifyView
 from .sentry_tunnel import sentry_tunnel
 from .units import UnitViewSet
 
@@ -13,7 +13,7 @@ __all__ = [
     "GameJourneysView",
     "GameLeaderboardView",
     "GlobePinsView",
-    "GuestSubscribeView",
+    "GuestFollowView",
     "GuestVerifyView",
     "StatsView",
     "UnitViewSet",

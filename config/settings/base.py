@@ -392,7 +392,7 @@ ACCOUNT_LOGIN_BY_CODE_TIMEOUT = constants.LOGIN_CODE_TIMEOUT_SECONDS
 ACCOUNT_LOGIN_BY_CODE_MAX_ATTEMPTS = constants.LOGIN_CODE_MAX_ATTEMPTS
 ACCOUNT_ADAPTER = "flamerelay.users.adapters.AccountAdapter"
 ACCOUNT_RATE_LIMITS = {
-    "guest_subscribe": "5/h",  # max 5 verification emails per email address per hour
+    "guest_follow": "5/h",  # max 5 verification emails per email address per hour
     "guest_verify": "20/h/ip",  # defence-in-depth on account-creation endpoint
 }
 # https://docs.allauth.org/en/latest/socialaccount/configuration.html

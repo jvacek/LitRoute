@@ -4,12 +4,12 @@ from django.utils.html import format_html
 from backend.models import CheckIn, CheckInImage
 
 
-@admin.action(description="Send email to subscribers")
-def send_email_to_subscribers(modeladmin, request, queryset):
+@admin.action(description="Send email to followers")
+def send_email_to_followers(modeladmin, request, queryset):
     # queryset.update(status="p")
     obj: CheckIn
     for obj in queryset:
-        obj.send_email_to_subscribers()
+        obj.send_email_to_followers()
 
 
 class CheckInImageInline(admin.TabularInline):
@@ -41,5 +41,5 @@ class CheckInAdmin(admin.ModelAdmin):
     )
     list_filter = ("unit", "date_created", "created_by")
     list_select_related = ("unit", "created_by")
-    actions = [send_email_to_subscribers]
+    actions = [send_email_to_followers]
     inlines = [CheckInImageInline]

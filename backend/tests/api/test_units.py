@@ -1,4 +1,4 @@
-"""GET /api/units/<identifier>/ — retrieve, subscription state, game payload."""
+"""GET /api/units/<identifier>/ — retrieve, follow state, game payload."""
 
 from __future__ import annotations
 
@@ -18,16 +18,16 @@ class TestUnitRetrieve:
         assert res.status_code == status.HTTP_404_NOT_FOUND
 
 
-class TestUnitSubscriptionState:
-    def test_is_subscribed_false_for_anon(self, client, unit):
-        assert client.get(f"/api/units/{unit.identifier}/").json()["is_subscribed"] is False
+class TestUnitFollowState:
+    def test_is_following_false_for_anon(self, client, unit):
+        assert client.get(f"/api/units/{unit.identifier}/").json()["is_following"] is False
 
-    def test_is_subscribed_false_when_not_subscribed(self, auth_client, unit):
-        assert auth_client.get(f"/api/units/{unit.identifier}/").json()["is_subscribed"] is False
+    def test_is_following_false_when_not_following(self, auth_client, unit):
+        assert auth_client.get(f"/api/units/{unit.identifier}/").json()["is_following"] is False
 
-    def test_is_subscribed_true_when_subscribed(self, auth_client, unit, user):
-        unit.subscribers.add(user)
-        assert auth_client.get(f"/api/units/{unit.identifier}/").json()["is_subscribed"] is True
+    def test_is_following_true_when_following(self, auth_client, unit, user):
+        unit.followers.add(user)
+        assert auth_client.get(f"/api/units/{unit.identifier}/").json()["is_following"] is True
 
 
 class TestUnitCheckInCapability:

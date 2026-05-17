@@ -24,7 +24,7 @@ _REMOVED_ITEMS = [
     "Your name and profile information",
     "All photos you uploaded to check-ins",
     "All messages you left on check-ins",
-    "Your unit subscriptions",
+    "The lighters you follow",
 ]
 
 
@@ -81,7 +81,7 @@ def anonymize_user(user) -> None:
 
         CheckInImage.objects.filter(checkin__created_by=user).delete()
         CheckIn.objects.filter(created_by=user).update(message="")
-        user.subscribed_units.clear()
+        user.followed_units.clear()
 
         if affected_game_ids:
             keys = [

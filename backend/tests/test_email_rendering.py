@@ -2,7 +2,7 @@
 
 We don't re-test Django's template engine itself — only the
 project-specific invariants that the new-checkin template carries an
-unsubscribe link and the thank-you template doesn't.
+unfollow link and the thank-you template doesn't.
 """
 
 from __future__ import annotations
@@ -28,14 +28,14 @@ def site(db):
 
 
 @pytest.fixture
-def subscriber(db):
+def follower(db):
     return UserFactory.create()
 
 
 @pytest.fixture
-def checkin(db, subscriber):
+def checkin(db, follower):
     unit = UnitFactory.create()
-    unit.subscribers.add(subscriber)
+    unit.followers.add(follower)
     return CheckInFactory.create(
         unit=unit,
         message="Just arrived in Paris!",
@@ -49,16 +49,16 @@ def _render_new_checkin(checkin, user, site):
 
 
 class TestNewCheckinEmail:
-    def test_unsubscribe_link_present(self, checkin, subscriber, site):
-        assert "action=unsubscribe" in _render_new_checkin(checkin, subscriber, site)
+    def test_unfollow_link_present(self, checkin, follower, site):
+        assert "action=unfollow" in _render_new_checkin(checkin, follower, site)
 
-    def test_no_img_tag_when_checkin_has_no_image(self, checkin, subscriber, site):
-        assert "<img" not in _render_new_checkin(checkin, subscriber, site)
+    def test_no_img_tag_when_checkin_has_no_image(self, checkin, follower, site):
+        assert "<img" not in _render_new_checkin(checkin, follower, site)
 
 
 class TestThankYouEmail:
-    def test_no_unsubscribe_link(self, checkin, site):
-        assert "action=unsubscribe" not in render_thank_you_email(checkin, site)
+    def test_no_unfollow_link(self, checkin, site):
+        assert "action=unfollow" not in render_thank_you_email(checkin, site)
 
     def test_no_img_tag_when_checkin_has_no_image(self, checkin, site):
         assert "<img" not in render_thank_you_email(checkin, site)

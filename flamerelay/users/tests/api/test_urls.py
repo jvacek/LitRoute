@@ -11,7 +11,7 @@ from django.urls import resolve, reverse
     ("name", "path"),
     [
         ("api:account", "/api/account/"),
-        ("api:account-subscriptions", "/api/account/subscriptions/"),
+        ("api:account-follows", "/api/account/follows/"),
     ],
 )
 def test_named_routes_resolve(name, path):

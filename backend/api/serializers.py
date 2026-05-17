@@ -157,9 +157,9 @@ class GameJourneysSerializer(serializers.Serializer):
 
 class UnitSerializer(serializers.ModelSerializer):
     checkin_count = serializers.IntegerField(read_only=True)
-    subscriber_count = serializers.IntegerField(read_only=True)
+    follower_count = serializers.IntegerField(read_only=True)
     distance_traveled_km = serializers.SerializerMethodField()
-    is_subscribed = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
     can_check_in = serializers.SerializerMethodField()
     is_gps_enforced = serializers.SerializerMethodField()
     team = TeamSerializer(read_only=True)
@@ -173,9 +173,9 @@ class UnitSerializer(serializers.ModelSerializer):
             "admin_only_checkin",
             "team",
             "checkin_count",
-            "subscriber_count",
+            "follower_count",
             "distance_traveled_km",
-            "is_subscribed",
+            "is_following",
             "can_check_in",
             "is_gps_enforced",
             "game",
@@ -184,10 +184,10 @@ class UnitSerializer(serializers.ModelSerializer):
     def get_distance_traveled_km(self, obj: Unit) -> float:
         return obj.get_distance_traveled()
 
-    def get_is_subscribed(self, obj: Unit) -> bool:
+    def get_is_following(self, obj: Unit) -> bool:
         request = self.context.get("request")
         if request and request.user.is_authenticated:
-            return obj.subscribers.filter(id=request.user.id).exists()
+            return obj.followers.filter(id=request.user.id).exists()
         return False
 
     def get_can_check_in(self, obj: Unit) -> bool:

@@ -87,7 +87,7 @@ class CheckinValidator:
         if user.is_authenticated and not self.unit.can_user_check_in(user, previous=self.previous):
             msg = (
                 "You can't check in here — once someone else takes the lighter, "
-                "its journey moves on. You can still follow along by subscribing."
+                "its journey moves on. You can still follow along."
             )
             raise PermissionDenied(msg)
 
@@ -254,10 +254,10 @@ def check_authenticated_owner(checkin, user, verb: str, grace_hours: int) -> Non
 
 def save_checkin_record(unit, serializer, user):
     """Save the CheckIn after all pre-flight checks have passed. Authenticated
-    callers auto-subscribe to the unit; anon callers get a one-shot edit token."""
+    callers auto-follow the unit; anon callers get a one-shot edit token."""
     if user.is_authenticated:
         checkin = serializer.save(created_by=user, unit=unit)
-        unit.subscribers.add(user)
+        unit.followers.add(user)
     else:
         checkin = serializer.save(created_by=None, unit=unit, edit_token=uuid.uuid4())
     return checkin

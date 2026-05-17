@@ -1,5 +1,5 @@
 """Anonymous check-in flow: create with edit_token, edit/delete via header,
-guest subscribe + email verification, and Turnstile CAPTCHA gating."""
+guest follow + email verification, and Turnstile CAPTCHA gating."""
 
 from __future__ import annotations
 
@@ -168,15 +168,15 @@ class TestAnonCheckinDelete:
         assert CheckIn.objects.filter(pk=checkin.pk).exists()
 
 
-# ── Guest subscribe ────────────────────────────────────────────────────────────
+# ── Guest follow ───────────────────────────────────────────────────────────────
 
 
-class TestGuestSubscribe:
+class TestGuestFollow:
     def test_valid_request_returns_201_and_enqueues_email(self, client, unit, make_checkin):
         checkin = make_checkin(unit, anonymous=True)
         with patch("backend.services.send_guest_verification_email_task.delay") as mock_task:
             res = client.post(
-                f"/api/units/{unit.identifier}/guest-subscribe/",
+                f"/api/units/{unit.identifier}/guest-follow/",
                 {"email": "sub@example.com", "checkin_id": checkin.pk},
                 format="json",
             )
@@ -186,7 +186,7 @@ class TestGuestSubscribe:
     def test_invalid_email_format_returns_400(self, client, unit, make_checkin):
         checkin = make_checkin(unit, anonymous=True)
         res = client.post(
-            f"/api/units/{unit.identifier}/guest-subscribe/",
+            f"/api/units/{unit.identifier}/guest-follow/",
             {"email": "not-an-email", "checkin_id": checkin.pk},
             format="json",
         )
@@ -195,7 +195,7 @@ class TestGuestSubscribe:
     def test_missing_email_returns_400(self, client, unit, make_checkin):
         checkin = make_checkin(unit, anonymous=True)
         res = client.post(
-            f"/api/units/{unit.identifier}/guest-subscribe/",
+            f"/api/units/{unit.identifier}/guest-follow/",
             {"checkin_id": checkin.pk},
             format="json",
         )
@@ -203,16 +203,16 @@ class TestGuestSubscribe:
 
     def test_missing_checkin_id_returns_400(self, client, unit):
         res = client.post(
-            f"/api/units/{unit.identifier}/guest-subscribe/",
+            f"/api/units/{unit.identifier}/guest-follow/",
             {"email": "sub@example.com"},
             format="json",
         )
         assert res.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_owned_checkin_cannot_be_used_for_guest_subscribe(self, client, unit, make_checkin):
+    def test_owned_checkin_cannot_be_used_for_guest_follow(self, client, unit, make_checkin):
         owned = make_checkin(unit, UserFactory.create())
         res = client.post(
-            f"/api/units/{unit.identifier}/guest-subscribe/",
+            f"/api/units/{unit.identifier}/guest-follow/",
             {"email": "sub@example.com", "checkin_id": owned.pk},
             format="json",
         )
@@ -222,7 +222,7 @@ class TestGuestSubscribe:
         other_unit = UnitFactory.create()
         checkin = make_checkin(other_unit, anonymous=True)
         res = client.post(
-            f"/api/units/{unit.identifier}/guest-subscribe/",
+            f"/api/units/{unit.identifier}/guest-follow/",
             {"email": "sub@example.com", "checkin_id": checkin.pk},
             format="json",
         )
@@ -230,7 +230,7 @@ class TestGuestSubscribe:
 
     def test_nonexistent_unit_returns_404(self, client, db):
         res = client.post(
-            "/api/units/NONE-99/guest-subscribe/",
+            "/api/units/NONE-99/guest-follow/",
             {"email": "sub@example.com", "checkin_id": 1},
             format="json",
         )
@@ -241,7 +241,7 @@ class TestGuestSubscribe:
         csrf_client = APIClient(enforce_csrf_checks=True)
         checkin = make_checkin(unit, anonymous=True)
         res = csrf_client.post(
-            f"/api/units/{unit.identifier}/guest-subscribe/",
+            f"/api/units/{unit.identifier}/guest-follow/",
             {"email": "sub@example.com", "checkin_id": checkin.pk},
             format="json",
         )
@@ -267,12 +267,12 @@ class TestGuestVerify:
         assert checkin.created_by is not None
         assert checkin.created_by.email == "claimer@example.com"
 
-    def test_valid_token_subscribes_user_to_unit(self, client, unit, make_checkin):
+    def test_valid_token_follows_user_to_unit(self, client, unit, make_checkin):
         checkin = make_checkin(unit, anonymous=True)
-        token = _make_verify_token("subscriber@example.com", unit.identifier, checkin.pk)
+        token = _make_verify_token("follower@example.com", unit.identifier, checkin.pk)
         client.get(f"/api/guest-verify/?token={token}")
-        user = get_user_model().objects.get(email="subscriber@example.com")
-        assert unit.subscribers.filter(pk=user.pk).exists()
+        user = get_user_model().objects.get(email="follower@example.com")
+        assert unit.followers.filter(pk=user.pk).exists()
 
     def test_valid_token_marks_email_as_verified(self, client, unit, make_checkin):
         checkin = make_checkin(unit, anonymous=True)
