@@ -18,6 +18,7 @@ if (SENTRY_DSN) {
     dsn: SENTRY_DSN,
     environment: SENTRY_ENVIRONMENT || undefined,
     release: GIT_COMMIT || undefined,
+    sendDefaultPii: true,
     // Forward envelopes through a same-origin endpoint so Safari ITP and
     // ad blockers don't drop traffic to *.ingest.sentry.io.
     tunnel: '/api/sentry/envelope/',
@@ -29,11 +30,19 @@ if (SENTRY_DSN) {
         createRoutesFromChildren,
         matchRoutes,
       }),
+      Sentry.replayIntegration({
+        maskAllText: false,
+        maskAllInputs: true,
+        blockAllMedia: true,
+      }),
     ],
     tracesSampleRate: 1.0,
     // Same-origin relative URLs only — adds sentry-trace + baggage headers
     // to /api/* calls so frontend traces stitch onto backend traces.
     tracePropagationTargets: [/^\//],
+    // No background recording. Record the ~30s leading up to errors only.
+    replaysSessionSampleRate: 0.0,
+    replaysOnErrorSampleRate: 1.0,
   });
 }
 
