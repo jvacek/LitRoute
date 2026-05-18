@@ -1,14 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-
-interface CheckInImage {
-  id: number;
-  image: string;
-  order: number;
-}
+import type { components } from '../api/schema';
 
 interface ImageCarouselProps {
-  images: CheckInImage[];
+  images: components['schemas']['CheckInImage'][];
   onImageClick: (url: string) => void;
 }
 

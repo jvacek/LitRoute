@@ -34,14 +34,19 @@ export function readableTextColor(bgHex: string): string {
 
 interface Props {
   name: string;
-  color: string;
+  // Team.color is optional in the OpenAPI schema (model allows blank); fall
+  // back to the brand smoke token when it's missing so the pill still renders.
+  color?: string;
 }
 
+const FALLBACK_COLOR = '#7a7773';
+
 export default function TeamBadge({ name, color }: Props) {
+  const bg = color || FALLBACK_COLOR;
   return (
     <span
       className="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium"
-      style={{ backgroundColor: color, color: readableTextColor(color) }}
+      style={{ backgroundColor: bg, color: readableTextColor(bg) }}
     >
       {name}
     </span>

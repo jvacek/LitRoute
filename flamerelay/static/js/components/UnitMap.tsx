@@ -6,33 +6,15 @@ import ReactMap, {
   Source,
 } from 'react-map-gl/maplibre';
 import type { MapRef } from 'react-map-gl/maplibre';
+import type { components } from '../api/schema';
 
-interface CheckInImage {
-  id: number;
-  image: string;
-  order: number;
-}
+type CheckInData = components['schemas']['CheckIn'];
 
-interface GeoPoint {
-  type: 'Point';
-  coordinates: [number, number]; // [lng, lat]
-}
-
-interface CheckInData {
-  id: number;
-  date_created: string;
-  created_by_username: string | null;
-  created_by_name: string | null;
-  anonymous_name: string;
-  images: CheckInImage[];
-  message: string;
-  place: string;
-  location: GeoPoint;
-  within_edit_grace_period: boolean;
-}
-
-function parseLatLng(loc: GeoPoint): [number, number] {
-  return [loc.coordinates[1], loc.coordinates[0]]; // GeoJSON is [lng, lat]; return [lat, lng]
+function parseLatLng(loc: CheckInData['location']): [number, number] {
+  // GeoJSON is [lng, lat]; return [lat, lng]. Spectacular widens the tuple
+  // to `number[]`, so narrow at the boundary.
+  const [lng, lat] = loc.coordinates as [number, number];
+  return [lat, lng];
 }
 
 // Returns [[minLng, minLat], [maxLng, maxLat]] for MapLibre fitBounds
@@ -165,7 +147,12 @@ export default function UnitMap({
         const color = isFirst ? '#e8a030' : isLast ? '#c94c35' : '#7b8fa1';
         return {
           type: 'Feature' as const,
-          geometry: checkin.location,
+          // Narrow the openapi-typed location (which widens `type` and
+          // `coordinates` to optional) back to GeoJSON's strict Point.
+          geometry: {
+            type: 'Point' as const,
+            coordinates: checkin.location.coordinates as [number, number],
+          },
           properties: {
             id: checkin.id,
             color,

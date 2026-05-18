@@ -1,9 +1,10 @@
 import { Component, Suspense, lazy, useEffect } from 'react';
 import {
-  BrowserRouter,
   Outlet,
   Route,
-  Routes,
+  RouterProvider,
+  createBrowserRouter,
+  createRoutesFromElements,
   useLocation,
 } from 'react-router-dom';
 import { AuthProvider } from './AuthContext';
@@ -22,6 +23,7 @@ import Home from './pages/Home';
 import Signup from './pages/Signup';
 import SocialConnections from './pages/SocialConnections';
 import Terms from './pages/Terms';
+import { UnitErrorElement, unitLoader } from './pages/Unit.loader';
 import UserDetail from './pages/UserDetail';
 import UserForm from './pages/UserForm';
 
@@ -99,76 +101,74 @@ function Layout() {
   );
 }
 
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route element={<Layout />}>
+      <Route path="/" element={<Home />} />
+      <Route path="/about/" element={<About />} />
+      <Route path="/support/" element={<Support />} />
+      <Route path="/contribute/" element={<ContributorGuide />} />
+      <Route path="/feedback/" element={<Feedback />} />
+      <Route path="/privacy/" element={<Privacy />} />
+      <Route path="/terms/" element={<Terms />} />
+      <Route path="/accounts/login/" element={<Login />} />
+      <Route path="/accounts/signup/" element={<Signup />} />
+      <Route path="/accounts/confirm-email/:key" element={<EmailConfirm />} />
+      <Route
+        path="/unit/:identifier/"
+        element={<Unit />}
+        loader={unitLoader}
+        errorElement={<UnitErrorElement />}
+      />
+      <Route path="/unit/:identifier/checkin" element={<CheckinCreate />} />
+      <Route
+        path="/unit/:identifier/checkin/:checkinId"
+        element={<CheckinEdit />}
+      />
+      <Route path="/game/:gameId/leaderboard/" element={<GameLeaderboard />} />
+      <Route
+        path="/profile/"
+        element={
+          <PrivateRoute>
+            <UserDetail />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/profile/update/"
+        element={
+          <PrivateRoute>
+            <UserForm />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/profile/settings/"
+        element={
+          <PrivateRoute>
+            <UserSettings />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/socialconnect/"
+        element={
+          <PrivateRoute>
+            <SocialConnections />
+          </PrivateRoute>
+        }
+      />
+      <Route path="*" element={<ErrorPage code={404} />} />
+    </Route>,
+  ),
+);
+
 export default function App() {
   return (
-    <BrowserRouter>
-      <ErrorBoundary>
-        <AuthProvider>
-          <Routes>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/about/" element={<About />} />
-              <Route path="/support/" element={<Support />} />
-              <Route path="/contribute/" element={<ContributorGuide />} />
-              <Route path="/feedback/" element={<Feedback />} />
-              <Route path="/privacy/" element={<Privacy />} />
-              <Route path="/terms/" element={<Terms />} />
-              <Route path="/accounts/login/" element={<Login />} />
-              <Route path="/accounts/signup/" element={<Signup />} />
-              <Route
-                path="/accounts/confirm-email/:key"
-                element={<EmailConfirm />}
-              />
-              <Route path="/unit/:identifier/" element={<Unit />} />
-              <Route
-                path="/unit/:identifier/checkin"
-                element={<CheckinCreate />}
-              />
-              <Route
-                path="/unit/:identifier/checkin/:checkinId"
-                element={<CheckinEdit />}
-              />
-              <Route
-                path="/game/:gameId/leaderboard/"
-                element={<GameLeaderboard />}
-              />
-              <Route
-                path="/profile/"
-                element={
-                  <PrivateRoute>
-                    <UserDetail />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/profile/update/"
-                element={
-                  <PrivateRoute>
-                    <UserForm />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/profile/settings/"
-                element={
-                  <PrivateRoute>
-                    <UserSettings />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/socialconnect/"
-                element={
-                  <PrivateRoute>
-                    <SocialConnections />
-                  </PrivateRoute>
-                }
-              />
-              <Route path="*" element={<ErrorPage code={404} />} />
-            </Route>
-          </Routes>
-        </AuthProvider>
-      </ErrorBoundary>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

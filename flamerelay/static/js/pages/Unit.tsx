@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import {
   Link,
+  useLoaderData,
   useNavigate,
   useParams,
   useSearchParams,
 } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { apiFetch } from '../api';
+import type { components } from '../api/schema';
 import GameIntroModal from '../components/GameIntroModal';
 import GuestEmailCapture from '../components/GuestEmailCapture';
 import ImageCarousel from '../components/ImageCarousel';
@@ -20,61 +22,16 @@ import { formatKm, formatNumber } from '../lib/numbers';
 import i18n from '../i18n';
 import { reportError } from '../lib/sentry';
 import { useConfig } from '../lib/useConfig';
+import type { UnitLoaderData } from './Unit.loader';
 
-interface CheckInImage {
-  id: number;
-  image: string;
-  order: number;
-}
+type CheckInData = components['schemas']['CheckIn'];
+type UnitData = components['schemas']['Unit'];
 
-interface GeoPoint {
-  type: 'Point';
-  coordinates: [number, number]; // [lng, lat]
-}
-
-interface CheckInData {
-  id: number;
-  date_created: string;
-  created_by_username: string | null;
-  created_by_name: string | null;
-  anonymous_name: string;
-  images: CheckInImage[];
-  message: string;
-  place: string;
-  location: GeoPoint;
-  within_edit_grace_period: boolean;
-}
-
-interface GameData {
-  id: number;
-  name: string;
-  mode: string;
-  allowed_time: number;
-  gps_drift_floor: number;
-  shelf_life: number;
-  start_time: string;
-  end_time: string;
-}
-
-interface TeamRef {
-  name: string;
-  color: string;
-}
-
-interface UnitData {
-  identifier: string;
-  checkin_count: number;
-  follower_count: number;
-  distance_traveled_km: number;
-  is_following: boolean;
-  can_check_in: boolean | null;
-  is_gps_enforced: boolean;
-  team: TeamRef | null;
-  game: GameData | null;
-}
-
-function parseLatLng(loc: GeoPoint): [number, number] {
-  return [loc.coordinates[1], loc.coordinates[0]]; // GeoJSON is [lng, lat]; return [lat, lng]
+function parseLatLng(loc: CheckInData['location']): [number, number] {
+  // GeoJSON is [lng, lat]; return [lat, lng]. Spectacular widens the
+  // tuple to `number[]`, so narrow at the boundary.
+  const [lng, lat] = loc.coordinates as [number, number];
+  return [lat, lng];
 }
 
 function fmtDate(iso: string): string {
@@ -126,19 +83,29 @@ export default function Unit() {
   }
   const checkinUrl = `/unit/${identifier}/checkin`;
   const navigate = useNavigate();
-  const [unit, setUnit] = useState<UnitData | null>(null);
-  const [checkins, setCheckins] = useState<CheckInData[]>([]);
+  const loaderData = useLoaderData() as UnitLoaderData;
+  // Local copies so mutations (follow toggle, delete) can update the UI
+  // without a full route revalidation. Seeded from loader data; the route
+  // wrapper re-mounts on pathname changes, so these reset naturally on
+  // navigation between units.
+  const [unit, setUnit] = useState<UnitData>(loaderData.unit);
+  const [checkins, setCheckins] = useState<CheckInData[]>(loaderData.checkins);
   const [gameRank, setGameRank] = useState<number | null>(null);
   const [gameTotal, setGameTotal] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  // sessionStorage is read at mount only — unit.game is fixed from the loader
+  // (route remounts on navigation), so a useState initializer fits better than
+  // a useEffect with a setState call.
+  const [showGameModal, setShowGameModal] = useState(
+    () =>
+      !!loaderData.unit.game &&
+      !sessionStorage.getItem(`game-intro-seen-${loaderData.unit.game.id}`),
+  );
   const [mapResetKey, setMapResetKey] = useState(0);
   const [mapIsReset, setMapIsReset] = useState(true);
   const [visibleIds, setVisibleIds] = useState<Set<number>>(new Set());
   const [focusedCheckinId, setFocusedCheckinId] = useState<number | null>(null);
   const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
-  const [showGameModal, setShowGameModal] = useState(false);
   const [claimingCheckinId, setClaimingCheckinId] = useState<number | null>(
     null,
   );
@@ -152,66 +119,36 @@ export default function Unit() {
   const checkinsRef = useRef(checkins);
   const mapWrapperRef = useRef<HTMLDivElement>(null);
 
+  // Rank/total are not on the unit endpoint — they live on the leaderboard,
+  // which is itself cached for 5 min. Fetched here (not in the loader) so the
+  // page renders immediately and rank pops in once the response arrives.
+  // Pass ?from=<identifier> so this unit's row returns its identifier
+  // (other rows are nulled out to prevent slug enumeration).
   useEffect(() => {
+    if (!unit.game) return;
     let cancelled = false;
-    Promise.all([
-      fetch(`/api/units/${identifier}/`).then((r) => {
-        if (cancelled) return null;
-        if (r.status === 404) {
-          setNotFound(true);
-          return null;
-        }
-        return r.json() as Promise<UnitData>;
-      }),
-      fetch(`/api/units/${identifier}/checkins/`).then((r) => r.json()),
-    ])
-      .then(([unitData, checkinData]) => {
-        if (cancelled || !unitData) return;
-        setUnit(unitData as UnitData);
-        setCheckins(
-          Array.isArray(checkinData)
-            ? (checkinData as CheckInData[])
-            : (checkinData as { results: CheckInData[] }).results,
-        );
-        if (
-          unitData.game &&
-          !sessionStorage.getItem(`game-intro-seen-${unitData.game.id}`)
-        ) {
-          setShowGameModal(true);
-        }
-        // Rank/total are not on the unit endpoint — they live on the leaderboard,
-        // which is itself cached for 5 min. Fetch async so the page renders
-        // immediately and rank pops in once the second response arrives.
-        // Pass ?from=<identifier> so this unit's row returns its identifier
-        // (other rows are nulled out to prevent slug enumeration).
-        if (unitData.game) {
-          const url = `/api/games/${unitData.game.id}/leaderboard/?from=${encodeURIComponent(unitData.identifier)}`;
-          apiFetch(url)
-            .then((r) => (r.ok ? r.json() : null))
-            .then(
-              (
-                board: {
-                  individual: { identifier: string | null; rank: number }[];
-                } | null,
-              ) => {
-                if (cancelled || !board) return;
-                const entry = board.individual.find(
-                  (e) => e.identifier === unitData.identifier,
-                );
-                if (!entry) return;
-                setGameRank(entry.rank);
-                setGameTotal(board.individual.length);
-              },
-            );
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    const url = `/api/games/${unit.game.id}/leaderboard/?from=${encodeURIComponent(unit.identifier)}`;
+    apiFetch(url)
+      .then((r) => (r.ok ? r.json() : null))
+      .then(
+        (
+          board: {
+            individual: { identifier: string | null; rank: number }[];
+          } | null,
+        ) => {
+          if (cancelled || !board) return;
+          const entry = board.individual.find(
+            (e) => e.identifier === unit.identifier,
+          );
+          if (!entry) return;
+          setGameRank(entry.rank);
+          setGameTotal(board.individual.length);
+        },
+      );
     return () => {
       cancelled = true;
     };
-  }, [identifier]);
+  }, [unit.game, unit.identifier]);
 
   useEffect(() => {
     checkinsRef.current = checkins;
@@ -358,52 +295,6 @@ export default function Unit() {
     const el = timelineRefs.current.get(checkin.id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
-
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-5xl px-6 py-16 text-center text-smoke">
-        {t('common.loading')}…
-      </div>
-    );
-  }
-
-  if (notFound) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center px-6 py-16 text-center">
-        <p className="font-heading mb-4 text-[6rem] font-bold leading-none text-char/10">
-          ?
-        </p>
-        <h1 className="font-heading mb-2 text-2xl font-semibold text-char">
-          {t('unit.notFound.heading')}
-        </h1>
-        <p className="mb-1 max-w-sm text-smoke">
-          <Trans
-            i18nKey="unit.notFound.body1"
-            values={{ identifier }}
-            components={{ strong: <strong className="text-char" /> }}
-          />
-        </p>
-        <p className="mb-8 max-w-sm text-smoke">
-          <Trans
-            i18nKey="unit.notFound.body2"
-            components={{
-              handwriting: (
-                <strong className="font-handwriting text-lg text-char" />
-              ),
-            }}
-          />
-        </p>
-        <Link
-          to="/"
-          className="rounded-btn bg-amber px-[22px] py-[9px] text-sm font-semibold tracking-wide text-char transition-transform hover:-translate-y-px active:translate-y-0"
-        >
-          {t('unit.notFound.cta')}
-        </Link>
-      </div>
-    );
-  }
-
-  if (!unit) return null;
 
   const currentCheckin = checkins[0] ?? null;
   const heroImageUrl = currentCheckin?.images[0]?.image ?? null;
@@ -780,9 +671,9 @@ export default function Unit() {
         >
           <div className="cursor-default" onClick={(e) => e.stopPropagation()}>
             <GuestEmailCapture
-              identifier={identifier}
+              identifier={unit.identifier}
               checkinId={claimingCheckinId}
-              followerCount={unit?.follower_count ?? 0}
+              followerCount={unit.follower_count}
               onDone={() => setClaimingCheckinId(null)}
             />
           </div>

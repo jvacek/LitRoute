@@ -1,20 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import type { components } from '../api/schema';
 import { humanizeHours } from '../lib/duration';
 import { getGameConfig } from '../lib/gameConfig';
 import { outlineBtnMd, primaryBtnMd } from '../styles';
 
 interface Props {
-  game: {
-    id: number;
-    name: string;
-    mode: string;
-    allowed_time: number;
-    gps_drift_floor: number;
-    shelf_life: number;
-    start_time: string;
-    end_time: string;
-  };
+  game: components['schemas']['Game'];
   fromIdentifier?: string;
   onDismiss: () => void;
 }
@@ -30,7 +22,7 @@ export default function GameIntroModal({
   if (!config) return null;
 
   const body = t(config.rulesKey, {
-    duration: humanizeHours(t, game.allowed_time),
+    duration: humanizeHours(t, game.allowed_time ?? 0),
     maxDrift: game.gps_drift_floor,
     shelfLife: game.shelf_life,
   });
