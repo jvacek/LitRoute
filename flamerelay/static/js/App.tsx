@@ -18,17 +18,17 @@ import EmailConfirm from './pages/EmailConfirm';
 import ErrorPage from './pages/ErrorPage';
 import Feedback from './pages/Feedback';
 import Privacy from './pages/Privacy';
+import Home from './pages/Home';
 import Signup from './pages/Signup';
 import SocialConnections from './pages/SocialConnections';
 import Terms from './pages/Terms';
 import UserDetail from './pages/UserDetail';
 import UserForm from './pages/UserForm';
 
-// Heavy or rarely-visited routes are lazy-loaded so the QR-landing payload
-// (mostly the navbar/footer shell + Home dependencies) stays small. Home
-// pulls in `cobe`; Unit/Checkin* pull in maplibre-gl; Login/UserSettings pull
-// in @simplewebauthn/browser and qrcode.
-const Home = lazy(() => import('./pages/Home'));
+// Home is the QR-landing front page — bundled into the entry so it paints
+// without a second-roundtrip lazy chunk. `cobe` stays lazy via SpinningGlobe.
+// Unit/Checkin* pull in maplibre-gl; Login/UserSettings pull in
+// @simplewebauthn/browser and qrcode.
 const Unit = lazy(() => import('./pages/Unit'));
 const CheckinCreate = lazy(() => import('./pages/CheckinCreate'));
 const CheckinEdit = lazy(() => import('./pages/CheckinEdit'));
