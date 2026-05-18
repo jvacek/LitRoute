@@ -6,6 +6,8 @@ from sentry_sdk.integrations.django import DjangoIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration, ignore_logger
 from sentry_sdk.integrations.redis import RedisIntegration
 
+from config.whitenoise_immutable import immutable_file_test as _whitenoise_immutable_file_test
+
 from .base import *  # noqa: F403
 from .base import DATABASES, GIT_HASH, INSTALLED_APPS, REDIS_URL, SPECTACULAR_SETTINGS, env
 
@@ -79,6 +81,10 @@ STORAGES = {
         "BACKEND": "config.whitenoise_forgiving.ErrorSquashingStorage",
     },
 }
+
+# WhiteNoise treats this as a regex pattern if it's a string, so we pass the
+# callable directly. See config/whitenoise_immutable.py for the rationale.
+WHITENOISE_IMMUTABLE_FILE_TEST = _whitenoise_immutable_file_test
 
 # STORAGES = {
 #     "default": {
