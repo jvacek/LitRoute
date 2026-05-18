@@ -46,17 +46,21 @@ if (SENTRY_DSN) {
 
   // Replay's ~150 KB minified bundle is loaded after first paint to keep the
   // entry small. Errors before the integration lands are still captured;
-  // they just won't carry replay footage.
-  const loadReplay = () =>
-    import('./lib/sentryReplay')
-      .then((m) => m.enableReplay())
-      .catch(() => {
-        // Swallow chunk-load failures — replay is a nice-to-have.
-      });
-  if ('requestIdleCallback' in window) {
-    window.requestIdleCallback(loadReplay, { timeout: 2000 });
-  } else {
-    setTimeout(loadReplay, 1000);
+  // they just won't carry replay footage. Skipped in non-prod: rrweb's
+  // rolling buffer is a measurable framerate hit on canvas-heavy pages and
+  // dev/staging replays aren't useful for debugging.
+  if (SENTRY_ENVIRONMENT === 'production') {
+    const loadReplay = () =>
+      import('./lib/sentryReplay')
+        .then((m) => m.enableReplay())
+        .catch(() => {
+          // Swallow chunk-load failures — replay is a nice-to-have.
+        });
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(loadReplay, { timeout: 2000 });
+    } else {
+      setTimeout(loadReplay, 1000);
+    }
   }
 }
 
