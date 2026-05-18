@@ -1,12 +1,17 @@
 # Config for Dependabot updates. See Documentation here:
 # https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Strategy: version-update PRs for prod runtime deps, bundled version-update PRs
+# for dev tooling, and security-update PRs always individual for everything.
+# Note: `allow` in dependabot.yml filters BOTH version and security updates, so
+# we omit it on `uv` and `npm` to keep dev-dep CVEs flowing. The `groups` block
+# rolls dev-dep version updates into a single bundled PR per cycle to manage
+# noise without sacrificing CVE coverage.
 
 version: 2
 updates:
-  # Update GitHub actions in workflows
   - package-ecosystem: 'github-actions'
     directory: '/'
-    # Every weekday
     schedule:
       interval: 'daily'
     groups:
@@ -14,13 +19,10 @@ updates:
         patterns:
           - '*'
 
-  # Enable version updates for Docker
   - package-ecosystem: 'docker'
-    # Look for a `Dockerfile` in the `compose/local/django` directory
     directories:
       - 'compose/local/django/'
       - 'compose/production/django/'
-    # Every weekday
     schedule:
       interval: 'daily'
     # Ignore minor version updates (3.10 -> 3.11) but update patch versions
@@ -35,11 +37,9 @@ updates:
           - '*'
 
   - package-ecosystem: 'docker'
-    # Look for a `Dockerfile` in the listed directories
     directories:
       - 'compose/local/node/'
       - 'compose/production/postgres/'
-    # Every weekday
     schedule:
       interval: 'daily'
     # Node uses even/odd LTS model — odd versions (25, 27…) are non-LTS dev releases.
@@ -49,39 +49,31 @@ updates:
         update-types:
           - 'version-update:semver-major'
 
-  # Enable version updates for Docker Compose files
   - package-ecosystem: 'docker-compose'
     directories:
       - '/'
-    # Every weekday
     schedule:
       interval: 'daily'
 
-  # Enable version updates for Python/uv
   - package-ecosystem: 'uv'
-    # Look for a `pyproject.toml` in the `root` directory
     directory: '/'
-    # Every weekday
     schedule:
       interval: 'daily'
-    # Only track [project.dependencies], skip [dependency-groups.dev] tooling.
-    allow:
-      - dependency-type: 'production'
     groups:
-      python:
+      uv-prod:
+        dependency-type: 'production'
         update-types:
           - 'minor'
           - 'patch'
+      uv-dev:
+        dependency-type: 'development'
 
-  # Enable version updates for npm/package.json
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
       interval: 'daily'
-    # Only track runtime `dependencies`, skip `devDependencies`.
-    allow:
-      - dependency-type: 'production'
     groups:
-      npm:
-        patterns:
-          - '*'
+      npm-prod:
+        dependency-type: 'production'
+      npm-dev:
+        dependency-type: 'development'
