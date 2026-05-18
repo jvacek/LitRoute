@@ -78,9 +78,13 @@ webpack-reset:
 webpack-rebuild file="flamerelay/static/js/project.tsx":
     @docker compose exec -T node touch /app/{{file}}
 
-# node-reinstall: Drop and recreate the node container + node_modules volume (use after adding npm packages).
+# node-reinstall: Rebuild the node image and recreate its container + node_modules volume (use after adding npm packages).
+#                 The image bakes `npm install` into a layer from package.json, and the /app/node_modules anonymous volume
+#                 is seeded from that layer on container start — so the image must be rebuilt, not just the volume recreated.
 node-reinstall:
     @echo "Reinstalling node_modules..."
+    @npm install
+    @docker compose build node
     @docker compose rm -f -s -v node
     @docker compose up --force-recreate -d node
 
