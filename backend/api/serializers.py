@@ -162,8 +162,8 @@ class UnitSerializer(serializers.ModelSerializer):
     is_following = serializers.SerializerMethodField()
     can_check_in = serializers.SerializerMethodField()
     is_gps_enforced = serializers.SerializerMethodField()
-    team = TeamSerializer(read_only=True)
-    game = GameSerializer(read_only=True)
+    team = TeamSerializer(read_only=True, allow_null=True)
+    game = GameSerializer(read_only=True, allow_null=True)
 
     class Meta:
         model = Unit

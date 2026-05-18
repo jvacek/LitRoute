@@ -1064,6 +1064,7 @@ components:
           allOf:
           - $ref: '#/components/schemas/Team'
           readOnly: true
+          nullable: true
         checkin_count:
           type: integer
           readOnly: true
@@ -1087,6 +1088,7 @@ components:
           allOf:
           - $ref: '#/components/schemas/Game'
           readOnly: true
+          nullable: true
       required:
       - can_check_in
       - checkin_count

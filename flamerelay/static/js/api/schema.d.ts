@@ -503,7 +503,7 @@ export interface components {
             readonly date_created: string;
             /** @description Whether only admins can check in to this unit, primarily used for demos or for disabling lighters. */
             admin_only_checkin?: boolean;
-            readonly team: components["schemas"]["Team"];
+            readonly team: components["schemas"]["Team"] | null;
             readonly checkin_count: number;
             readonly follower_count: number;
             /** Format: double */
@@ -511,7 +511,7 @@ export interface components {
             readonly is_following: boolean;
             readonly can_check_in: boolean;
             readonly is_gps_enforced: boolean;
-            readonly game: components["schemas"]["Game"];
+            readonly game: components["schemas"]["Game"] | null;
         };
         User: {
             /** @description Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only. */
