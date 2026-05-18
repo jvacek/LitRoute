@@ -1,7 +1,13 @@
+import { Suspense, lazy } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
-import { GlobePin, SpinningGlobe } from './SpinningGlobe';
+import type { GlobePin } from './SpinningGlobe';
+
+// Lazy so `cobe` stays out of the entry bundle now that Home itself is eager.
+const SpinningGlobe = lazy(() =>
+  import('./SpinningGlobe').then((m) => ({ default: m.SpinningGlobe })),
+);
 
 export interface Stats {
   active_unit_count: number;
@@ -47,8 +53,20 @@ export function StatsBanner({
     <section className="bg-char px-6 py-16">
       <div className="mx-auto max-w-5xl">
         <div className="flex flex-col items-center gap-12">
-          {/* Globe */}
-          <SpinningGlobe pins={pins} />
+          {/* Globe — reserves layout box so canvas mounting doesn't shift content */}
+          <Suspense
+            fallback={
+              <div
+                aria-busy="true"
+                style={{
+                  width: 'min(420px, 90vw)',
+                  height: 'min(420px, 90vw)',
+                }}
+              />
+            }
+          >
+            <SpinningGlobe pins={pins} />
+          </Suspense>
 
           {/* Stats */}
           <dl className="grid w-full grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-4">
