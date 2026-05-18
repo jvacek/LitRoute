@@ -36,10 +36,8 @@
             href="{% static 'images/favicons/apple-touch-icon.png' %}" />
     {% endif %}
     <link rel="manifest" href="{% static 'images/favicons/site.webmanifest' %}" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=DM+Sans:wght@300;400;600&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&display=swap"
-          rel="stylesheet" />
+    {# Fonts are self-hosted via @fontsource — see flamerelay/static/js/fonts.ts. #}
+    {# Their @font-face rules are bundled into the project CSS chunk below. #}
     {% render_bundle 'project' 'css' %}
     {% render_bundle 'project' 'js' attrs='defer' %}
   </head>

@@ -84,6 +84,9 @@
     "test": "jest"
   },
   "dependencies": {
+    "@fontsource-variable/fraunces": "^5.2.9",
+    "@fontsource/caveat": "^5.2.8",
+    "@fontsource/dm-sans": "^5.2.8",
     "@maptiler/client": "^3.0.2",
     "@marsidev/react-turnstile": "^1.1.0",
     "@sentry/react": "^10.53.1",
