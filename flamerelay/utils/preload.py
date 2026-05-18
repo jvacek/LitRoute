@@ -30,7 +30,6 @@ ABOVE_FOLD_FONT_PATTERNS = (
 # preload reliably).
 UNIT_CHUNK_PREFIX = "js/pages-Unit-"
 LOGIN_CHUNK_PREFIX = "js/pages-Login-"
-MAPLIBRE_CHUNK_PREFIX = "js/vendor-maplibre-"
 
 UNIT_PATH_RE = re.compile(r"^/unit/[^/]+/?$")
 
@@ -88,13 +87,15 @@ def get_preload_hints(path: str) -> dict:
     scripts: list[str] = []
     if path == "/" or UNIT_PATH_RE.match(path):
         # QR-landing fast path: most users land on /unit/:id/ from a sticker scan,
-        # and most homepage clicks go to /unit/:id/. Preload the Unit chunk and
-        # the maplibre vendor split it pulls in, so the lazy import doesn't
-        # serialise behind the entry script.
+        # and most homepage clicks go to /unit/:id/. Preload the Unit chunk so
+        # the lazy import doesn't serialise behind the entry script.
+        #
+        # maplibre is intentionally NOT preloaded — the Unit page defers its
+        # interactive map to ``requestIdleCallback`` and renders a placeholder
+        # until then (see ``flamerelay/static/js/pages/Unit.tsx``). Preloading
+        # the 1 MiB vendor-maplibre chunk would defeat that optimisation.
         if unit := _find_chunk_by_prefix(UNIT_CHUNK_PREFIX):
             scripts.append(unit)
-        if maplibre := _find_chunk_by_prefix(MAPLIBRE_CHUNK_PREFIX):
-            scripts.append(maplibre)
     elif path == "/accounts/login/":
         if login := _find_chunk_by_prefix(LOGIN_CHUNK_PREFIX):
             scripts.append(login)
