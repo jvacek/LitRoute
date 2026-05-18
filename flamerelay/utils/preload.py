@@ -23,8 +23,13 @@ ABOVE_FOLD_FONT_PATTERNS = (
 )
 
 # Chunk prefixes that identify a lazy-loaded route or vendor split.
-UNIT_CHUNK_PREFIX = "js/flamerelay_static_js_pages_Unit_tsx-"
-LOGIN_CHUNK_PREFIX = "js/flamerelay_static_js_pages_Login_tsx-"
+#
+# Unit/Login use ``webpackChunkName`` magic comments in App.tsx so they emit
+# stable filenames in prod (webpack's ``chunkIds: "deterministic"`` default
+# would otherwise emit numeric IDs like ``940-<hash>.js`` that we can't
+# preload reliably).
+UNIT_CHUNK_PREFIX = "js/pages-Unit-"
+LOGIN_CHUNK_PREFIX = "js/pages-Login-"
 MAPLIBRE_CHUNK_PREFIX = "js/vendor-maplibre-"
 
 UNIT_PATH_RE = re.compile(r"^/unit/[^/]+/?$")

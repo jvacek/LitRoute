@@ -25,14 +25,14 @@ FAKE_STATS = {
             "publicPath": "/static/webpack_bundles/js/vendor-maplibre-deadbeef.js",
             "sourceFilename": "",
         },
-        "js/flamerelay_static_js_pages_Unit_tsx-cafef00d.js": {
-            "name": "js/flamerelay_static_js_pages_Unit_tsx-cafef00d.js",
-            "publicPath": "/static/webpack_bundles/js/flamerelay_static_js_pages_Unit_tsx-cafef00d.js",
+        "js/pages-Unit-cafef00d.js": {
+            "name": "js/pages-Unit-cafef00d.js",
+            "publicPath": "/static/webpack_bundles/js/pages-Unit-cafef00d.js",
             "sourceFilename": "",
         },
-        "js/flamerelay_static_js_pages_Login_tsx-abc123.js": {
-            "name": "js/flamerelay_static_js_pages_Login_tsx-abc123.js",
-            "publicPath": "/static/webpack_bundles/js/flamerelay_static_js_pages_Login_tsx-abc123.js",
+        "js/pages-Login-abc123.js": {
+            "name": "js/pages-Login-abc123.js",
+            "publicPath": "/static/webpack_bundles/js/pages-Login-abc123.js",
             "sourceFilename": "",
         },
         "1111.woff2": {
@@ -59,9 +59,9 @@ FAKE_STATS = {
     }
 }
 
-UNIT_URL = "/static/webpack_bundles/js/flamerelay_static_js_pages_Unit_tsx-cafef00d.js"
+UNIT_URL = "/static/webpack_bundles/js/pages-Unit-cafef00d.js"
 MAPLIBRE_URL = "/static/webpack_bundles/js/vendor-maplibre-deadbeef.js"
-LOGIN_URL = "/static/webpack_bundles/js/flamerelay_static_js_pages_Login_tsx-abc123.js"
+LOGIN_URL = "/static/webpack_bundles/js/pages-Login-abc123.js"
 FRAUNCES_URL = "/static/webpack_bundles/1111.woff2"
 DM_SANS_URL = "/static/webpack_bundles/2222.woff2"
 

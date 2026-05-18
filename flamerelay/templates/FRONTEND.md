@@ -55,10 +55,42 @@ Never hardcode the MapTiler key — always read it from `useConfig()`.
 ## Error pages
 
 - **404** — the catch-all `<Route path="*">` in `App.tsx` renders `<ErrorPage code={404} />`.
-- **500 (uncaught render error)** — `ErrorBoundary` in `App.tsx` catches unhandled React errors and renders `<ErrorPage code={500} />`.
+- **500 (uncaught render error)** — `App.tsx` has two `<ErrorBoundary>` layers. The **outer** boundary (wrapping `<AuthProvider>`) catches crashes in the shell — Navbar, Footer, AuthProvider — and replaces the whole app with `<ErrorPage code={500} />`. The **inner** boundary (`<ErrorBoundary key={pathname}>` inside Layout's `<Suspense>`) catches page-level crashes so a broken route doesn't kill navigation; the `key={pathname}` re-mounts it on every nav so a caught error doesn't poison subsequent routes.
 - **Django server errors** (e.g. 500 before React loads) — Django's own error handler; these are rare since the SPA shell has no server-side logic.
 
 `ErrorPage` derives headline and description from the `code` prop. Pass `code={403}` for permission errors, `code={500}` for unexpected failures. Use `text-amber` for 404 and `text-ember` for 403/500 (the component handles this internally).
+
+## Performance hints
+
+### Preload pipeline (entry-path chunks)
+
+QR-landing routes (`/`, `/unit/:id/`, `/accounts/login/`) emit `<link rel="preload" as="script">` hints from the SPA shell so the browser fetches the route chunk in parallel with the entry script instead of serially after it. Fonts above the fold get the same treatment with `as="font"`. URLs are resolved from `webpack-stats.json` at request time so deploy-time hash changes don't break the hints.
+
+Wiring lives across four files:
+
+1. **`flamerelay/static/js/App.tsx`** — wrap the lazy import with a `webpackChunkName` magic comment so the chunk emits with a stable filename. Webpack's prod default (`chunkIds: 'deterministic'`) otherwise emits numeric IDs like `940-<hash>.js` that the helper can't match.
+   ```ts
+   const Foo = lazy(() => import(/* webpackChunkName: "pages-Foo" */ './pages/Foo'));
+   ```
+2. **`flamerelay/utils/preload.py`** — add a `_CHUNK_PREFIX` constant and a `request.path`-keyed mapping in `get_preload_hints()`.
+3. **`flamerelay/utils/tests/test_preload.py`** — add a test case stubbing `_load_stats` with a fake `assets` entry matching the new prefix. The resolver fails silently when prefixes drift, so this test is load-bearing.
+4. **`flamerelay/templates/spa.html`** — already renders `preload_scripts` + `preload_fonts` from the context processor. No changes needed when adding a new route.
+
+**Only add routes the user lands on cold** — QR scans, magic-link emails, direct URL share. Routes reached via in-app navigation already have the entry loaded; a preload there is wasted bandwidth.
+
+### Image priority hints
+
+- **LCP image** (the largest above-the-fold image on a route): `fetchPriority="high"` + `decoding="async"`. See `pages/Unit.tsx` hero image.
+- **Below-the-fold images**: `loading="lazy"` + `decoding="async"`.
+- **Carousel slides** (`components/ImageCarousel.tsx`): first slide `loading="eager"`, subsequent slides `loading="lazy"`.
+
+### Bundle-size budgets
+
+The `size-limit` block in `package.json` enforces brotli-compressed budgets on `npm run build` output. CI runs `npm run size` after `npm run build` and fails the linter job if a budget trips.
+
+If a budget trips, the options are: (a) trim the offender, (b) push the cost behind a lazy boundary, (c) revise the budget upward with a one-line note in the PR explaining what changed. Don't silently bump the budget — the gate exists to surface bloat for review.
+
+When adding a new lazy route whose chunk merits its own budget (heavy deps, public-facing fast path), add a corresponding entry to the `size-limit` block.
 
 ## CSRF
 
@@ -197,8 +229,9 @@ Not all components are migrated yet. See `TODOs/translations.md` for the per-com
 ## Adding a new React page
 
 1. Create `flamerelay/static/js/pages/MyPage.tsx` — export a default component. Use `useParams()` for URL segments, `useAuth()` for auth state, `useConfig()` for API keys.
-2. Add a `<Route>` in `App.tsx`. Wrap in `<PrivateRoute>` if login is required.
+2. Add a `<Route>` in `App.tsx`. Wrap in `<PrivateRoute>` if login is required. If the page is heavy (large dep, e.g. maplibre, qrcode, @simplewebauthn), use `lazy()` so it ships as its own chunk.
 3. No Django view needed — the catch-all `spa_view` in `config/urls.py` handles all non-API routes automatically.
+4. **If this is a QR-landing fast path** (a route users hit cold from outside the app), wire it through the preload pipeline — see _Performance hints → Preload pipeline_ above.
 
 ```tsx
 // App.tsx — add inside the <Route element={<Layout />}> block
