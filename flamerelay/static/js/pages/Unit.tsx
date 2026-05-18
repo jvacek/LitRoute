@@ -556,6 +556,8 @@ export default function Unit() {
                 <img
                   src={heroImageUrl}
                   alt=""
+                  fetchPriority="high"
+                  decoding="async"
                   className="absolute inset-0 h-full w-full object-cover"
                 />
               </div>

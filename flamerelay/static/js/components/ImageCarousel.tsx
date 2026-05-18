@@ -56,6 +56,8 @@ export default function ImageCarousel({
             <img
               src={img.image}
               alt={t('unit.photoAlt', { index: i + 1, total: images.length })}
+              loading={i === 0 ? 'eager' : 'lazy'}
+              decoding="async"
               className="h-full w-full object-cover"
               draggable={false}
             />
