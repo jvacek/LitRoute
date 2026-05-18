@@ -32,7 +32,10 @@ if (SENTRY_DSN) {
         matchRoutes,
       }),
     ],
-    tracesSampleRate: 1.0,
+    // 10% in prod keeps Sentry quota + per-pageload tracing-envelope payload
+    // small; full sampling in non-prod environments so dev/staging traces are
+    // always available for debugging.
+    tracesSampleRate: SENTRY_ENVIRONMENT === 'production' ? 0.1 : 1.0,
     // Same-origin relative URLs only — adds sentry-trace + baggage headers
     // to /api/* calls so frontend traces stitch onto backend traces.
     tracePropagationTargets: [/^\//],
