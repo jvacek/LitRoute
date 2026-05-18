@@ -138,6 +138,9 @@ lint.ignore = [
   "S101",   # Use of assert detected https://docs.astral.sh/ruff/rules/assert/
   "SIM102", # sometimes it's better to nest
 ]
+# Tests are allowed to reach into module internals — that's the whole point of
+# unit-testing private helpers.
+lint.per-file-ignores."**/tests/**" = [ "SLF001" ]
 
 # lint.isort.force-single-line = true
 [tool.pyproject-fmt]

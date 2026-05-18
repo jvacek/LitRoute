@@ -36,6 +36,18 @@
             href="{% static 'images/favicons/apple-touch-icon.png' %}" />
     {% endif %}
     <link rel="manifest" href="{% static 'images/favicons/site.webmanifest' %}" />
+    {# Preload hints — emitted before render_bundle so the browser starts these #}
+    {# fetches in parallel with the entry script. URLs come from #}
+    {# flamerelay.utils.preload, which reads webpack-stats.json to resolve the #}
+    {# current build's hashed filenames. #}
+    {% for url in preload_fonts %}
+      <link rel="preload"
+            href="{{ url }}"
+            as="font"
+            type="font/woff2"
+            crossorigin />
+    {% endfor %}
+    {% for url in preload_scripts %}<link rel="preload" href="{{ url }}" as="script" crossorigin />{% endfor %}
     {# Fonts are self-hosted via @fontsource — see flamerelay/static/js/fonts.ts. #}
     {# Their @font-face rules are bundled into the project CSS chunk below. #}
     {% render_bundle 'project' 'css' %}
