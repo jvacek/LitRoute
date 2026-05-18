@@ -93,7 +93,7 @@ flamerelay/
   static/
     css/            # Tailwind entry point (project.css)
     js/             # React entry, components, pages, i18n.ts
-    locales/{en,fr}/translation.json
+    locales/<lang>/translation.json   # bundled set declared in static/js/i18n.ts
   templates/        # spa.html (single shell) + email templates + FRONTEND.md
 backend/            # Unit, CheckIn, Team models + DRF API + ARCHITECTURE.md + API.md
 brand/              # Brand identity reference + TRANSLATOR_GUIDE.md

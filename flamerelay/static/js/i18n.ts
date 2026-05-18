@@ -6,6 +6,10 @@ import en from '../locales/en/translation.json';
 import fr from '../locales/fr/translation.json';
 import nl from '../locales/nl/translation.json';
 
+// `cs` (Czech) translations live under static/locales/cs/translation.json but
+// are not yet bundled — Weblate is still populating coverage. Wire it up by
+// importing + adding to LANGUAGES when the locale reaches a translatable
+// floor (rough rule: parity with `nl`).
 export const LANGUAGES = [
   { code: 'en', label: 'English', translation: en },
   { code: 'fr', label: 'Français', translation: fr },
