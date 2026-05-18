@@ -24,7 +24,7 @@ from .cache import (
     invalidate_checkin_caches,
     unit_distance_cache_key,
 )
-from .distance import distance_traveled_in_km, total_distance_traveled_in_km
+from .distance import total_distance_traveled_in_km
 from .journeys import compute_game_journeys
 from .leaderboard import compute_game_leaderboard
 from .stats import get_cached_globe_pins, get_cached_stats
@@ -46,7 +46,6 @@ __all__ = [
     "compute_game_journeys",
     "compute_game_leaderboard",
     "delete_checkin_image_file_task",
-    "distance_traveled_in_km",
     "game_journeys_cache_key",
     "game_leaderboard_cache_key",
     "get_cached_globe_pins",

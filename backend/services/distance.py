@@ -1,5 +1,4 @@
 from django.core.cache import cache
-from geopy.distance import geodesic as distance
 
 from config.constants import (
     EXAMPLE_IDENTIFIER,
@@ -9,34 +8,25 @@ from config.constants import (
 from .cache import unit_distance_cache_key
 
 
-def distance_traveled_in_km(unit) -> float:
-    checkins = unit.checkin_set.order_by("date_created")
-    # Point.x = longitude, Point.y = latitude; geopy expects (lat, lng) tuples
-    pts = [(p.y, p.x) for p in checkins.values_list("location", flat=True)]
-    total_distance = sum(distance(pts[i], pts[i + 1]).km for i in range(len(pts) - 1))
-    return round(total_distance, 2)
-
-
 def total_distance_traveled_in_km() -> float:
-    """Sum of per-unit cached distances. Computes and caches any misses individually."""
+    """Sum of per-unit distances, using Redis cache when warm.
+
+    Cache-miss units are computed in a single grouped query via
+    `Unit.objects.with_distance_km()`.
+    """
 
     from backend.models import Unit  # noqa: PLC0415
 
-    units = Unit.objects.exclude(identifier=EXAMPLE_IDENTIFIER)
-    identifiers = list(units.values_list("identifier", flat=True))
-    keys = {unit_distance_cache_key(i): i for i in identifiers}
-    cached = cache.get_many(keys.keys())
+    rows = list(Unit.objects.exclude(identifier=EXAMPLE_IDENTIFIER).values_list("pk", "identifier"))
+    keys = {pk: unit_distance_cache_key(ident) for pk, ident in rows}
+    cached = cache.get_many(keys.values())
 
     total = sum(cached.values())
 
-    missing = {i for k, i in keys.items() if k not in cached}
-    if missing:
-        to_set = {}
-        for unit in Unit.objects.filter(identifier__in=missing):
-            dist = distance_traveled_in_km(unit)
-            to_set[unit_distance_cache_key(unit.identifier)] = dist
-            total += dist
-
-        cache.set_many(to_set, UNIT_DISTANCE_CACHE_TTL)
+    missing_pks = [pk for pk, k in keys.items() if k not in cached]
+    if missing_pks:
+        computed = {u.pk: u.distance_km for u in Unit.objects.filter(pk__in=missing_pks).with_distance_km()}
+        cache.set_many({keys[pk]: km for pk, km in computed.items()}, UNIT_DISTANCE_CACHE_TTL)
+        total += sum(computed.values())
 
     return round(total, 2)

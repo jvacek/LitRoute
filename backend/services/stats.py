@@ -22,13 +22,19 @@ def _compute_stats() -> dict:
     from backend.models import CheckIn, Unit  # noqa: PLC0415
 
     user_model = get_user_model()
-    return {
-        "active_unit_count": Unit.objects.exclude(admin_only_checkin=True)
+
+    active_unit_count = (
+        Unit.objects.exclude(admin_only_checkin=True)
         .annotate(checkin_count=Count("checkin"))
         .exclude(checkin_count__lt=1)
-        .count(),
+        .count()
+    )
+    total_followers = user_model.objects.filter(followed_units__isnull=False).distinct().count()
+
+    return {
+        "active_unit_count": active_unit_count,
         "checkin_count": CheckIn.objects.count(),
-        "followers": user_model.objects.filter(followed_units__isnull=False).distinct().count(),
+        "followers": total_followers,
         "total_distance_traveled_km": total_distance_traveled_in_km(),
     }
 

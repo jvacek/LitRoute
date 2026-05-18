@@ -1,6 +1,7 @@
 from django.core.cache import cache
 from django.core.validators import RegexValidator
 from django.db import models
+from django.db.models.expressions import RawSQL
 
 from config.constants import UNIT_DISTANCE_CACHE_TTL
 from flamerelay.users.models import User
@@ -10,6 +11,43 @@ from .game import Game
 from .team import Team
 
 _UNFETCHED = object()
+
+
+# Correlated subquery: for each Unit row, build a LineString from this unit's
+# check-in `location` values ordered by `date_created`, then spheroid length
+# of that line in kilometres, rounded to 2dp to match the project convention
+# (cache writes, serializer output, API responses are all 2dp).
+# NULL when the unit has <2 check-ins → COALESCE 0.
+# RawSQL is necessary because Django's `MakeLine` aggregate sets
+# `allow_order_by = False`, and unordered points produce an arbitrary polyline.
+_DISTANCE_KM_SQL = """
+    COALESCE(ROUND(
+        (
+            (SELECT ST_Length(
+                ST_MakeLine(
+                    location::geometry ORDER BY date_created
+                )::geography
+            ) / 1000.0
+            FROM backend_checkin
+            WHERE unit_id = "backend_unit"."id")
+        )::numeric,
+        2
+    ), 0)
+"""
+
+
+class UnitQuerySet(models.QuerySet):
+    def with_distance_km(self):
+        """Annotate each Unit with `distance_km` (spheroid km of the check-in path).
+
+        Uncached — every call hits Postgres. Callers that want caching should
+        wrap this themselves (see `total_distance_traveled_in_km` and
+        `Unit.get_distance_traveled`).
+        """
+        # _DISTANCE_KM_SQL is a static string with no interpolation; ruff S611 false positive.
+        return self.annotate(
+            distance_km=RawSQL(_DISTANCE_KM_SQL, [], output_field=models.FloatField()),  # noqa: S611
+        )
 
 
 class Unit(models.Model):
@@ -49,6 +87,8 @@ class Unit(models.Model):
     )
     game = models.ForeignKey(Game, on_delete=models.PROTECT, null=True, blank=True)
 
+    objects = UnitQuerySet.as_manager()
+
     class Meta:
         verbose_name = "Unit"
         verbose_name_plural = "Units"
@@ -78,11 +118,12 @@ class Unit(models.Model):
 
     def get_distance_traveled(self) -> float:
 
-        from backend.services import distance_traveled_in_km, unit_distance_cache_key  # noqa: PLC0415
+        from backend.services import unit_distance_cache_key  # noqa: PLC0415
 
         key = unit_distance_cache_key(self.identifier)
         cached = cache.get(key)
         if cached is None:
-            cached = distance_traveled_in_km(self)
+            row = Unit.objects.filter(pk=self.pk).with_distance_km().first()
+            cached = row.distance_km if row else 0.0
             cache.set(key, cached, UNIT_DISTANCE_CACHE_TTL)
         return cached
