@@ -2,26 +2,19 @@ import { Suspense, lazy } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
-import type { GlobePin } from './SpinningGlobe';
+import type { components } from '../../api/schema';
 
 // Lazy so `cobe` stays out of the entry bundle now that Home itself is eager.
 const SpinningGlobe = lazy(() =>
   import('./SpinningGlobe').then((m) => ({ default: m.SpinningGlobe })),
 );
 
-export interface Stats {
-  active_unit_count: number;
-  checkin_count: number;
-  followers: number;
-  total_distance_traveled_km: number;
-}
-
 export function StatsBanner({
   stats,
   pins,
 }: {
-  stats: Stats | null;
-  pins: GlobePin[];
+  stats: components['schemas']['Stats'] | null;
+  pins: components['schemas']['GlobePin'][];
 }) {
   const { t } = useTranslation();
 

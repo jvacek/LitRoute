@@ -20,12 +20,15 @@ import ErrorPage from './pages/ErrorPage';
 import Feedback from './pages/Feedback';
 import Privacy from './pages/Privacy';
 import Home from './pages/Home';
+import { homeLoader } from './pages/Home/loader';
 import Signup from './pages/Signup';
 import SocialConnections from './pages/SocialConnections';
 import Terms from './pages/Terms';
 import { UnitErrorElement, unitLoader } from './pages/Unit.loader';
 import UserDetail from './pages/UserDetail';
+import { userDetailLoader } from './pages/UserDetail.loader';
 import UserForm from './pages/UserForm';
+import { userFormLoader } from './pages/UserForm.loader';
 
 // Home is the QR-landing front page — bundled into the entry so it paints
 // without a second-roundtrip lazy chunk. `cobe` stays lazy via SpinningGlobe.
@@ -104,7 +107,7 @@ function Layout() {
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route element={<Layout />}>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Home />} loader={homeLoader} />
       <Route path="/about/" element={<About />} />
       <Route path="/support/" element={<Support />} />
       <Route path="/contribute/" element={<ContributorGuide />} />
@@ -133,6 +136,7 @@ const router = createBrowserRouter(
             <UserDetail />
           </PrivateRoute>
         }
+        loader={userDetailLoader}
       />
       <Route
         path="/profile/update/"
@@ -141,6 +145,7 @@ const router = createBrowserRouter(
             <UserForm />
           </PrivateRoute>
         }
+        loader={userFormLoader}
       />
       <Route
         path="/profile/settings/"

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { ComponentType } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import {
   Link,
@@ -14,7 +15,7 @@ import GameIntroModal from '../components/GameIntroModal';
 import GuestEmailCapture from '../components/GuestEmailCapture';
 import ImageCarousel from '../components/ImageCarousel';
 import TeamBadge from '../components/TeamBadge';
-import UnitMap from '../components/UnitMap';
+import type UnitMapComponent from '../components/UnitMap';
 import { getEditToken } from '../lib/editTokens';
 import { getGameConfig } from '../lib/gameConfig';
 import { haversineKm } from '../lib/haversine';
@@ -103,6 +104,12 @@ export default function Unit() {
   );
   const [mapResetKey, setMapResetKey] = useState(0);
   const [mapIsReset, setMapIsReset] = useState(true);
+  // <UnitMap> pulls in maplibre-gl + react-map-gl — a ~1 MiB chunk that
+  // shouldn't block the QR-landing first paint. Load the module at idle (or
+  // 2s timeout fallback) so the page paints first and the map fills in.
+  const [MapModule, setMapModule] = useState<ComponentType<
+    React.ComponentProps<typeof UnitMapComponent>
+  > | null>(null);
   const [visibleIds, setVisibleIds] = useState<Set<number>>(new Set());
   const [focusedCheckinId, setFocusedCheckinId] = useState<number | null>(null);
   const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
@@ -153,6 +160,32 @@ export default function Unit() {
   useEffect(() => {
     checkinsRef.current = checkins;
   }, [checkins]);
+
+  // Defer the maplibre chunk load until the browser is idle (or 2s timeout).
+  // Until then the placeholder div reserves the layout so paint isn't blocked.
+  useEffect(() => {
+    if (checkins.length === 0) return;
+    let cancelled = false;
+    const load = () => {
+      import(
+        /* webpackChunkName: "components-UnitMap" */ '../components/UnitMap'
+      ).then((m) => {
+        if (!cancelled) setMapModule(() => m.default);
+      });
+    };
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(load, { timeout: 2000 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback(id);
+      };
+    }
+    const id = setTimeout(load, 200);
+    return () => {
+      cancelled = true;
+      clearTimeout(id);
+    };
+  }, [checkins.length]);
 
   useEffect(() => {
     observerRef.current = new IntersectionObserver(
@@ -462,15 +495,26 @@ export default function Unit() {
             ref={mapWrapperRef}
             className="sticky top-0 z-[60] mb-8 -mx-6 overflow-hidden sm:top-16 sm:z-10 sm:rounded-card sm:border sm:border-char/10"
           >
-            <div className="relative h-[280px] sm:h-[450px]">
-              <UnitMap
-                checkins={checkins}
-                resetKey={mapResetKey}
-                onMarkerClick={handleMarkerClick}
-                panToRef={mapPanToRef}
-                maptilerKey={maptilerKey}
-              />
-              {!mapIsReset && (
+            <div className="relative h-[280px] sm:h-[450px] bg-linen">
+              {MapModule ? (
+                <MapModule
+                  checkins={checkins}
+                  resetKey={mapResetKey}
+                  onMarkerClick={handleMarkerClick}
+                  panToRef={mapPanToRef}
+                  maptilerKey={maptilerKey}
+                />
+              ) : (
+                <div
+                  className="absolute inset-0 flex items-center justify-center text-smoke/60"
+                  aria-busy="true"
+                >
+                  <span className="text-xs uppercase tracking-wide">
+                    {t('unit.mapLoading')}
+                  </span>
+                </div>
+              )}
+              {MapModule && !mapIsReset && (
                 <button
                   onClick={() => {
                     setMapResetKey((k) => k + 1);

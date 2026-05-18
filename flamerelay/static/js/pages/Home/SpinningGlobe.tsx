@@ -2,10 +2,9 @@ import createGlobe from 'cobe';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export interface GlobePin {
-  lat: number;
-  lng: number;
-}
+import type { components } from '../../api/schema';
+
+type GlobePin = components['schemas']['GlobePin'];
 
 const DRAG_SENSITIVITY = 200;
 const RENDER_SIZE = 600;

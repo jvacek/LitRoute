@@ -681,6 +681,7 @@
       "heading": "This lighter's just getting started."
     },
     "goToPhoto": "Go to photo {{index}}",
+    "mapLoading": "Loading map…",
     "nextPhoto": "Next photo",
     "noCheckinsYet": "No check-ins yet.",
     "notFound": {

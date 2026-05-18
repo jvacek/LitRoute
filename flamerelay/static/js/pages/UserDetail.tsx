@@ -1,13 +1,8 @@
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLoaderData, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { logout } from '../lib/allauthApi';
-
-interface FollowedUnit {
-  identifier: string;
-  checkin_count: number;
-}
+import type { UserDetailLoaderData } from './UserDetail.loader';
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -20,15 +15,7 @@ export default function UserDetail() {
   const { t } = useTranslation();
   const { username, name, adminUrl, refresh } = useAuth();
   const navigate = useNavigate();
-  const [followedUnits, setFollowedUnits] = useState<FollowedUnit[] | null>(
-    null,
-  );
-
-  useEffect(() => {
-    fetch('/api/account/follows/')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data: FollowedUnit[] | null) => setFollowedUnits(data ?? []));
-  }, []);
+  const { followedUnits } = useLoaderData() as UserDetailLoaderData;
 
   const displayName = name || username;
 
@@ -94,7 +81,7 @@ export default function UserDetail() {
         <h2 className="font-heading mb-4 text-xl font-semibold text-char">
           {t('userDetail.followedUnits')}
         </h2>
-        {followedUnits === null ? null : followedUnits.length === 0 ? (
+        {followedUnits.length === 0 ? (
           <p className="text-smoke">{t('userDetail.noFollows')}</p>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">

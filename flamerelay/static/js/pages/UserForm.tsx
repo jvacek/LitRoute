@@ -1,27 +1,21 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLoaderData, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { useAuth } from '../AuthContext';
 import { reportError } from '../lib/sentry';
+import type { UserFormLoaderData } from './UserForm.loader';
 
 export default function UserForm() {
   const { t } = useTranslation();
   const { refresh } = useAuth();
   const navigate = useNavigate();
   const updateUrl = '/api/account/';
+  const loaderData = useLoaderData() as UserFormLoaderData;
 
-  const [name, setName] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [name, setName] = useState(loaderData.name);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string[]>>({});
-
-  useEffect(() => {
-    fetch('/api/account/')
-      .then((r) => r.json())
-      .then((data: { name: string }) => setName(data.name ?? ''))
-      .finally(() => setLoading(false));
-  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,14 +43,6 @@ export default function UserForm() {
     } finally {
       setSubmitting(false);
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-3xl px-6 py-16 text-center text-smoke">
-        {t('common.loading')}…
-      </div>
-    );
   }
 
   return (
