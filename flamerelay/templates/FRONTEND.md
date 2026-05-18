@@ -6,23 +6,24 @@ Django serves a **single HTML shell** (`flamerelay/templates/spa.html`) for ever
 
 ## Route → component map
 
-All routes are declared in `flamerelay/static/js/App.tsx`. The `<Layout>` wrapper (Navbar + footer) wraps every route. Routes marked **PrivateRoute** redirect unauthenticated users to `/accounts/login/?next=<path>`.
+All routes are declared in `flamerelay/static/js/App.tsx` via `createBrowserRouter(createRoutesFromElements(...))` + `<RouterProvider>`. The `<Layout>` wrapper (Navbar + footer) wraps every route. Routes marked **PrivateRoute** redirect unauthenticated users to `/accounts/login/?next=<path>`. Routes marked **Loader** fetch their initial data via a React Router 7 `loader` — see _Data loading (route loaders)_ below.
 
-| URL                                    | React component                                                 | Auth         |
-| -------------------------------------- | --------------------------------------------------------------- | ------------ |
-| `/`                                    | `pages/Home.tsx`                                                | —            |
-| `/about/`                              | `pages/About.tsx`                                               | —            |
-| `/accounts/login/`                     | `pages/Login.tsx` — unified sign-in **and** sign-up             | —            |
-| `/accounts/signup/`                    | `pages/Signup.tsx` — name confirmation for authenticated users  | —            |
-| `/accounts/confirm-email/:key`         | `pages/EmailConfirm.tsx`                                        | —            |
-| `/unit/:identifier/`                   | `pages/Unit.tsx`                                                | —            |
-| `/unit/:identifier/checkin`            | `pages/CheckinCreate.tsx`                                       | PrivateRoute |
-| `/unit/:identifier/checkin/:checkinId` | `pages/CheckinEdit.tsx`                                         | PrivateRoute |
-| `/profile/`                            | `pages/UserDetail.tsx` — own profile only                       | PrivateRoute |
-| `/profile/update/`                     | `pages/UserForm.tsx`                                            | PrivateRoute |
-| `/profile/settings/`                   | `pages/UserSettings/` — profile, email, MFA, connected accounts | PrivateRoute |
-| `/socialconnect/`                      | `pages/SocialConnections.tsx`                                   | PrivateRoute |
-| `*`                                    | `pages/ErrorPage.tsx` (code=404)                                | —            |
+| URL                                    | React component                                                 | Auth         | Loader |
+| -------------------------------------- | --------------------------------------------------------------- | ------------ | ------ |
+| `/`                                    | `pages/Home.tsx`                                                | —            | ✓      |
+| `/about/`                              | `pages/About.tsx`                                               | —            |        |
+| `/accounts/login/`                     | `pages/Login.tsx` — unified sign-in **and** sign-up             | —            |        |
+| `/accounts/signup/`                    | `pages/Signup.tsx` — name confirmation for authenticated users  | —            |        |
+| `/accounts/confirm-email/:key`         | `pages/EmailConfirm.tsx`                                        | —            |        |
+| `/unit/:identifier/`                   | `pages/Unit.tsx`                                                | —            | ✓      |
+| `/unit/:identifier/checkin`            | `pages/CheckinCreate.tsx`                                       | PrivateRoute | ✓      |
+| `/unit/:identifier/checkin/:checkinId` | `pages/CheckinEdit.tsx`                                         | PrivateRoute | ✓      |
+| `/game/:gameId/leaderboard/`           | `pages/GameLeaderboard.tsx`                                     | —            | ✓      |
+| `/profile/`                            | `pages/UserDetail.tsx` — own profile only                       | PrivateRoute | ✓      |
+| `/profile/update/`                     | `pages/UserForm.tsx`                                            | PrivateRoute | ✓      |
+| `/profile/settings/`                   | `pages/UserSettings/` — profile, email, MFA, connected accounts | PrivateRoute |        |
+| `/socialconnect/`                      | `pages/SocialConnections.tsx`                                   | PrivateRoute |        |
+| `*`                                    | `pages/ErrorPage.tsx` (code=404)                                | —            |        |
 
 ## Auth state (AuthContext)
 
@@ -52,9 +53,103 @@ const maptilerKey = config?.maptilerKey ?? '';
 
 Never hardcode the MapTiler key — always read it from `useConfig()`.
 
+## Data loading (route loaders)
+
+Pages that need data on first paint fetch it via a **React Router 7 loader**, not a `useEffect`. The browser starts the loader the moment navigation begins, in parallel with the lazy route chunk download — so the API request and the JS chunk arrive together instead of the request only firing after the component mounts.
+
+### File layout
+
+The loader lives in its own file next to the page, **separate from the lazy component**:
+
+```
+pages/Unit.tsx          ← React.lazy() in App.tsx, big chunk
+pages/Unit.loader.tsx   ← eager import in App.tsx, tiny (just the fetch)
+```
+
+If the loader lived inside the page file, it would only become available after the chunk loaded — defeating the parallelism. Keep loaders in `<Page>.loader.ts` (or `.tsx` if you also export an `errorElement` component).
+
+### Typed API client
+
+Loaders call the API through `apiClient` from `flamerelay/static/js/api/client.ts` — an `openapi-fetch` instance wrapping `apiFetch` so CSRF + cookies still work. Types come from `flamerelay/static/js/api/schema.d.ts`, regenerated by `just specs` from the live OpenAPI schema (commits both `openapi.yaml` and `schema.d.ts`; CI fails the build if the checked-in artifacts drift).
+
+```ts
+import { apiClient } from '../api/client';
+import type { components } from '../api/schema';
+
+export type UnitLoaderData = {
+  unit: components['schemas']['Unit'];
+  checkins: components['schemas']['CheckIn'][];
+};
+
+export async function unitLoader({ params }: LoaderFunctionArgs): Promise<UnitLoaderData> {
+  const identifier = params.identifier ?? '';
+  const [unitResp, checkinsResp] = await Promise.all([
+    apiClient.GET('/api/units/{identifier}/', { params: { path: { identifier } } }),
+    apiClient.GET('/api/units/{identifier}/checkins/', { params: { path: { identifier } } }),
+  ]);
+  if (unitResp.response.status === 404 || !unitResp.data) {
+    throw new Response('Unit not found', { status: 404 });
+  }
+  return { unit: unitResp.data, checkins: checkinsResp.data ?? [] };
+}
+```
+
+`apiClient.GET` returns `{ data, error, response }` and **never throws on non-2xx** — check `response.status` or `data` and `throw new Response(...)` to surface a routed error.
+
+### Consuming loader data in the page
+
+```ts
+import { useLoaderData } from 'react-router-dom';
+import type { UnitLoaderData } from './Unit.loader';
+
+const { unit, checkins } = useLoaderData() as UnitLoaderData;
+```
+
+The route component re-mounts on pathname changes (the per-pathname `key={pathname}` wrappers in Layout ensure this), so seeding local state from loader data via `useState(() => loaderData.something)` is safe — the initialiser re-runs on navigation.
+
+### 404 and other expected failures
+
+A loader that `throw`s a `Response` with a 4xx status is caught by the route's `errorElement`. Pattern (see `pages/Unit.loader.tsx`):
+
+```tsx
+export function UnitErrorElement() {
+  const error = useRouteError();
+  if (!isRouteErrorResponse(error) || error.status !== 404) throw error;
+  return <NotFoundUI />;
+}
+```
+
+Wire both `loader` and `errorElement` on the `<Route>` in App.tsx:
+
+```tsx
+<Route
+  path="/unit/:identifier/"
+  element={<Unit />}
+  loader={unitLoader}
+  errorElement={<UnitErrorElement />}
+/>
+```
+
+Non-404 errors `throw error` to bubble to the parent error boundary (the per-route `<ErrorBoundary>` in Layout).
+
+### When to use a loader vs. a useEffect
+
+Use a **loader** when the data is required for the first paint and the page can't render meaningfully without it.
+
+Keep a **`useEffect`** when:
+
+- The fetch is intentionally lazy / fire-and-forget (the leaderboard rank on Unit takes ~5 min cache misses; we don't want it blocking the page).
+- The fetch depends on AuthContext (loaders can't access React context — `PrivateRoute` runs after the loader).
+- The fetch is triggered by a user action (mutations stay in handlers, not loaders).
+
+### Generated types and runtime mismatches
+
+`openapi-typescript` is honest — if the schema says a field is required but runtime returns `null`, the generated types lie. When you find a mismatch, fix it in the **serializer** (e.g. `allow_null=True` on nested serializers) and re-run `just specs`. Don't paper over the mismatch with hand-typed intersection types — the whole point of generating from the schema is that the schema becomes the contract.
+
 ## Error pages
 
-- **404** — the catch-all `<Route path="*">` in `App.tsx` renders `<ErrorPage code={404} />`.
+- **Per-route loader errors (e.g. 404 on `/unit/:identifier/`)** — handled by the route's `errorElement`, which catches anything the loader throws. See _Data loading (route loaders) → 404 and other expected failures_.
+- **Catch-all 404** — the trailing `<Route path="*">` in `App.tsx` renders `<ErrorPage code={404} />` for unmatched paths.
 - **500 (uncaught render error)** — `App.tsx` has two `<ErrorBoundary>` layers. The **outer** boundary (wrapping `<AuthProvider>`) catches crashes in the shell — Navbar, Footer, AuthProvider — and replaces the whole app with `<ErrorPage code={500} />`. The **inner** boundary (`<ErrorBoundary key={pathname}>` inside Layout's `<Suspense>`) catches page-level crashes so a broken route doesn't kill navigation; the `key={pathname}` re-mounts it on every nav so a caught error doesn't poison subsequent routes.
 - **Django server errors** (e.g. 500 before React loads) — Django's own error handler; these are rare since the SPA shell has no server-side logic.
 
@@ -94,15 +189,22 @@ When adding a new lazy route whose chunk merits its own budget (heavy deps, publ
 
 ## CSRF
 
-There are two CSRF-aware fetch wrappers — use the right one for the right API:
+There are three CSRF-aware ways to call our APIs — pick by use case:
 
-- **`/api/` endpoints** — use `apiFetch` from `api.ts`. Injects `X-CSRFToken` automatically on mutating methods.
+- **Loaders and any typed `/api/` GET** — use `apiClient` from `api/client.ts`. Typed via the generated OpenAPI schema; wraps `apiFetch` so CSRF still works. See _Data loading (route loaders)_.
+- **Mutations against `/api/` (POST/PATCH/DELETE)** — use `apiFetch` from `api.ts` directly. Injects `X-CSRFToken` automatically on mutating methods. Returns the raw `Response` for the `r.ok` check.
 - **`/_allauth/` endpoints** — use the functions in `lib/allauthApi.ts`. They handle their own CSRF internally.
 
 ```ts
+// Typed GET — preferred when you have a schema entry for the endpoint
+import { apiClient } from '../api/client';
+const { data, error } = await apiClient.GET('/api/account/');
+
+// Untyped mutation — when you need raw control over body/headers
 import { apiFetch } from '../api';
 await apiFetch(`/api/units/${identifier}/follow/`, { method: 'POST' });
 
+// Allauth
 import { logout } from '../lib/allauthApi';
 await logout(); // calls DELETE /_allauth/browser/v1/auth/session
 ```
@@ -126,16 +228,9 @@ DRF puts the human-readable reason in `detail` for permission/grace-period error
 
 ### 404 on initial data loads
 
-For GETs that load page state, **always check `r.ok` before calling `.json()`** — DRF error bodies (`{"detail": "Not found."}`) are valid JSON, so without the check they silently become the component's state. Pattern:
+Initial-load 404s are handled by the route's loader + `errorElement` — see _Data loading (route loaders)_ above. The old `setNotFound(true)` + `<ErrorPage code={404} />` pattern in component state is gone from the loader-migrated pages.
 
-```ts
-if (!r.ok) {
-  setNotFound(true);
-  return null;
-}
-```
-
-Then render `<ErrorPage code={404} />` when `notFound` is true. See `Unit.tsx` and `CheckinEdit.tsx` for reference.
+For mutations and lazy fetches that stay in `useEffect`, **always check `r.ok` before calling `.json()`** — DRF error bodies (`{"detail": "Not found."}`) are valid JSON, so without the check they silently become the component's state.
 
 ### 401 handling
 
@@ -229,12 +324,16 @@ Not all components are migrated yet. See `TODOs/translations.md` for the per-com
 ## Adding a new React page
 
 1. Create `flamerelay/static/js/pages/MyPage.tsx` — export a default component. Use `useParams()` for URL segments, `useAuth()` for auth state, `useConfig()` for API keys.
-2. Add a `<Route>` in `App.tsx`. Wrap in `<PrivateRoute>` if login is required. If the page is heavy (large dep, e.g. maplibre, qrcode, @simplewebauthn), use `lazy()` so it ships as its own chunk.
-3. No Django view needed — the catch-all `spa_view` in `config/urls.py` handles all non-API routes automatically.
-4. **If this is a QR-landing fast path** (a route users hit cold from outside the app), wire it through the preload pipeline — see _Performance hints → Preload pipeline_ above.
+2. **If the page fetches data on first paint**, create `flamerelay/static/js/pages/MyPage.loader.ts(x)` next to it with a `myPageLoader` function and (if there's an expected 404) a `MyPageErrorElement`. See _Data loading (route loaders)_. Consume the result with `useLoaderData() as MyPageLoaderData` — do not fetch in `useEffect`.
+3. Add a `<Route>` in `App.tsx` with `loader={myPageLoader}` (and `errorElement={<MyPageErrorElement />}` if applicable). Wrap in `<PrivateRoute>` if login is required. If the page is heavy (large dep, e.g. maplibre, qrcode, @simplewebauthn), use `lazy()` so it ships as its own chunk — but **keep the loader import eager** (that's why the loader lives in a separate file).
+4. No Django view needed — the catch-all `spa_view` in `config/urls.py` handles all non-API routes automatically.
+5. **If this is a QR-landing fast path** (a route users hit cold from outside the app), wire it through the preload pipeline — see _Performance hints → Preload pipeline_ above.
 
 ```tsx
 // App.tsx — add inside the <Route element={<Layout />}> block
+import { myPageLoader, MyPageErrorElement } from './pages/MyPage.loader';
+const MyPage = lazy(() => import(/* webpackChunkName: "pages-MyPage" */ './pages/MyPage'));
+
 <Route
   path="/my-page/:id/"
   element={
@@ -242,6 +341,8 @@ Not all components are migrated yet. See `TODOs/translations.md` for the per-com
       <MyPage />
     </PrivateRoute>
   }
+  loader={myPageLoader}
+  errorElement={<MyPageErrorElement />}
 />
 ```
 
@@ -391,6 +492,12 @@ https://api.maptiler.com/maps/dataviz/style.json?key=${maptilerKey}
 ```
 
 Pages with maps: `Unit.tsx` (travel history) and `CheckinForm.tsx` (location picker). Do not import from `react-leaflet` or `leaflet` — those packages have been removed.
+
+### Deferred map load on Unit pages
+
+`Unit.tsx` does **not** statically import `<UnitMap>` — the maplibre vendor chunk is ~1 MiB uncompressed and would block the QR-landing first paint. Instead the page renders a placeholder, then loads the map module via `import('../components/UnitMap')` inside `requestIdleCallback` (with a 2s `setTimeout` fallback). The component swaps in once the chunk arrives.
+
+Consequence: `preload.py` deliberately omits the `vendor-maplibre` chunk from the Unit-route preload hints. Re-adding it would defeat the defer. If you add another large dep that should follow the same pattern, mirror the state-driven dynamic import in `Unit.tsx` rather than wrapping in `React.lazy()` (which fires the import on first render, too eager for this case).
 
 ## Check-in images
 

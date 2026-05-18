@@ -120,7 +120,7 @@ TODOs/              # task trackers
 - **Touching `backend/models.py`, signals, auth, permissions, or storage cleanup**
   → **read `backend/ARCHITECTURE.md` first.**
 - **Adding, modifying, or testing any `/api/` endpoint**
-  → **read `backend/API.md` first.** Live schema at `/api/docs/`.
+  → **read `backend/API.md` first.** Live schema at `/api/docs/`. After any serializer/viewset change, run `just specs` and commit both `openapi.yaml` and `flamerelay/static/js/api/schema.d.ts` — CI's linter job re-runs the TS gen and diffs against the committed file, so drift fails the build.
 - **Writing or refactoring any test under `backend/tests/` or `flamerelay/users/tests/`**
   → **read `backend/TESTING.md` first.** Layered structure, shared fixtures, FIRST-U rules, anti-patterns.
 - **Adding i18n keys or running `scripts/*-translations.py`**
