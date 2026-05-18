@@ -32,8 +32,8 @@ class UnitAdmin(admin.ModelAdmin):
         "follower_count",
         "checkin_count",
     )
-    list_filter = ("date_created", "created_by", "team")
-    list_select_related = ("team", "created_by")
+    list_filter = ("date_created", "created_by", "team", "game")
+    list_select_related = ("team", "created_by", "game")
     filter_horizontal = ["followers"]
     inlines = [CheckInInline]
 
@@ -69,8 +69,8 @@ class UnitAdmin(admin.ModelAdmin):
 
     def get_list_filter(self, request):
         if self._is_contributor(request):
-            return ["date_created", "team"]
-        return ["date_created", "created_by", "team"]
+            return ["date_created", "team", "game"]
+        return ["date_created", "created_by", "team", "game"]
 
     def get_queryset(self, request):
         qs = (
