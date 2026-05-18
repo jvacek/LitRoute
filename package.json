@@ -7,6 +7,7 @@
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
     "@sentry/webpack-plugin": "^5.3.0",
+    "@size-limit/file": "^12.1.0",
     "@svgr/webpack": "^8.1.0",
     "@tailwindcss/postcss": "^4.2.2",
     "@testing-library/jest-dom": "^6.9.1",
@@ -31,6 +32,7 @@
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "sharp": "^0.34.5",
+    "size-limit": "^12.1.0",
     "tailwindcss": "^4.2.2",
     "typescript": "^6.0.2",
     "webpack": "^5.82.0",
@@ -84,8 +86,36 @@
     "build": "webpack --config webpack/prod.config.js",
     "lint": "eslint --max-warnings 0 flamerelay/static/js/",
     "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "test": "jest",
+    "size": "size-limit"
   },
+  "size-limit": [
+    {
+      "name": "entry (project + initial vendors, brotli)",
+      "path": [
+        "flamerelay/static/webpack_bundles/js/project-*.js",
+        "flamerelay/static/webpack_bundles/js/vendor-react-*.js",
+        "flamerelay/static/webpack_bundles/js/vendor-i18n-*.js",
+        "flamerelay/static/webpack_bundles/js/vendor-sentry-*.js"
+      ],
+      "limit": "200 KB"
+    },
+    {
+      "name": "vendor-maplibre (lazy, Unit/Checkin, brotli)",
+      "path": "flamerelay/static/webpack_bundles/js/vendor-maplibre-*.js",
+      "limit": "280 KB"
+    },
+    {
+      "name": "Unit route chunk (brotli)",
+      "path": "flamerelay/static/webpack_bundles/js/pages-Unit-*.js",
+      "limit": "15 KB"
+    },
+    {
+      "name": "Login route chunk (brotli)",
+      "path": "flamerelay/static/webpack_bundles/js/pages-Login-*.js",
+      "limit": "15 KB"
+    }
+  ],
   "dependencies": {
     "@fontsource-variable/fraunces": "^5.2.9",
     "@fontsource/caveat": "^5.2.8",
