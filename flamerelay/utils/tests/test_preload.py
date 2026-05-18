@@ -78,19 +78,27 @@ def stub_stats():
 
 
 class TestGetPreloadHints:
-    def test_homepage_preloads_unit_chunk_maplibre_and_fonts(self):
+    def test_homepage_preloads_unit_chunk_and_fonts(self):
         hints = preload.get_preload_hints("/")
-        assert hints["preload_scripts"] == [UNIT_URL, MAPLIBRE_URL]
+        assert hints["preload_scripts"] == [UNIT_URL]
         assert hints["preload_fonts"] == [FRAUNCES_URL, DM_SANS_URL]
 
-    def test_unit_page_preloads_unit_chunk_maplibre_and_fonts(self):
+    def test_unit_page_preloads_unit_chunk_and_fonts(self):
         hints = preload.get_preload_hints("/unit/john-93/")
-        assert hints["preload_scripts"] == [UNIT_URL, MAPLIBRE_URL]
+        assert hints["preload_scripts"] == [UNIT_URL]
         assert hints["preload_fonts"] == [FRAUNCES_URL, DM_SANS_URL]
 
     def test_unit_page_without_trailing_slash_still_matches(self):
         hints = preload.get_preload_hints("/unit/john-93")
-        assert hints["preload_scripts"] == [UNIT_URL, MAPLIBRE_URL]
+        assert hints["preload_scripts"] == [UNIT_URL]
+
+    def test_unit_page_does_not_preload_maplibre(self):
+        # maplibre is deliberately omitted — Unit.tsx defers the map to
+        # requestIdleCallback. Preloading the ~1 MiB chunk would defeat the
+        # defer. Same logic for `/` (Home → Unit nav path).
+        for path in ("/", "/unit/john-93/"):
+            hints = preload.get_preload_hints(path)
+            assert MAPLIBRE_URL not in hints["preload_scripts"], path
 
     def test_unit_subpath_does_not_match(self):
         # /unit/:id/checkin etc. shouldn't be classified as the QR-landing fast
