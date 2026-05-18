@@ -1,53 +1,17 @@
-import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams, useSearchParams } from 'react-router-dom';
-import { apiFetch } from '../api';
+import { useLoaderData, useSearchParams } from 'react-router-dom';
 import Countdown from '../components/Countdown';
-import JourneyMap, { type JourneyEntry } from '../components/JourneyMap';
+import JourneyMap from '../components/JourneyMap';
 import TeamBadge from '../components/TeamBadge';
+import type { components } from '../api/schema';
 import { humanizeHours } from '../lib/duration';
 import { getGameConfig } from '../lib/gameConfig';
 import { formatKm, formatNumber } from '../lib/numbers';
 import { useConfig } from '../lib/useConfig';
-import ErrorPage from './ErrorPage';
+import type { GameLeaderboardLoaderData } from './GameLeaderboard.loader';
 
-interface TeamRef {
-  name: string;
-  color: string;
-}
-
-interface IndividualEntry {
-  rank: number;
-  // Null for every row except the one matching the ?from=<identifier> query.
-  identifier: string | null;
-  place: string;
-  last_checkin_name: string;
-  distance_km: number;
-  checkin_count: number;
-  team: TeamRef | null;
-}
-
-interface TeamEntry {
-  rank: number;
-  team: TeamRef;
-  distance_km: number;
-  lighter_count: number;
-}
-
-interface LeaderboardData {
-  game: {
-    id: number;
-    name: string;
-    mode: string;
-    allowed_time: number;
-    gps_drift_floor: number;
-    start_time: string;
-    end_time: string;
-    sort_by: 'distance_km' | 'checkin_count';
-  };
-  individual: IndividualEntry[];
-  teams: TeamEntry[] | null;
-}
+type IndividualEntry = components['schemas']['LeaderboardIndividualEntry'];
+type TeamEntry = components['schemas']['LeaderboardTeamEntry'];
 
 const headerCell =
   'px-4 py-3 text-xs font-semibold uppercase tracking-wide text-char/60';
@@ -55,80 +19,20 @@ const dataCell = 'px-4 py-3 text-sm';
 
 export default function GameLeaderboard() {
   const { t } = useTranslation();
-  const { gameId = '' } = useParams<{ gameId: string }>();
   const [searchParams] = useSearchParams();
   const fromIdentifier = searchParams.get('from');
   const appConfig = useConfig();
   const maptilerKey = appConfig?.maptilerKey ?? '';
-  const [data, setData] = useState<LeaderboardData | null>(null);
-  const [journeys, setJourneys] = useState<JourneyEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
+  const { leaderboard: data, journeys: journeysPayload } =
+    useLoaderData() as GameLeaderboardLoaderData;
+  const journeys = journeysPayload.journeys;
 
-  useEffect(() => {
-    // Pass ?from=<identifier> when known so that one row's identifier comes
-    // through; everyone else's identifier is nulled out by the backend.
-    let cancelled = false;
-    const url = fromIdentifier
-      ? `/api/games/${gameId}/leaderboard/?from=${encodeURIComponent(fromIdentifier)}`
-      : `/api/games/${gameId}/leaderboard/`;
-    apiFetch(url)
-      .then(async (r) => {
-        if (cancelled) return null;
-        if (!r.ok) {
-          setNotFound(true);
-          return null;
-        }
-        return (await r.json()) as LeaderboardData;
-      })
-      .then((d) => {
-        if (cancelled) return;
-        if (d) setData(d);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [gameId, fromIdentifier]);
-
-  useEffect(() => {
-    // Journey-map data is split off so the leaderboard table renders quickly
-    // and the rank lookup on /unit/ doesn't pull megabytes of coordinates.
-    let cancelled = false;
-    apiFetch(`/api/games/${gameId}/journeys/`)
-      .then(async (r) => {
-        if (cancelled || !r.ok) return null;
-        return (await r.json()) as {
-          game_id: number;
-          journeys: JourneyEntry[];
-        };
-      })
-      .then((d) => {
-        if (cancelled || !d) return;
-        setJourneys(d.journeys);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [gameId]);
-
-  if (notFound) return <ErrorPage code={404} />;
-  if (loading || !data) {
-    return (
-      <div className="mx-auto max-w-3xl px-4 py-12 text-center text-char/60">
-        {t('common.loading')}…
-      </div>
-    );
-  }
-
-  const config = getGameConfig(data.game.mode);
-  const modeName = config ? t(config.name) : data.game.mode;
+  const config = getGameConfig(data.game.mode ?? '');
+  const modeName = config ? t(config.name) : (data.game.mode ?? '');
   const rules = config
     ? t(config.rulesKey, {
-        duration: humanizeHours(t, data.game.allowed_time),
-        maxDrift: formatNumber(data.game.gps_drift_floor),
+        duration: humanizeHours(t, data.game.allowed_time ?? 0),
+        maxDrift: formatNumber(data.game.gps_drift_floor ?? 0),
       })
     : null;
 

@@ -13,11 +13,20 @@ import Footer from './components/Footer';
 import Navbar from './components/Navbar';
 import doodlesSrc from './assets/backgrounds/pattern.webp';
 import About from './pages/About';
+import {
+  CheckinCreateErrorElement,
+  checkinCreateLoader,
+} from './pages/CheckinCreate.loader';
+import {
+  CheckinEditErrorElement,
+  checkinEditLoader,
+} from './pages/CheckinEdit.loader';
 import ContributorGuide from './pages/ContributorGuide';
 import Support from './pages/Support';
 import EmailConfirm from './pages/EmailConfirm';
 import ErrorPage from './pages/ErrorPage';
 import Feedback from './pages/Feedback';
+import { gameLeaderboardLoader } from './pages/GameLeaderboard.loader';
 import Privacy from './pages/Privacy';
 import Home from './pages/Home';
 import { homeLoader } from './pages/Home/loader';
@@ -123,12 +132,23 @@ const router = createBrowserRouter(
         loader={unitLoader}
         errorElement={<UnitErrorElement />}
       />
-      <Route path="/unit/:identifier/checkin" element={<CheckinCreate />} />
+      <Route
+        path="/unit/:identifier/checkin"
+        element={<CheckinCreate />}
+        loader={checkinCreateLoader}
+        errorElement={<CheckinCreateErrorElement />}
+      />
       <Route
         path="/unit/:identifier/checkin/:checkinId"
         element={<CheckinEdit />}
+        loader={checkinEditLoader}
+        errorElement={<CheckinEditErrorElement />}
       />
-      <Route path="/game/:gameId/leaderboard/" element={<GameLeaderboard />} />
+      <Route
+        path="/game/:gameId/leaderboard/"
+        element={<GameLeaderboard />}
+        loader={gameLeaderboardLoader}
+      />
       <Route
         path="/profile/"
         element={

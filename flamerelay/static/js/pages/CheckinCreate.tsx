@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLoaderData, useNavigate, useParams } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { useAuth } from '../AuthContext';
 import { storeEditToken } from '../lib/editTokens';
@@ -8,12 +8,7 @@ import { useConfig } from '../lib/useConfig';
 import CheckinForm from '../components/CheckinForm';
 import GuestEmailCapture from '../components/GuestEmailCapture';
 import TeamBadge from '../components/TeamBadge';
-import ErrorPage from './ErrorPage';
-
-interface TeamRef {
-  name: string;
-  color: string;
-}
+import type { CheckinCreateLoaderData } from './CheckinCreate.loader';
 
 interface CheckinResponse {
   id: number;
@@ -29,53 +24,27 @@ export default function CheckinCreate() {
   const { isAuthenticated, refresh } = useAuth();
   const unitUrl = `/unit/${identifier}/`;
 
-  const [guestCheckinId, setGuestCheckinId] = useState<number | null>(null);
-  const [notFound, setNotFound] = useState(false);
-  const [isGpsEnforced, setIsGpsEnforced] = useState(false);
-  const [gpsDriftFloorM, setGpsDriftFloorM] = useState<number | null>(null);
-  const [gameTimeWarning, setGameTimeWarning] = useState<string | null>(null);
-  const [team, setTeam] = useState<TeamRef | null>(null);
-  const [followerCount, setFollowerCount] = useState(0);
+  const { unit } = useLoaderData() as CheckinCreateLoaderData;
+  const isGpsEnforced = unit.is_gps_enforced ?? false;
+  const team = unit.team;
+  const followerCount = unit.follower_count;
+  const gpsDriftFloorM = unit.game?.gps_drift_floor ?? 0;
 
-  useEffect(() => {
-    apiFetch(`/api/units/${identifier}/`).then(async (r) => {
-      if (r.status === 404) {
-        setNotFound(true);
-        return;
-      }
-      if (r.ok) {
-        const data = (await r.json()) as {
-          is_gps_enforced: boolean;
-          follower_count: number;
-          team: TeamRef | null;
-          game: {
-            name: string;
-            mode: string;
-            gps_drift_floor: number;
-            allowed_time: number;
-            end_time: string;
-          } | null;
-        };
-        setIsGpsEnforced(data.is_gps_enforced ?? false);
-        setTeam(data.team ?? null);
-        setFollowerCount(data.follower_count ?? 0);
-        setGpsDriftFloorM(data.game?.gps_drift_floor ?? 0);
-        if (data.game?.mode === 'distance' && data.game.end_time) {
-          const remainingMinutes =
-            (new Date(data.game.end_time).getTime() - Date.now()) / 60_000;
-          if (remainingMinutes <= 0) {
-            setGameTimeWarning(t('game.distance.timeExpired'));
-          } else if (remainingMinutes < 60) {
-            setGameTimeWarning(
-              t('game.distance.timeAlmostUp', {
-                minutes: Math.ceil(remainingMinutes),
-              }),
-            );
-          }
-        }
-      }
-    });
-  }, [identifier, t]);
+  const [guestCheckinId, setGuestCheckinId] = useState<number | null>(null);
+  // Computed at mount only — `Date.now()` is impure during render and unit.game
+  // is fixed from the loader, so a useState initializer is the right home.
+  const [gameTimeWarning] = useState<string | null>(() => {
+    if (unit.game?.mode !== 'distance' || !unit.game.end_time) return null;
+    const remainingMinutes =
+      (new Date(unit.game.end_time).getTime() - Date.now()) / 60_000;
+    if (remainingMinutes <= 0) return t('game.distance.timeExpired');
+    if (remainingMinutes < 60) {
+      return t('game.distance.timeAlmostUp', {
+        minutes: Math.ceil(remainingMinutes),
+      });
+    }
+    return null;
+  });
 
   async function handleSubmit(data: FormData) {
     const res = await apiFetch(`/api/units/${identifier}/checkins/`, {
@@ -107,8 +76,6 @@ export default function CheckinCreate() {
     return json;
   }
 
-  if (notFound) return <ErrorPage code={404} />;
-
   if (guestCheckinId !== null) {
     return (
       <main className="px-4 py-12">
@@ -119,14 +86,6 @@ export default function CheckinCreate() {
           onDone={() => navigate(unitUrl)}
         />
       </main>
-    );
-  }
-
-  if (gpsDriftFloorM === null) {
-    return (
-      <div className="mx-auto max-w-3xl px-6 py-16 text-center text-smoke">
-        {t('common.loading')}…
-      </div>
     );
   }
 

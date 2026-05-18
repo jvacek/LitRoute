@@ -30,7 +30,7 @@ const REPLAY_TICK_MS = 100;
 
 interface TeamRef {
   name: string;
-  color: string;
+  color?: string;
 }
 
 export interface JourneyEntry {
