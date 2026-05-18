@@ -54,7 +54,7 @@ def sentry_tunnel(request) -> HttpResponse:
         return HttpResponseBadRequest("dsn mismatch")
 
     upstream = Request(
-        f"https://{host}/api/{project_id}/envelope/",
+        f"https://{expected_host}/api/{expected_project_id}/envelope/",
         data=body,
         headers={"Content-Type": "application/x-sentry-envelope"},
         method="POST",
