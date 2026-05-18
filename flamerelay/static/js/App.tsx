@@ -29,11 +29,21 @@ import UserForm from './pages/UserForm';
 // without a second-roundtrip lazy chunk. `cobe` stays lazy via SpinningGlobe.
 // Unit/Checkin* pull in maplibre-gl; Login/UserSettings pull in
 // @simplewebauthn/browser and qrcode.
-const Unit = lazy(() => import('./pages/Unit'));
+//
+// `webpackChunkName` magic comments on Unit and Login give those two chunks
+// stable, human-readable filenames in prod (webpack's default `chunkIds:
+// "deterministic"` produces numeric IDs like `940-<hash>.js`). The preload
+// hints in spa.html look these chunks up by name prefix — see
+// flamerelay/utils/preload.py.
+const Unit = lazy(
+  () => import(/* webpackChunkName: "pages-Unit" */ './pages/Unit'),
+);
 const CheckinCreate = lazy(() => import('./pages/CheckinCreate'));
 const CheckinEdit = lazy(() => import('./pages/CheckinEdit'));
 const GameLeaderboard = lazy(() => import('./pages/GameLeaderboard'));
-const Login = lazy(() => import('./pages/Login'));
+const Login = lazy(
+  () => import(/* webpackChunkName: "pages-Login" */ './pages/Login'),
+);
 const UserSettings = lazy(() => import('./pages/UserSettings'));
 
 // Capture is handled by Sentry.reactErrorHandler() wired into createRoot's
@@ -75,7 +85,13 @@ function Layout() {
       <Navbar />
       <div key={pathname} className="page-enter flex-1">
         <Suspense fallback={<div className="min-h-[60vh]" aria-busy="true" />}>
-          <Outlet />
+          {/* `key={pathname}` re-mounts the boundary on every navigation so a
+              caught error on one page doesn't poison subsequent routes. The
+              outer ErrorBoundary still catches crashes in AuthProvider/Navbar/
+              Footer; this inner one isolates page-level failures. */}
+          <ErrorBoundary key={pathname}>
+            <Outlet />
+          </ErrorBoundary>
         </Suspense>
       </div>
       <Footer />
