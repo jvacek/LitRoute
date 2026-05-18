@@ -1,0 +1,1127 @@
+openapi: 3.0.3
+info:
+  title: LitRoute API
+  version: 1.0.0
+  description: Documentation of API endpoints of LitRoute
+paths:
+  /api/account/:
+    get:
+      operationId: account_retrieve
+      tags:
+      - account
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: account_partial_update
+      tags:
+      - account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUser'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    delete:
+      operationId: account_destroy
+      tags:
+      - account
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/account/follows/:
+    get:
+      operationId: account_follows_list
+      tags:
+      - account
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Unit'
+          description: ''
+  /api/account/social-accounts/:
+    delete:
+      operationId: account_social_accounts_destroy
+      description: |-
+        DELETE /api/account/social-accounts/ — remove a connected social account.
+
+        Allauth's built-in disconnect rejects users with no usable password. Since
+        this app is passwordless (magic code always works), we bypass that check and
+        delete the SocialAccount directly. The user must have at least one verified
+        email address so they can still receive sign-in codes after disconnect.
+      tags:
+      - account
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialAccountError'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SocialAccountNotFound'
+          description: ''
+  /api/auth/code/request/:
+    post:
+      operationId: auth_code_request_create
+      description: |-
+        Unified sign-in / sign-up endpoint. Creates the account if it doesn't exist,
+        then triggers allauth's login-by-code flow. Always returns the same response
+        regardless of whether the email was registered, preventing email enumeration.
+        Rate-limited via allauth's built-in ratelimit (ACCOUNT_RATE_LIMITS[request_login_code]).
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CodeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CodeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CodeRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeRequestSuccess'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeRequestError'
+          description: ''
+        '403':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeRequestForbidden'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodeRequestThrottled'
+          description: ''
+  /api/config/:
+    get:
+      operationId: config_retrieve
+      tags:
+      - config
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Config'
+          description: ''
+  /api/feedback/:
+    post:
+      operationId: feedback_create
+      tags:
+      - feedback
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/FeedbackRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FeedbackRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackSuccess'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeedbackError'
+          description: ''
+  /api/games/{id}/journeys/:
+    get:
+      operationId: games_journeys_retrieve
+      description: |-
+        Map data for a Game's journeys, split from the leaderboard endpoint so
+        table-only callers (rank lookups on the unit page, the leaderboard table
+        itself) don't pay for the coordinate dump on every fetch. Anonymous: no
+        identifiers in the payload.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - games
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameJourneys'
+          description: ''
+  /api/games/{id}/leaderboard/:
+    get:
+      operationId: games_leaderboard_retrieve
+      parameters:
+      - in: query
+        name: from
+        schema:
+          type: string
+        description: Unit identifier whose row should keep its identifier in the response.
+          All other rows return identifier=null so the public endpoint cannot be used
+          to enumerate unit slugs.
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: pk
+        schema:
+          type: integer
+        required: true
+      tags:
+      - games
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Leaderboard'
+          description: ''
+  /api/globe-pins/:
+    get:
+      operationId: globe_pins_retrieve
+      tags:
+      - globe-pins
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GlobePins'
+          description: ''
+  /api/stats/:
+    get:
+      operationId: stats_retrieve
+      tags:
+      - stats
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stats'
+          description: ''
+  /api/units/{identifier}/:
+    get:
+      operationId: units_retrieve
+      parameters:
+      - in: path
+        name: identifier
+        schema:
+          type: string
+        required: true
+      tags:
+      - units
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unit'
+          description: ''
+  /api/units/{identifier}/checkins/:
+    get:
+      operationId: units_checkins_list
+      parameters:
+      - in: path
+        name: identifier
+        schema:
+          type: string
+        required: true
+      tags:
+      - units
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CheckIn'
+          description: ''
+    post:
+      operationId: units_checkins_create
+      parameters:
+      - in: path
+        name: identifier
+        schema:
+          type: string
+        required: true
+      tags:
+      - units
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckIn'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CheckIn'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CheckIn'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckIn'
+          description: ''
+  /api/units/{identifier}/checkins/{id}/:
+    patch:
+      operationId: units_checkins_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: identifier
+        schema:
+          type: string
+        required: true
+      tags:
+      - units
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCheckIn'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCheckIn'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCheckIn'
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckIn'
+          description: ''
+    delete:
+      operationId: units_checkins_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: identifier
+        schema:
+          type: string
+        required: true
+      tags:
+      - units
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/units/{identifier}/follow/:
+    post:
+      operationId: units_follow_create
+      parameters:
+      - in: path
+        name: identifier
+        schema:
+          type: string
+        required: true
+      tags:
+      - units
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+        '401':
+          description: No response body
+    delete:
+      operationId: units_follow_destroy
+      parameters:
+      - in: path
+        name: identifier
+        schema:
+          type: string
+        required: true
+      tags:
+      - units
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+        '401':
+          description: No response body
+  /api/units/{identifier}/guest-follow/:
+    post:
+      operationId: units_guest_follow_create
+      parameters:
+      - in: path
+        name: identifier
+        schema:
+          type: string
+        required: true
+      tags:
+      - units
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuestFollowRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GuestFollowRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GuestFollowRequest'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuestFollowSuccess'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuestFollowError'
+          description: ''
+components:
+  schemas:
+    CheckIn:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        date_created:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by_username:
+          type: string
+          nullable: true
+          readOnly: true
+        created_by_name:
+          type: string
+          nullable: true
+          readOnly: true
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckInImage'
+          readOnly: true
+        message:
+          type: string
+        place:
+          type: string
+          maxLength: 200
+        location:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+                format: float
+              example:
+              - 12.9721
+              - 77.5933
+              minItems: 2
+              maxItems: 3
+        gps_location:
+          writeOnly: true
+          nullable: true
+        gps_accuracy_m:
+          type: integer
+          minimum: 0
+          writeOnly: true
+          nullable: true
+        within_edit_grace_period:
+          type: boolean
+          readOnly: true
+        anonymous_name:
+          type: string
+          maxLength: 100
+      required:
+      - created_by_name
+      - created_by_username
+      - date_created
+      - id
+      - images
+      - location
+      - within_edit_grace_period
+    CheckInImage:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        image:
+          type: string
+          format: uri
+        order:
+          type: integer
+          maximum: 32767
+          minimum: 0
+      required:
+      - id
+      - image
+    CodeRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
+    CodeRequestError:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    CodeRequestForbidden:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    CodeRequestSuccess:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    CodeRequestThrottled:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    Config:
+      type: object
+      properties:
+        maptilerKey:
+          type: string
+        allowRegistration:
+          type: boolean
+        turnstileSiteKey:
+          type: string
+      required:
+      - allowRegistration
+      - maptilerKey
+      - turnstileSiteKey
+    FeedbackError:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    FeedbackRequest:
+      type: object
+      properties:
+        message:
+          type: string
+          maxLength: 5000
+        email:
+          type: string
+          format: email
+        turnstile_token:
+          type: string
+      required:
+      - message
+    FeedbackSuccess:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    Game:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: Display name shown on the leaderboard and intro modal.
+          maxLength: 100
+        mode:
+          $ref: '#/components/schemas/ModeEnum'
+        allowed_time:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Total game duration in hours.
+        gps_drift_floor:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Floor of the drift envelope in meters. The server enforces
+            `distance(pin, gps) ≤ max(this, reported accuracy)`, so this is the minimum
+            allowance — never the cap. (Distance+Race modes.)
+        shelf_life:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Time in hours before a check-in expires. (Hot Potato mode)
+        start_time:
+          type: string
+          format: date-time
+          description: When the game starts. End time is start_time + allowed_time
+            hours.
+        end_time:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - end_time
+      - id
+      - name
+    GameJourneys:
+      type: object
+      properties:
+        game_id:
+          type: integer
+        journeys:
+          type: array
+          items:
+            $ref: '#/components/schemas/JourneyEntry'
+      required:
+      - game_id
+      - journeys
+    GlobePin:
+      type: object
+      properties:
+        lat:
+          type: number
+          format: double
+        lng:
+          type: number
+          format: double
+      required:
+      - lat
+      - lng
+    GlobePins:
+      type: object
+      properties:
+        pins:
+          type: array
+          items:
+            $ref: '#/components/schemas/GlobePin'
+      required:
+      - pins
+    GuestFollowError:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    GuestFollowRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        checkin_id:
+          type: integer
+      required:
+      - checkin_id
+      - email
+    GuestFollowSuccess:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    JourneyEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        team:
+          allOf:
+          - $ref: '#/components/schemas/Team'
+          nullable: true
+        journey:
+          type: array
+          items:
+            $ref: '#/components/schemas/JourneyPoint'
+      required:
+      - journey
+      - rank
+      - team
+    JourneyPoint:
+      type: object
+      properties:
+        lng:
+          type: number
+          format: double
+        lat:
+          type: number
+          format: double
+        date:
+          type: string
+        after_end:
+          type: boolean
+      required:
+      - after_end
+      - date
+      - lat
+      - lng
+    Leaderboard:
+      type: object
+      properties:
+        game:
+          $ref: '#/components/schemas/LeaderboardGame'
+        individual:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardIndividualEntry'
+        teams:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardTeamEntry'
+          nullable: true
+      required:
+      - game
+      - individual
+      - teams
+    LeaderboardGame:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          description: Display name shown on the leaderboard and intro modal.
+          maxLength: 100
+        mode:
+          $ref: '#/components/schemas/ModeEnum'
+        allowed_time:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Total game duration in hours.
+        gps_drift_floor:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Floor of the drift envelope in meters. The server enforces
+            `distance(pin, gps) ≤ max(this, reported accuracy)`, so this is the minimum
+            allowance — never the cap. (Distance+Race modes.)
+        shelf_life:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          description: Time in hours before a check-in expires. (Hot Potato mode)
+        start_time:
+          type: string
+          format: date-time
+          description: When the game starts. End time is start_time + allowed_time
+            hours.
+        end_time:
+          type: string
+          format: date-time
+          readOnly: true
+        sort_by:
+          $ref: '#/components/schemas/SortByEnum'
+      required:
+      - end_time
+      - id
+      - name
+      - sort_by
+    LeaderboardIndividualEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        identifier:
+          type: string
+          nullable: true
+        place:
+          type: string
+        last_checkin_name:
+          type: string
+        distance_km:
+          type: number
+          format: double
+        checkin_count:
+          type: integer
+        team:
+          allOf:
+          - $ref: '#/components/schemas/Team'
+          nullable: true
+      required:
+      - checkin_count
+      - distance_km
+      - identifier
+      - last_checkin_name
+      - place
+      - rank
+      - team
+    LeaderboardTeamEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        team:
+          $ref: '#/components/schemas/Team'
+        distance_km:
+          type: number
+          format: double
+        checkin_count:
+          type: integer
+        lighter_count:
+          type: integer
+      required:
+      - checkin_count
+      - distance_km
+      - lighter_count
+      - rank
+      - team
+    ModeEnum:
+      enum:
+      - relay
+      - race
+      - hot_potato
+      - distance
+      type: string
+      description: |-
+        * `relay` - Relay
+        * `race` - Race
+        * `hot_potato` - Hot Potato
+        * `distance` - Distance
+    PatchedCheckIn:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        date_created:
+          type: string
+          format: date-time
+          readOnly: true
+        created_by_username:
+          type: string
+          nullable: true
+          readOnly: true
+        created_by_name:
+          type: string
+          nullable: true
+          readOnly: true
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckInImage'
+          readOnly: true
+        message:
+          type: string
+        place:
+          type: string
+          maxLength: 200
+        location:
+          type: object
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+                format: float
+              example:
+              - 12.9721
+              - 77.5933
+              minItems: 2
+              maxItems: 3
+        gps_location:
+          writeOnly: true
+          nullable: true
+        gps_accuracy_m:
+          type: integer
+          minimum: 0
+          writeOnly: true
+          nullable: true
+        within_edit_grace_period:
+          type: boolean
+          readOnly: true
+        anonymous_name:
+          type: string
+          maxLength: 100
+    PatchedUser:
+      type: object
+      properties:
+        username:
+          type: string
+          readOnly: true
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+        name:
+          type: string
+          title: Name of User
+          maxLength: 255
+        language:
+          type: string
+          maxLength: 10
+        admin_url:
+          type: string
+          nullable: true
+          readOnly: true
+    SocialAccountError:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    SocialAccountNotFound:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    SortByEnum:
+      enum:
+      - distance_km
+      - checkin_count
+      type: string
+      description: |-
+        * `distance_km` - distance_km
+        * `checkin_count` - checkin_count
+    Stats:
+      type: object
+      properties:
+        active_unit_count:
+          type: integer
+        checkin_count:
+          type: integer
+        followers:
+          type: integer
+        total_distance_traveled_km:
+          type: number
+          format: double
+      required:
+      - active_unit_count
+      - checkin_count
+      - followers
+      - total_distance_traveled_km
+    Team:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 32
+          pattern: ^[-a-zA-Z0-9_]+$
+        color:
+          type: string
+          description: 'Hex colour used for the team pill on the leaderboard, e.g.
+            #c94c35.'
+          pattern: ^#[0-9a-fA-F]{6}$
+          maxLength: 7
+      required:
+      - name
+    Unit:
+      type: object
+      properties:
+        identifier:
+          type: string
+          description: Unique identifier for the unit, e.g. 'alpha-01'. Must start
+            with at least three characters and end with two digits, separated by a
+            dash.
+          pattern: ^\w{3,}
+          maxLength: 200
+        date_created:
+          type: string
+          format: date-time
+          readOnly: true
+        admin_only_checkin:
+          type: boolean
+          description: Whether only admins can check in to this unit, primarily used
+            for demos or for disabling lighters.
+        team:
+          allOf:
+          - $ref: '#/components/schemas/Team'
+          readOnly: true
+        checkin_count:
+          type: integer
+          readOnly: true
+        follower_count:
+          type: integer
+          readOnly: true
+        distance_traveled_km:
+          type: number
+          format: double
+          readOnly: true
+        is_following:
+          type: boolean
+          readOnly: true
+        can_check_in:
+          type: boolean
+          readOnly: true
+        is_gps_enforced:
+          type: boolean
+          readOnly: true
+        game:
+          allOf:
+          - $ref: '#/components/schemas/Game'
+          readOnly: true
+      required:
+      - can_check_in
+      - checkin_count
+      - date_created
+      - distance_traveled_km
+      - follower_count
+      - game
+      - identifier
+      - is_following
+      - is_gps_enforced
+      - team
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+          readOnly: true
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+        name:
+          type: string
+          title: Name of User
+          maxLength: 255
+        language:
+          type: string
+          maxLength: 10
+        admin_url:
+          type: string
+          nullable: true
+          readOnly: true
+      required:
+      - admin_url
+      - username
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

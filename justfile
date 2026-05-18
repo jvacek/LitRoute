@@ -56,9 +56,14 @@ manage +args:
 test *args:
     @docker compose run --rm django pytest {{args}}
 
-# specs: Generate and validate the OpenAPI schema.
+# specs: Regenerate the OpenAPI schema YAML and the matching TypeScript types.
+#        YAML is produced in a one-shot django container (no `just up` required);
+#        TS types are generated on the host via openapi-typescript. Both
+#        artifacts are checked in — re-run after any serializer/viewset change
+#        and commit the resulting openapi.yaml + flamerelay/static/js/api/schema.d.ts.
 specs:
     @docker compose run --rm django python ./manage.py spectacular --file /app/openapi.yaml --validate
+    @npm run gen:api
 
 # ── Translations ───────────────────────────────────────────────────────────────
 

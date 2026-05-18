@@ -40,6 +40,11 @@ jobs:
       - name: Install Node dependencies
         run: npm ci
 
+      - name: Check OpenAPI types are in sync with openapi.yaml
+        run: |
+          npx openapi-typescript openapi.yaml -o /tmp/schema.d.ts
+          diff /tmp/schema.d.ts flamerelay/static/js/api/schema.d.ts
+
       - name: Run ESLint
         run: npm run lint
 
@@ -96,6 +101,11 @@ jobs:
         run: |
           docker compose -f docker-compose.local.yml run --rm django \
             sh -c "python manage.py makemigrations --check && python manage.py migrate && pytest"
+
+      - name: Check openapi.yaml is in sync with serializers
+        run: |
+          docker compose -f docker-compose.local.yml run --rm django \
+            sh -c "python manage.py spectacular --file /tmp/openapi.yaml --validate && diff /tmp/openapi.yaml /app/openapi.yaml"
 
       - name: Tear down the Stack
         run: docker compose -f docker-compose.local.yml down
