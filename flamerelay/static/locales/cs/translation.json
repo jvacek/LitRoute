@@ -1,16 +1,12 @@
 {
   "about": {
     "aboutTitle": "O projektu",
-    "faqTitle": "",
     "header": "Pro ty, co po sobě naschvál nechávaj věci",
     "qa": {
       "followAlong": {
-        "a": "Na <instagramLink>Instagramu (@lit_route)</instagramLink>, na <redditLink>Redditu (r/litroute)</redditLink>, a na <discordLink>Discrodu</discordLink>",
-        "q": ""
+        "a": "Na <instagramLink>Instagramu (@lit_route)</instagramLink>, na <redditLink>Redditu (r/litroute)</redditLink>, a na <discordLink>Discrodu</discordLink>"
       },
       "help": {
-        "a1": "",
-        "a2": "",
         "a3": "Můžeš taky pomoct s přkeladem do jiných jazyků i bez znalostí programovaní. Překlady se upravují skrz <weblateLink>Weblate</weblateLink>.",
         "q": "Můžu nějak pomoct?"
       },
@@ -25,7 +21,6 @@
         "q": "Chceš z tohodle nějak vydělávat?"
       },
       "secure": {
-        "a1": "",
         "a2": "Nevěříš mi? Kód je volně přístupnej. Můžeš si i zpriovoznit svůj vlastní LitRoute, jen tomu prosím říkej nějak jinak.",
         "q": "Je to bezpečný?"
       },
@@ -44,134 +39,6 @@
     },
     "subheader": "Zapík putuje z ruky do ruky. Každý komu projde rukou si ho začekuje — fotka, místo a nějaká zpráva. Tady tu pouť můžeš sledovat.",
     "supportHeading": "Podpoř tenhle projekt"
-  },
-  "auth": {
-    "code": {
-      "codeLabel": "",
-      "description": "",
-      "differentEmail": "",
-      "inboxFallback": "",
-      "submit": {
-        "default": ""
-      },
-      "title": ""
-    },
-    "email": {
-      "description": "",
-      "emailLabel": "",
-      "passkey": {
-        "default": ""
-      },
-      "submit": {
-        "default": "",
-        "loading": ""
-      },
-      "title": ""
-    },
-    "errors": {
-      "passkeyFailed": "",
-      "passkeyMfaFailed": "",
-      "sendFailed": "",
-      "socialLoginFailed": "",
-      "somethingWrong": "",
-      "verifyFailed": ""
-    },
-    "mfa": {
-      "codeLabel": "",
-      "description": "",
-      "passkey": {
-        "default": ""
-      },
-      "submit": {
-        "default": ""
-      }
-    },
-    "signup": {
-      "description": "",
-      "displayNameLabel": "",
-      "previewLabel": "",
-      "saveFailed": "",
-      "submit": {
-        "default": ""
-      },
-      "title": "",
-      "yourNameFallback": ""
-    }
-  },
-  "checkin": {
-    "createTitle": "",
-    "editTitle": "",
-    "form": {
-      "clickToDrop": "",
-      "clickToMove": "",
-      "dismiss": "",
-      "errors": {
-        "gpsRequired": "",
-        "locationRequired": "",
-        "maxPhotos": "",
-        "nameRequired": "",
-        "placeRequired": "",
-        "svgNotSupported": ""
-      },
-      "gameRequiredNote": {
-        "anon": "",
-        "auth": ""
-      },
-      "gpsDeniedModal": {
-        "body": "",
-        "close": "",
-        "step1": "",
-        "step2": "",
-        "step3": "",
-        "title": "",
-        "tryAgain": ""
-      },
-      "gpsLowPrecisionModal": {
-        "body": "",
-        "title": "",
-        "tryAgain": "",
-        "useAnyway": ""
-      },
-      "gpsNotice": "",
-      "gpsNudgeHint": "",
-      "locationLabel": "",
-      "locationLockedOnEdit": "",
-      "locationSet": "",
-      "messageLabel": "",
-      "messagePlaceholder": "",
-      "nameLabel": "",
-      "nameLabelRequired": "",
-      "namePlaceholder": "",
-      "passedOnNote": "",
-      "placeLabel": "",
-      "placePlaceholder": "",
-      "privacyHint": {
-        "body": "",
-        "title": ""
-      },
-      "scrollUpForErrors": "",
-      "searchPlaceholder": "",
-      "submit": {
-        "create": "",
-        "creating": "",
-        "save": ""
-      },
-      "useMyLocation": {
-        "default": "",
-        "loading": ""
-      }
-    },
-    "guestEmailPlaceholder": "",
-    "guestEmailSent": "",
-    "guestEmailSentBack": "",
-    "guestEmailSentTitle": "",
-    "guestEmailSkip": "",
-    "guestEmailSocialProof_few": "",
-    "guestEmailSocialProof_one": "",
-    "guestEmailSocialProof_other": "",
-    "guestEmailSubmit": "",
-    "guestEmailSubtitle": "",
-    "guestEmailTitle": ""
   },
   "common": {
     "about": "O projektu",
@@ -199,504 +66,47 @@
     "saving": "Ukládání",
     "sending": "Posílání",
     "settings": "Nastavení",
-    "signingIn": "",
     "support": "Podpořit",
     "twoFactorAuth": "Dvoufázový ověření",
-    "unexpectedError": "Nějaká neočekávaná chyba",
-    "verificationCodeLabel": "",
-    "verifying": ""
-  },
-  "contributorGuide": {
-    "footerText": "",
-    "greeting": "",
-    "greetingBody1": "",
-    "greetingBody2": "",
-    "header": "",
-    "openAdmin": "",
-    "passingOnSubtext": "",
-    "passingOnTitle": "",
-    "steps": {
-      "attachLabel": {
-        "a": "",
-        "q": "",
-        "tip": ""
-      },
-      "createUnit": {
-        "a": "",
-        "q": "",
-        "tip": ""
-      },
-      "firstCheckin": {
-        "a": "",
-        "q": ""
-      },
-      "handOff": {
-        "a": "",
-        "q": ""
-      },
-      "makeLabel": {
-        "a": "",
-        "q": "",
-        "tip": ""
-      }
-    },
-    "stepsTitle": "",
-    "subheader": ""
-  },
-  "emailConfirm": {
-    "checkingLink": "",
-    "confirm": {
-      "body": "",
-      "failed": "",
-      "submit": {
-        "default": ""
-      },
-      "title": ""
-    },
-    "invalid": {
-      "body": "",
-      "title": ""
-    }
-  },
-  "errorPage": {
-    "403": {
-      "description": "",
-      "headline": ""
-    },
-    "403csrf": {
-      "description": "",
-      "headline": ""
-    },
-    "404": {
-      "description": "",
-      "headline": ""
-    },
-    "500": {
-      "description": "",
-      "headline": ""
-    },
-    "backToHome": ""
-  },
-  "faq": {
-    "lighter": {
-      "anythingDo": {
-        "a1": "",
-        "a2": "",
-        "q": ""
-      },
-      "cantSeeAll": {
-        "a1": "",
-        "a2": "",
-        "q": ""
-      },
-      "giveToWhom": {
-        "a1": "",
-        "a2": "",
-        "q": ""
-      },
-      "lightDied": {
-        "a": "",
-        "q": ""
-      },
-      "multipleCheckins": {
-        "a1": "",
-        "a2": "",
-        "q": ""
-      }
-    }
-  },
-  "feedback": {
-    "captchaPending": "",
-    "emailHelpAnonymous": "",
-    "emailHelpAuthenticated": "",
-    "emailLabel": "",
-    "emailPlaceholder": "",
-    "embedHeading": "",
-    "embedSubheading": "",
-    "errorGeneric": "",
-    "errorRequiredMessage": "",
-    "messageLabel": "",
-    "messagePlaceholder": "",
-    "submit": "",
-    "submitting": "",
-    "subtitle": "",
-    "successMessage": "",
-    "successTitle": "",
-    "title": "",
-    "youFallback": ""
-  },
-  "footer": {
-    "feedback": "",
-    "footerNav": "",
-    "tagline": "",
-    "viewCommit": ""
+    "unexpectedError": "Nějaká neočekávaná chyba"
   },
   "game": {
-    "countdown": {
-      "days": "",
-      "ended": "",
-      "endedOn": "",
-      "endsIn": "",
-      "endsOn": "",
-      "hours": "",
-      "minutes": "",
-      "seconds": ""
-    },
-    "distance": {
-      "name": "",
-      "rules": "",
-      "timeAlmostUp": "",
-      "timeExpired": ""
-    },
-    "hot_potato": {
-      "name": "",
-      "rules": ""
-    },
     "leaderboard": {
-      "byPerson": "",
-      "checkinsHeader": "",
-      "distanceHeader": "",
-      "individualTab": "",
-      "lighterCountHeader": "",
-      "lightersDescriptionByCheckins": "",
-      "lightersDescriptionByDistance": "",
-      "mapAfterEndLegend": "",
-      "mapDescription": "",
-      "mapDuringLegend": "",
-      "mapEmpty": "",
-      "mapReplay": "",
-      "mapReplaying": "",
-      "mapTitle": "",
-      "noEntries": "",
-      "placeHeader": "",
-      "rankHeader": "#",
-      "teamHeader": "",
-      "teamsDescriptionByCheckins": "",
-      "teamsDescriptionByDistance": "",
-      "teamsTab": "",
-      "title": "",
-      "unitsNotStarted_few": "",
-      "unitsNotStarted_one": "",
-      "unitsNotStarted_other": ""
-    },
-    "modal": {
-      "gotIt": "",
-      "title": "",
-      "viewLeaderboard": ""
-    },
-    "race": {
-      "name": "",
-      "rules": ""
-    },
-    "relay": {
-      "name": "",
-      "rules": ""
+      "rankHeader": "#"
     }
   },
   "home": {
     "cta": {
-      "body": "",
-      "heading": "",
       "link": "O projektu"
     },
-    "errors": {
-      "like": "",
-      "missingDash": "",
-      "nameTooShort": "",
-      "noNumber": "",
-      "notFound": "",
-      "numberRequired": "",
-      "offMap": "",
-      "singleDigit": ""
-    },
-    "eyebrow": "",
     "globeCaption": "20 nedávno aktivních zapíků — každej puntík je něčí story.",
-    "headline": "",
-    "howItWorks": {
-      "heading": "",
-      "step1Body": "",
-      "step1Title": "",
-      "step2Body": "",
-      "step2Title": "",
-      "step3Body": "",
-      "step3Title": "",
-      "step4Body": "",
-      "step4Title": ""
-    },
-    "journey": {
-      "exampleLabel": "",
-      "heading": "",
-      "openSlotBody": "",
-      "seeReal": "",
-      "somewhere": "",
-      "subtext": "",
-      "yourName": ""
-    },
-    "lighterAlt": "",
-    "lighterLabel": "",
     "stats": {
-      "activeLighters": "aktivní zapalovače",
-      "checkinsLogged": "",
-      "freeText": "",
-      "traveledSoFar": ""
-    },
-    "subheadline": "",
-    "submit": {
-      "checking": "",
-      "default": ""
-    },
-    "tryExample": ""
-  },
-  "nav": {
-    "feedback": "",
-    "homeAriaLabel": "",
-    "languageLabel": "",
-    "mainNav": "",
-    "mobileNav": "",
-    "signIn": "",
-    "supportAriaLabel": "",
-    "toggleNav": ""
+      "activeLighters": "aktivní zapalovače"
+    }
   },
   "photoUpload": {
-    "counter": "",
-    "dragToReorder": "",
     "empty": {
-      "addPhotos": "Přidat fotky",
-      "clickOrDrag": "",
-      "dropHere": "",
-      "releaseToUpload": "",
-      "showWhere": ""
-    },
-    "existingPhoto": "",
-    "label": "",
-    "maxReached": "",
-    "optional": "",
-    "preview": "",
-    "removePhoto": "",
-    "tips": {
-      "heading": "",
-      "hide": "",
-      "lighter": "",
-      "location": ""
-    },
-    "zoneAriaAdd": "",
-    "zoneAriaFull": ""
-  },
-  "privacy": {
-    "body": "",
-    "title": ""
+      "addPhotos": "Přidat fotky"
+    }
   },
   "settings": {
-    "connectedAccounts": {
-      "disconnect": {
-        "default": "",
-        "loading": ""
-      },
-      "failedDisconnect": "",
-      "noAccounts": ""
-    },
-    "deleteAccount": {
-      "confirmation": {
-        "failed": "",
-        "item1": "",
-        "item2": "",
-        "item3": "",
-        "item4": "",
-        "item5": "",
-        "keepAnon": "",
-        "placeholder": "",
-        "submit": {
-          "default": "",
-          "loading": ""
-        },
-        "title": "",
-        "typeToConfirm": ""
-      },
-      "deleteBtn": "",
-      "description": "",
-      "sectionTitle": ""
-    },
-    "email": {
-      "cancelChange": "",
-      "changeEmail": {
-        "default": "",
-        "loading": ""
-      },
-      "confirmChange": {
-        "default": ""
-      },
-      "currentEmail": "",
-      "errors": {
-        "failedCancel": "",
-        "failedPrimary": "",
-        "failedRemove": "",
-        "failedRequest": "",
-        "failedVerification": ""
-      },
-      "newEmailLabel": "",
-      "newEmailPlaceholder": "",
-      "pendingVerify": "",
-      "readyToSwitch": "",
-      "resendEmail": {
-        "default": ""
-      },
-      "sectionTitle": ""
-    },
     "mfa": {
-      "deactivate": {
-        "description": "",
-        "remove": {
-          "default": "",
-          "loading": ""
-        }
-      },
-      "reauth": {
-        "codeSent": "",
-        "description": "",
-        "sendCode": {
-          "default": ""
-        }
-      },
-      "recoveryCodes": {
-        "eachOnce": "",
-        "failedGenerate": "",
-        "generateBtn": "",
-        "generateNew": "",
-        "generateWarning": "",
-        "generating": {
-          "loading": ""
-        },
-        "label": "",
-        "notGenerated": "",
-        "remaining": "",
-        "setUpFirst": "",
-        "viewBtn": ""
-      },
       "setup": {
         "activate": {
           "default": "Aktivovat",
           "loading": "Aktivuje se"
-        },
-        "description": "",
-        "invalidCode": "",
-        "secretKeyLabel": ""
+        }
       },
       "totp": {
-        "active": "Aktivní",
-        "label": "",
-        "notSetUp": "",
-        "setUp": {
-          "default": ""
-        }
+        "active": "Aktivní"
       }
     },
     "passkeys": {
-      "addBtn": "",
-      "added": "Přídáno {{date}}",
-      "adding": {
-        "nameHint": "",
-        "nameLabel": "",
-        "namePlaceholder": "",
-        "submit": {
-          "default": "",
-          "loading": ""
-        }
-      },
-      "description": "",
-      "errors": {
-        "cancelled": "",
-        "registerFailed": "",
-        "removeFailed": "",
-        "startFailed": ""
-      },
-      "lastUsed": "",
-      "noPasskeys": "",
-      "reauth": {
-        "codeSent": "",
-        "description": "",
-        "sendCode": {
-          "default": ""
-        }
-      },
-      "sectionTitle": "",
-      "unsupported": ""
-    },
-    "profile": {
-      "saved": "",
-      "submit": {
-        "default": ""
-      }
-    },
-    "reauth": {
-      "failedSend": "",
-      "incorrectPassword": "",
-      "invalidCode": ""
+      "added": "Přídáno {{date}}"
     }
   },
-  "socialProviders": {
-    "orContinueWith": ""
-  },
-  "support": {
-    "header": "",
-    "subheader": ""
-  },
-  "supportSection": {
-    "body1": "",
-    "body2": "",
-    "donateCta": "",
-    "githubDescription": "",
-    "githubLabel": "",
-    "kofiDescription": "",
-    "kofiLabel": "",
-    "liberapayDescription": "",
-    "liberapayLabel": "",
-    "otherWaysHeading": "",
-    "weblateCta": "",
-    "weblateDescription": "",
-    "weblateLabel": ""
-  },
-  "terms": {
-    "body": "",
-    "title": ""
-  },
   "unit": {
-    "cannotEdit": "",
-    "checkinBtn": "",
-    "claimBtn": "",
-    "currentLocation": "",
-    "deleteBtn": "",
-    "deleteConfirm": "",
-    "deleteError": "",
-    "editBtn": "",
     "follow": "Sledovat",
-    "game": {
-      "leaderboardLink": "",
-      "rankLabel": "",
-      "showRules": ""
-    },
-    "gettingStarted": {
-      "body": "",
-      "cta": "",
-      "heading": ""
-    },
-    "goToPhoto": "",
-    "nextPhoto": "",
-    "noCheckinsYet": "",
-    "notFound": {
-      "body1": "",
-      "body2": "",
-      "cta": "",
-      "heading": ""
-    },
-    "origin": "",
-    "passedOn": "",
-    "photoAlt": "",
-    "placeNotGiven": "",
-    "prevPhoto": "",
-    "resetView": "",
-    "statsFollowers": "",
-    "statsKmTraveled": "",
-    "statsStops": "",
     "statsTeam": "tým",
     "status": {
       "currentlyIn": "Zrovna v {{place}}",
@@ -704,23 +114,6 @@
       "lastSeenDaysAgo_one": "Naposledy viděno před {{count}} dnem v {{place}}",
       "lastSeenDaysAgo_other": "Naposledy viděno před {{count}} dny v {{place}}",
       "lastSeenYesterday": "Naposledy viděno v {{place}}"
-    },
-    "supportPrompt": "",
-    "travelLog": "",
-    "verifiedBanner": ""
-  },
-  "userDetail": {
-    "admin": "",
-    "checkins_few": "",
-    "checkins_one": "",
-    "checkins_other": "",
-    "contributorGuide": "",
-    "signOut": ""
-  },
-  "userForm": {
-    "submit": {
-      "default": ""
-    },
-    "title": ""
+    }
   }
 }
