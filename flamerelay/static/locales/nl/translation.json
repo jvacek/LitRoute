@@ -1,12 +1,98 @@
 {
+  "about": {
+    "aboutTitle": "",
+    "faqTitle": "",
+    "header": "",
+    "qa": {
+      "followAlong": {
+        "a": "",
+        "q": ""
+      },
+      "help": {
+        "a1": "",
+        "a2": "",
+        "a3": "",
+        "q": ""
+      },
+      "how": {
+        "a": "",
+        "q": ""
+      },
+      "money": {
+        "a1": "",
+        "a2": "",
+        "a3": "",
+        "q": ""
+      },
+      "secure": {
+        "a1": "",
+        "a2": "",
+        "q": ""
+      },
+      "translate": {
+        "a": "",
+        "q": ""
+      },
+      "who": {
+        "a": "",
+        "q": ""
+      },
+      "why": {
+        "a": "",
+        "q": ""
+      }
+    },
+    "subheader": "",
+    "supportHeading": ""
+  },
   "auth": {
+    "code": {
+      "codeLabel": "",
+      "description": "",
+      "differentEmail": "",
+      "inboxFallback": "",
+      "submit": {
+        "default": ""
+      },
+      "title": ""
+    },
     "email": {
+      "description": "",
       "emailLabel": "E-mailadres",
       "submit": {
         "default": "Doorgaan met e-mail",
         "loading": "Code versturen"
       },
       "title": "Aanmelden of registreren"
+    },
+    "errors": {
+      "passkeyFailed": "",
+      "passkeyMfaFailed": "",
+      "sendFailed": "",
+      "socialLoginFailed": "",
+      "somethingWrong": "",
+      "verifyFailed": ""
+    },
+    "mfa": {
+      "codeLabel": "",
+      "description": "",
+      "passkey": {
+        "default": ""
+      },
+      "submit": {
+        "default": ""
+      }
+    },
+    "signup": {
+      "description": "",
+      "displayNameLabel": "",
+      "previewLabel": "",
+      "saveFailed": "",
+      "submit": {
+        "default": ""
+      },
+      "title": "",
+      "yourNameFallback": ""
     }
   },
   "checkin": {
@@ -35,6 +121,12 @@
         "step3": "Laad deze pagina opnieuw als je klaar bent.",
         "title": "We zien je locatie niet",
         "tryAgain": "Opnieuw proberen"
+      },
+      "gpsLowPrecisionModal": {
+        "body": "",
+        "title": "",
+        "tryAgain": "",
+        "useAnyway": ""
       },
       "gpsNotice": "Deze eenheid vereist je realtime locatie. Deze wordt vastgelegd wanneer je op Inchecken tikt.",
       "gpsNudgeHint": "Verplaats je speld als je je exacte locatie liever niet deelt.",
@@ -107,6 +199,43 @@
     "verificationCodeLabel": "Verificatiecode",
     "verifying": "Verifiëren"
   },
+  "contributorGuide": {
+    "footerText": "",
+    "greeting": "",
+    "greetingBody1": "",
+    "greetingBody2": "",
+    "header": "",
+    "openAdmin": "",
+    "passingOnSubtext": "",
+    "passingOnTitle": "",
+    "steps": {
+      "attachLabel": {
+        "a": "",
+        "q": "",
+        "tip": ""
+      },
+      "createUnit": {
+        "a": "",
+        "q": "",
+        "tip": ""
+      },
+      "firstCheckin": {
+        "a": "",
+        "q": ""
+      },
+      "handOff": {
+        "a": "",
+        "q": ""
+      },
+      "makeLabel": {
+        "a": "",
+        "q": "",
+        "tip": ""
+      }
+    },
+    "stepsTitle": "",
+    "subheader": ""
+  },
   "emailConfirm": {
     "checkingLink": "Je verificatielink controleren",
     "confirm": {
@@ -122,8 +251,78 @@
       "title": "Ongeldige link"
     }
   },
+  "errorPage": {
+    "403": {
+      "description": "",
+      "headline": ""
+    },
+    "403csrf": {
+      "description": "",
+      "headline": ""
+    },
+    "404": {
+      "description": "",
+      "headline": ""
+    },
+    "500": {
+      "description": "",
+      "headline": ""
+    },
+    "backToHome": ""
+  },
+  "faq": {
+    "lighter": {
+      "anythingDo": {
+        "a1": "",
+        "a2": "",
+        "q": ""
+      },
+      "cantSeeAll": {
+        "a1": "",
+        "a2": "",
+        "q": ""
+      },
+      "giveToWhom": {
+        "a1": "",
+        "a2": "",
+        "q": ""
+      },
+      "lightDied": {
+        "a": "",
+        "q": ""
+      },
+      "multipleCheckins": {
+        "a1": "",
+        "a2": "",
+        "q": ""
+      }
+    }
+  },
+  "feedback": {
+    "captchaPending": "",
+    "emailHelpAnonymous": "",
+    "emailHelpAuthenticated": "",
+    "emailLabel": "",
+    "emailPlaceholder": "",
+    "embedHeading": "",
+    "embedSubheading": "",
+    "errorGeneric": "",
+    "errorRequiredMessage": "",
+    "messageLabel": "",
+    "messagePlaceholder": "",
+    "submit": "",
+    "submitting": "",
+    "subtitle": "",
+    "successMessage": "",
+    "successTitle": "",
+    "title": "",
+    "youFallback": ""
+  },
   "footer": {
-    "tagline": "Volg de reis van je aansteker"
+    "feedback": "",
+    "footerNav": "",
+    "tagline": "Volg de reis van je aansteker",
+    "viewCommit": ""
   },
   "game": {
     "countdown": {
@@ -168,7 +367,9 @@
       "teamsDescriptionByCheckins": "Teams worden gerangschikt op het totale aantal check-ins dat al hun aanstekers samen hebben ontvangen.",
       "teamsDescriptionByDistance": "Teams worden gerangschikt op de totale afstand die al hun aanstekers samen hebben afgelegd.",
       "teamsTab": "Teams",
-      "title": "Ranglijst — {{name}}"
+      "title": "Ranglijst — {{name}}",
+      "unitsNotStarted_one": "",
+      "unitsNotStarted_other": ""
     },
     "modal": {
       "gotIt": "Begrepen",
@@ -211,7 +412,7 @@
       "step2Title": "Check in.",
       "step3Body": "Geef hem aan een onbekende. Laat hem achter in een café, een hostel, bij een wandelpad. Jij bepaalt het volgende hoofdstuk.",
       "step3Title": "Geef hem door.",
-      "step4Body": "Volg de aansteker en krijg een mailtje als iemand hem weer vindt — waar dat ook ter wereld is. Het onschuldig stalken van een stukje metaal.",
+      "step4Body": "Abonneer je en krijg een mailtje als iemand hem weer vindt — waar dat ook ter wereld is. Het onschuldig stalken van een stukje metaal.",
       "step4Title": "Blijf op de hoogte."
     },
     "journey": {
@@ -240,6 +441,7 @@
     "tryExample": "probeer \"john-93\" voor een voorbeeld"
   },
   "nav": {
+    "feedback": "",
     "homeAriaLabel": "LitRoute startpagina",
     "languageLabel": "Taal",
     "mainNav": "Hoofdnavigatie",
@@ -273,8 +475,166 @@
     "zoneAriaAdd": "Foto-uploadzone — klik of sleep om foto's toe te voegen",
     "zoneAriaFull": "Foto-uploadzone — maximum bereikt"
   },
+  "privacy": {
+    "body": "",
+    "title": ""
+  },
+  "settings": {
+    "connectedAccounts": {
+      "disconnect": {
+        "default": "",
+        "loading": ""
+      },
+      "failedDisconnect": "",
+      "noAccounts": ""
+    },
+    "deleteAccount": {
+      "confirmation": {
+        "failed": "",
+        "item1": "",
+        "item2": "",
+        "item3": "",
+        "item4": "",
+        "item5": "",
+        "keepAnon": "",
+        "placeholder": "",
+        "submit": {
+          "default": "",
+          "loading": ""
+        },
+        "title": "",
+        "typeToConfirm": ""
+      },
+      "deleteBtn": "",
+      "description": "",
+      "sectionTitle": ""
+    },
+    "email": {
+      "cancelChange": "",
+      "changeEmail": {
+        "default": "",
+        "loading": ""
+      },
+      "confirmChange": {
+        "default": ""
+      },
+      "currentEmail": "",
+      "errors": {
+        "failedCancel": "",
+        "failedPrimary": "",
+        "failedRemove": "",
+        "failedRequest": "",
+        "failedVerification": ""
+      },
+      "newEmailLabel": "",
+      "newEmailPlaceholder": "",
+      "pendingVerify": "",
+      "readyToSwitch": "",
+      "resendEmail": {
+        "default": ""
+      },
+      "sectionTitle": ""
+    },
+    "mfa": {
+      "deactivate": {
+        "description": "",
+        "remove": {
+          "default": "",
+          "loading": ""
+        }
+      },
+      "reauth": {
+        "codeSent": "",
+        "description": "",
+        "sendCode": {
+          "default": ""
+        }
+      },
+      "recoveryCodes": {
+        "eachOnce": "",
+        "failedGenerate": "",
+        "generateBtn": "",
+        "generateNew": "",
+        "generateWarning": "",
+        "generating": {
+          "loading": ""
+        },
+        "label": "",
+        "notGenerated": "",
+        "remaining": "",
+        "setUpFirst": "",
+        "viewBtn": ""
+      },
+      "setup": {
+        "activate": {
+          "default": "",
+          "loading": ""
+        },
+        "description": "",
+        "invalidCode": "",
+        "secretKeyLabel": ""
+      },
+      "totp": {
+        "active": "",
+        "label": "",
+        "notSetUp": "",
+        "setUp": {
+          "default": ""
+        }
+      }
+    },
+    "passkeys": {
+      "addBtn": "",
+      "added": "",
+      "adding": {
+        "nameHint": "",
+        "nameLabel": "",
+        "namePlaceholder": "",
+        "submit": {
+          "default": "",
+          "loading": ""
+        }
+      },
+      "description": "",
+      "errors": {
+        "cancelled": "",
+        "registerFailed": "",
+        "removeFailed": "",
+        "startFailed": ""
+      },
+      "lastUsed": "",
+      "noPasskeys": "",
+      "reauth": {
+        "codeSent": "",
+        "description": "",
+        "sendCode": {
+          "default": ""
+        }
+      },
+      "sectionTitle": "",
+      "unsupported": ""
+    },
+    "profile": {
+      "saved": "",
+      "submit": {
+        "default": ""
+      }
+    },
+    "reauth": {
+      "failedSend": "",
+      "incorrectPassword": "",
+      "invalidCode": ""
+    }
+  },
+  "socialProviders": {
+    "orContinueWith": ""
+  },
+  "support": {
+    "header": "",
+    "subheader": ""
+  },
   "supportSection": {
-    "body1": "LitRoute is een eenmansproject. Geen reclame, geen betaalde abonnementen, geen investeerders — alleen serverkosten, e-mailbezorging en opslag uit eigen zak. De aanstekers zelf ook: elke aansteker wordt met de hand gekocht en geregistreerd voordat hij aan zijn reis kan beginnen.",
+    "body1": "LitRoute is een eenmansproject. Geen reclame, geen abonnementen, geen investeerders — alleen serverkosten, e-mailbezorging en opslag uit eigen zak. De aanstekers zelf ook: elke aansteker wordt met de hand gekocht en geregistreerd voordat hij aan zijn reis kan beginnen.",
     "body2": "Heb je hier met plezier een reis gevolgd? Dan helpt een kleine bijdrage echt.",
     "donateCta": "Tip",
     "githubDescription": "Sponsor direct op GitHub",
@@ -288,9 +648,14 @@
     "weblateDescription": "Help LitRoute in jouw taal op Weblate",
     "weblateLabel": "Vertalen"
   },
+  "terms": {
+    "body": "",
+    "title": ""
+  },
   "unit": {
     "cannotEdit": "Kan niet bewerken of verwijderen na 6 uur",
     "checkinBtn": "Nieuwe check-in",
+    "claimBtn": "",
     "currentLocation": "Huidige locatie",
     "deleteBtn": "Verwijderen",
     "deleteConfirm": "Deze check-in verwijderen?",
@@ -335,6 +700,19 @@
     "supportPrompt": "LitRoute is gratis en gemaakt door één persoon. Als je blij werd van deze (online) reis, overweeg dan <supportLink>het project te steunen</supportLink>",
     "travelLog": "Reisverslag",
     "unfollow": "Niet meer volgen",
-    "verifiedBanner": "Je e-mail is bevestigd — je volgt deze aansteker nu!"
+    "verifiedBanner": "Je e-mail is bevestigd — je bent nu geabonneerd!"
+  },
+  "userDetail": {
+    "admin": "",
+    "checkins_one": "",
+    "checkins_other": "",
+    "contributorGuide": "",
+    "signOut": ""
+  },
+  "userForm": {
+    "submit": {
+      "default": ""
+    },
+    "title": ""
   }
 }
