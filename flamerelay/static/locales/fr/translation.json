@@ -1,12 +1,98 @@
 {
+  "about": {
+    "aboutTitle": "",
+    "faqTitle": "",
+    "header": "",
+    "qa": {
+      "followAlong": {
+        "a": "",
+        "q": ""
+      },
+      "help": {
+        "a1": "",
+        "a2": "",
+        "a3": "",
+        "q": ""
+      },
+      "how": {
+        "a": "",
+        "q": ""
+      },
+      "money": {
+        "a1": "",
+        "a2": "",
+        "a3": "",
+        "q": ""
+      },
+      "secure": {
+        "a1": "",
+        "a2": "",
+        "q": ""
+      },
+      "translate": {
+        "a": "",
+        "q": ""
+      },
+      "who": {
+        "a": "",
+        "q": ""
+      },
+      "why": {
+        "a": "",
+        "q": ""
+      }
+    },
+    "subheader": "",
+    "supportHeading": ""
+  },
   "auth": {
+    "code": {
+      "codeLabel": "",
+      "description": "",
+      "differentEmail": "",
+      "inboxFallback": "",
+      "submit": {
+        "default": ""
+      },
+      "title": ""
+    },
     "email": {
+      "description": "",
       "emailLabel": "Adresse e-mail",
       "submit": {
         "default": "Envoyer le code",
         "loading": "Envoi"
       },
       "title": "Connexion"
+    },
+    "errors": {
+      "passkeyFailed": "",
+      "passkeyMfaFailed": "",
+      "sendFailed": "",
+      "socialLoginFailed": "",
+      "somethingWrong": "",
+      "verifyFailed": ""
+    },
+    "mfa": {
+      "codeLabel": "",
+      "description": "",
+      "passkey": {
+        "default": ""
+      },
+      "submit": {
+        "default": ""
+      }
+    },
+    "signup": {
+      "description": "",
+      "displayNameLabel": "",
+      "previewLabel": "",
+      "saveFailed": "",
+      "submit": {
+        "default": ""
+      },
+      "title": "",
+      "yourNameFallback": ""
     }
   },
   "checkin": {
@@ -35,6 +121,12 @@
         "step3": "Rechargez cette page une fois terminé.",
         "title": "Nous ne voyons pas votre position",
         "tryAgain": "Réessayer"
+      },
+      "gpsLowPrecisionModal": {
+        "body": "",
+        "title": "",
+        "tryAgain": "",
+        "useAnyway": ""
       },
       "gpsNotice": "Cette unité nécessite votre position en temps réel. Elle sera capturée lorsque vous appuyez sur Enregistrement.",
       "gpsNudgeHint": "Déplacez votre repère si vous préférez ne pas partager votre position exacte.",
@@ -70,10 +162,11 @@
     "guestEmailSentBack": "Retour à l'Unit",
     "guestEmailSentTitle": "Vérifiez votre boîte de réception.",
     "guestEmailSkip": "Non merci — ne me prévenez pas.",
+    "guestEmailSocialProof_many": "",
     "guestEmailSocialProof_one": "Rejoignez {{count}} autre personne qui suit ce briquet.",
     "guestEmailSocialProof_other": "Rejoignez {{count}} autres personnes qui suivent ce briquet.",
     "guestEmailSubmit": "Suivre ce briquet",
-    "guestEmailSubtitle": "On vous enverra un e-mail quand quelqu'un d'autre s'enregistrera ailleurs avec ce briquet. C'est tout — pas de marketing, un clic pour ne plus suivre.",
+    "guestEmailSubtitle": "On vous enverra un e-mail quand quelqu'un d'autre s'enregistrera ailleurs avec ce briquet. C'est tout — pas de marketing, désabonnement en un clic.",
     "guestEmailTitle": "Vous voulez savoir où ce briquet ira ensuite ?"
   },
   "common": {
@@ -85,8 +178,10 @@
     "connectedAccounts": "Comptes connectés",
     "duration": {
       "and": "et",
+      "day_many": "",
       "day_one": "{{count}} jour",
       "day_other": "{{count}} jours",
+      "hour_many": "",
       "hour_one": "{{count}} heure",
       "hour_other": "{{count}} heures"
     },
@@ -107,6 +202,43 @@
     "verificationCodeLabel": "Code de vérification",
     "verifying": "Vérification"
   },
+  "contributorGuide": {
+    "footerText": "",
+    "greeting": "",
+    "greetingBody1": "",
+    "greetingBody2": "",
+    "header": "",
+    "openAdmin": "",
+    "passingOnSubtext": "",
+    "passingOnTitle": "",
+    "steps": {
+      "attachLabel": {
+        "a": "",
+        "q": "",
+        "tip": ""
+      },
+      "createUnit": {
+        "a": "",
+        "q": "",
+        "tip": ""
+      },
+      "firstCheckin": {
+        "a": "",
+        "q": ""
+      },
+      "handOff": {
+        "a": "",
+        "q": ""
+      },
+      "makeLabel": {
+        "a": "",
+        "q": "",
+        "tip": ""
+      }
+    },
+    "stepsTitle": "",
+    "subheader": ""
+  },
   "emailConfirm": {
     "checkingLink": "Vérification de votre lien",
     "confirm": {
@@ -122,8 +254,78 @@
       "title": "Lien invalide"
     }
   },
+  "errorPage": {
+    "403": {
+      "description": "",
+      "headline": ""
+    },
+    "403csrf": {
+      "description": "",
+      "headline": ""
+    },
+    "404": {
+      "description": "",
+      "headline": ""
+    },
+    "500": {
+      "description": "",
+      "headline": ""
+    },
+    "backToHome": ""
+  },
+  "faq": {
+    "lighter": {
+      "anythingDo": {
+        "a1": "",
+        "a2": "",
+        "q": ""
+      },
+      "cantSeeAll": {
+        "a1": "",
+        "a2": "",
+        "q": ""
+      },
+      "giveToWhom": {
+        "a1": "",
+        "a2": "",
+        "q": ""
+      },
+      "lightDied": {
+        "a": "",
+        "q": ""
+      },
+      "multipleCheckins": {
+        "a1": "",
+        "a2": "",
+        "q": ""
+      }
+    }
+  },
+  "feedback": {
+    "captchaPending": "",
+    "emailHelpAnonymous": "",
+    "emailHelpAuthenticated": "",
+    "emailLabel": "",
+    "emailPlaceholder": "",
+    "embedHeading": "",
+    "embedSubheading": "",
+    "errorGeneric": "",
+    "errorRequiredMessage": "",
+    "messageLabel": "",
+    "messagePlaceholder": "",
+    "submit": "",
+    "submitting": "",
+    "subtitle": "",
+    "successMessage": "",
+    "successTitle": "",
+    "title": "",
+    "youFallback": ""
+  },
   "footer": {
-    "tagline": "Suivez le voyage de votre briquet"
+    "feedback": "",
+    "footerNav": "",
+    "tagline": "Suivez le voyage de votre briquet",
+    "viewCommit": ""
   },
   "game": {
     "countdown": {
@@ -169,6 +371,7 @@
       "teamsDescriptionByDistance": "Les équipes sont classées selon la distance totale parcourue par tous leurs briquets.",
       "teamsTab": "Équipes",
       "title": "Classement — {{name}}",
+      "unitsNotStarted_many": "",
       "unitsNotStarted_one": "{{count}} briquet n'a pas encore fait de check-in.",
       "unitsNotStarted_other": "{{count}} briquets n'ont pas encore fait de check-in."
     },
@@ -213,7 +416,7 @@
       "step2Title": "Enregistrez-vous.",
       "step3Body": "Donnez-le à un inconnu. Laissez-le dans un café, une auberge, un sentier de randonnée. Vous choisissez le prochain chapitre.",
       "step3Title": "Passez-le.",
-      "step4Body": "Suivez-le et recevez un e-mail la prochaine fois que quelqu'un le trouve — où que ce soit dans le monde. Du suivi discret d'un morceau de métal.",
+      "step4Body": "Abonnez-vous et recevez un e-mail la prochaine fois que quelqu'un le trouve — où que ce soit dans le monde. Du suivi discret d'un morceau de métal.",
       "step4Title": "Suivez l'aventure."
     },
     "journey": {
@@ -242,6 +445,7 @@
     "tryExample": "essayez « john-93 » pour voir un exemple"
   },
   "nav": {
+    "feedback": "",
     "homeAriaLabel": "Accueil LitRoute",
     "languageLabel": "Langue",
     "mainNav": "Navigation principale",
@@ -275,8 +479,166 @@
     "zoneAriaAdd": "Zone de téléversement — cliquez ou glissez pour ajouter des photos",
     "zoneAriaFull": "Zone de téléversement — maximum atteint"
   },
+  "privacy": {
+    "body": "",
+    "title": ""
+  },
+  "settings": {
+    "connectedAccounts": {
+      "disconnect": {
+        "default": "",
+        "loading": ""
+      },
+      "failedDisconnect": "",
+      "noAccounts": ""
+    },
+    "deleteAccount": {
+      "confirmation": {
+        "failed": "",
+        "item1": "",
+        "item2": "",
+        "item3": "",
+        "item4": "",
+        "item5": "",
+        "keepAnon": "",
+        "placeholder": "",
+        "submit": {
+          "default": "",
+          "loading": ""
+        },
+        "title": "",
+        "typeToConfirm": ""
+      },
+      "deleteBtn": "",
+      "description": "",
+      "sectionTitle": ""
+    },
+    "email": {
+      "cancelChange": "",
+      "changeEmail": {
+        "default": "",
+        "loading": ""
+      },
+      "confirmChange": {
+        "default": ""
+      },
+      "currentEmail": "",
+      "errors": {
+        "failedCancel": "",
+        "failedPrimary": "",
+        "failedRemove": "",
+        "failedRequest": "",
+        "failedVerification": ""
+      },
+      "newEmailLabel": "",
+      "newEmailPlaceholder": "",
+      "pendingVerify": "",
+      "readyToSwitch": "",
+      "resendEmail": {
+        "default": ""
+      },
+      "sectionTitle": ""
+    },
+    "mfa": {
+      "deactivate": {
+        "description": "",
+        "remove": {
+          "default": "",
+          "loading": ""
+        }
+      },
+      "reauth": {
+        "codeSent": "",
+        "description": "",
+        "sendCode": {
+          "default": ""
+        }
+      },
+      "recoveryCodes": {
+        "eachOnce": "",
+        "failedGenerate": "",
+        "generateBtn": "",
+        "generateNew": "",
+        "generateWarning": "",
+        "generating": {
+          "loading": ""
+        },
+        "label": "",
+        "notGenerated": "",
+        "remaining": "",
+        "setUpFirst": "",
+        "viewBtn": ""
+      },
+      "setup": {
+        "activate": {
+          "default": "",
+          "loading": ""
+        },
+        "description": "",
+        "invalidCode": "",
+        "secretKeyLabel": ""
+      },
+      "totp": {
+        "active": "",
+        "label": "",
+        "notSetUp": "",
+        "setUp": {
+          "default": ""
+        }
+      }
+    },
+    "passkeys": {
+      "addBtn": "",
+      "added": "",
+      "adding": {
+        "nameHint": "",
+        "nameLabel": "",
+        "namePlaceholder": "",
+        "submit": {
+          "default": "",
+          "loading": ""
+        }
+      },
+      "description": "",
+      "errors": {
+        "cancelled": "",
+        "registerFailed": "",
+        "removeFailed": "",
+        "startFailed": ""
+      },
+      "lastUsed": "",
+      "noPasskeys": "",
+      "reauth": {
+        "codeSent": "",
+        "description": "",
+        "sendCode": {
+          "default": ""
+        }
+      },
+      "sectionTitle": "",
+      "unsupported": ""
+    },
+    "profile": {
+      "saved": "",
+      "submit": {
+        "default": ""
+      }
+    },
+    "reauth": {
+      "failedSend": "",
+      "incorrectPassword": "",
+      "invalidCode": ""
+    }
+  },
+  "socialProviders": {
+    "orContinueWith": ""
+  },
+  "support": {
+    "header": "",
+    "subheader": ""
+  },
   "supportSection": {
-    "body1": "LitRoute est un projet solo. Pas de pub, pas de formules payantes, pas d'investisseurs — juste les coûts de serveur, d'envoi d'e-mails et de stockage qui viennent de ma poche. Y compris les briquets eux-mêmes : chacun est acheté et enregistré à la main avant de pouvoir commencer son voyage.",
+    "body1": "LitRoute est un projet solo. Pas de pub, pas d'abonnements, pas d'investisseurs — juste les coûts de serveur, d'envoi d'e-mails et de stockage qui viennent de ma poche. Y compris les briquets eux-mêmes : chacun est acheté et enregistré à la main avant de pouvoir commencer son voyage.",
     "body2": "Si vous avez aimé suivre un voyage ici, une petite contribution fait toute la différence.",
     "donateCta": "Soutenir",
     "githubDescription": "Sponsorisez directement sur GitHub",
@@ -290,9 +652,14 @@
     "weblateDescription": "Aidez à traduire LitRoute dans votre langue sur Weblate",
     "weblateLabel": "Traduire"
   },
+  "terms": {
+    "body": "",
+    "title": ""
+  },
   "unit": {
     "cannotEdit": "Impossible de modifier ou supprimer après 6 heures",
     "checkinBtn": "Nouvel enregistrement",
+    "claimBtn": "",
     "currentLocation": "Position actuelle",
     "deleteBtn": "Supprimer",
     "deleteConfirm": "Supprimer cet enregistrement ?",
@@ -324,12 +691,13 @@
     "placeNotGiven": "Lieu non précisé",
     "prevPhoto": "Photo précédente",
     "resetView": "Réinitialiser la vue",
-    "statsFollowers": "qui suivent",
+    "statsFollowers": "abonnés",
     "statsKmTraveled": "km parcourus",
     "statsStops": "arrêts",
     "statsTeam": "équipe",
     "status": {
       "currentlyIn": "Actuellement à {{place}}",
+      "lastSeenDaysAgo_many": "",
       "lastSeenDaysAgo_one": "Vu pour la dernière fois il y a {{count}} jour à {{place}}",
       "lastSeenDaysAgo_other": "Vu pour la dernière fois il y a {{count}} jours à {{place}}",
       "lastSeenYesterday": "Vu pour la dernière fois hier à {{place}}"
@@ -337,6 +705,20 @@
     "supportPrompt": "LitRoute est gratuit et fait par une seule personne. Si ce voyage vous a fait sourire, pensez à <supportLink>le soutenir</supportLink>",
     "travelLog": "Journal de voyage",
     "unfollow": "Ne plus suivre",
-    "verifiedBanner": "Votre e-mail est confirmé — vous suivez maintenant ce briquet !"
+    "verifiedBanner": "Votre e-mail est confirmé — vous êtes maintenant abonné !"
+  },
+  "userDetail": {
+    "admin": "",
+    "checkins_many": "",
+    "checkins_one": "",
+    "checkins_other": "",
+    "contributorGuide": "",
+    "signOut": ""
+  },
+  "userForm": {
+    "submit": {
+      "default": ""
+    },
+    "title": ""
   }
 }
