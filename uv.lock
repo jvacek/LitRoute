@@ -466,15 +466,15 @@ wheels = [
 
 [[package]]
 name = "django-allauth"
-version = "65.16.1"
+version = "65.17.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "asgiref" },
     { name = "django" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3d/df/357187dfff18c7783e4911827a6c69437e290d7259a32a99c23fcd85997f/django_allauth-65.16.1.tar.gz", hash = "sha256:4425ac3088541c4c54983e16e08f6e3eb9f438dc1b1009534fa51c8bb739ed31", size = 2232835, upload-time = "2026-04-17T18:53:59.475Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ae/55/5580ab770bae3a885d1ef5a49646c3958c49cf67edfe956703a9bf815371/django_allauth-65.17.0.tar.gz", hash = "sha256:72bea057eaaf2952e4e22cd0195e031ef8e7de2cbac065cf35bd0067ef50a1e7", size = 2237395, upload-time = "2026-05-20T17:43:29.727Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ad/58/d95b6c3088d83697bfd93782ee57bc6a6462e41eb19121a947b8a015396a/django_allauth-65.16.1-py3-none-any.whl", hash = "sha256:e49df24056bf37c44e56aaad1e51f78994b7d175bc3476d65e8f8f58390a8ce8", size = 2051868, upload-time = "2026-04-17T18:54:12.032Z" },
+    { url = "https://files.pythonhosted.org/packages/bd/5f/dbe29bb38ffc32c6c17590caa346fba8055876a54109a6f914b5916f5819/django_allauth-65.17.0-py3-none-any.whl", hash = "sha256:ff041190bc6f9b2854aa5d7215a1f64f1fc8eb0907990690daad19144b7d2757", size = 2054996, upload-time = "2026-05-20T17:43:41.601Z" },
 ]
 
 [package.optional-dependencies]
@@ -990,7 +990,7 @@ requires-dist = [
     { name = "celery", specifier = "==5.6.3" },
     { name = "crispy-bootstrap5", specifier = "==2026.3" },
     { name = "django", specifier = "==6.0.5" },
-    { name = "django-allauth", extras = ["mfa"], specifier = "==65.16.1" },
+    { name = "django-allauth", extras = ["mfa"], specifier = "==65.17.0" },
     { name = "django-anymail", extras = ["mailtrap"], specifier = "==15.0" },
     { name = "django-case-insensitive-field", specifier = ">=1.0.7" },
     { name = "django-celery-beat", specifier = "==2.9.0" },
@@ -1014,7 +1014,7 @@ requires-dist = [
     { name = "hiredis", specifier = "==3.3.1" },
     { name = "pillow", specifier = "==12.2.0" },
     { name = "psycopg", extras = ["c"], specifier = "==3.3.4" },
-    { name = "pyjwt", specifier = ">=2.12.1" },
+    { name = "pyjwt", specifier = ">=2.13.0" },
     { name = "python-slugify", specifier = "==8.0.4" },
     { name = "redis", specifier = "==7.4.0" },
     { name = "sentry-sdk", specifier = "==2.60.0" },
@@ -1527,11 +1527,11 @@ wheels = [
 
 [[package]]
 name = "pyjwt"
-version = "2.12.1"
+version = "2.13.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/c2/27/a3b6e5bf6ff856d2509292e95c8f57f0df7017cf5394921fc4e4ef40308a/pyjwt-2.12.1.tar.gz", hash = "sha256:c74a7a2adf861c04d002db713dd85f84beb242228e671280bf709d765b03672b", size = 102564, upload-time = "2026-03-13T19:27:37.25Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3b/81/58d0ac84e1ef3a3843791d6954d94c0b33d526c75eeb1efbce9d0a4c4077/pyjwt-2.13.0.tar.gz", hash = "sha256:41571c89ca91598c79e8ef18a2d07367d4810fbbd6f637794879baf1b7703423", size = 107515, upload-time = "2026-05-21T19:54:36.618Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e5/7a/8dd906bd22e79e47397a61742927f6747fe93242ef86645ee9092e610244/pyjwt-2.12.1-py3-none-any.whl", hash = "sha256:28ca37c070cad8ba8cd9790cd940535d40274d22f80ab87f3ac6a713e6e8454c", size = 29726, upload-time = "2026-03-13T19:27:35.677Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/5e/ecf12fdb62546d64385c158514e9b2b671f7832108ef2ecd2020ce0af2d1/pyjwt-2.13.0-py3-none-any.whl", hash = "sha256:66adcc2aff09b3f1bbd95fc1e1577df8ac8723c978552fd43304c8a290ac5728", size = 31274, upload-time = "2026-05-21T19:54:35.362Z" },
 ]
 
 [[package]]
