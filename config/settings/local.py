@@ -46,6 +46,21 @@ INSTALLED_APPS = ["whitenoise.runserver_nostatic", *INSTALLED_APPS]
 INSTALLED_APPS += ["debug_toolbar"]
 # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#middleware
 MIDDLEWARE += ["debug_toolbar.middleware.DebugToolbarMiddleware"]
+
+
+def _show_debug_toolbar(request) -> bool:
+    """Skip toolbar injection on the SPA shell.
+
+    The shell renders no SQL and no template context the panels can show, and
+    its toolbar.js wraps window.fetch — which masks the real call site for
+    every /api/* error. /admin/ and /__debug__/ pages still get the toolbar;
+    tracked API requests are visible in the History view at /__debug__/.
+    """
+    if request.META.get("REMOTE_ADDR") not in INTERNAL_IPS:
+        return False
+    return request.path.startswith(("/__debug__/", "/admin/"))
+
+
 # https://django-debug-toolbar.readthedocs.io/en/latest/configuration.html#debug-toolbar-config
 DEBUG_TOOLBAR_CONFIG = {
     "DISABLE_PANELS": [
@@ -55,6 +70,7 @@ DEBUG_TOOLBAR_CONFIG = {
         "debug_toolbar.panels.profiling.ProfilingPanel",
     ],
     "SHOW_TEMPLATE_CONTEXT": True,
+    "SHOW_TOOLBAR_CALLBACK": "config.settings.local._show_debug_toolbar",
 }
 # https://django-debug-toolbar.readthedocs.io/en/latest/installation.html#internal-ips
 INTERNAL_IPS = ["127.0.0.1", "10.0.2.2"]
