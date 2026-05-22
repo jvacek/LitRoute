@@ -155,6 +155,14 @@ function addFile(file: File) {
   fireEvent.change(input);
 }
 
+function addFiles(files: File[]) {
+  // Single file-input change carrying N files — same path the browser
+  // takes when the user picks multiple photos at once.
+  const input = document.getElementById('images') as HTMLInputElement;
+  Object.defineProperty(input, 'files', { value: files, writable: true });
+  fireEvent.change(input);
+}
+
 describe('CheckinForm shrinking state machine', () => {
   beforeEach(() => {
     convertMock.mockReset();
@@ -451,5 +459,232 @@ describe('CheckinForm auto-upload after shrink', () => {
       expect(screen.getByLabelText(/Uploaded/i)).toBeInTheDocument(),
     );
     expect(screen.queryByLabelText(/Upload failed/i)).not.toBeInTheDocument();
+  });
+});
+
+// ── Multi-photo flow ─────────────────────────────────────────────────────────
+
+describe('CheckinForm multi-photo upload', () => {
+  beforeEach(() => {
+    convertMock.mockReset();
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      username: 'tester',
+      name: 'Tester',
+      adminUrl: null,
+      loading: false,
+      refresh: jest.fn(),
+    });
+  });
+
+  it('shrinks and uploads three photos in parallel, then submits with tokens in order', async () => {
+    // One controllable promise per photo so we can sequence the events
+    // and assert on each stage.
+    const c1 = deferredFile();
+    const c2 = deferredFile();
+    const c3 = deferredFile();
+    convertMock
+      .mockReturnValueOnce(c1.promise)
+      .mockReturnValueOnce(c2.promise)
+      .mockReturnValueOnce(c3.promise);
+
+    const u1 = deferredUpload();
+    const u2 = deferredUpload();
+    const u3 = deferredUpload();
+    const onUploadImage = jest
+      .fn()
+      .mockReturnValueOnce(u1.promise)
+      .mockReturnValueOnce(u2.promise)
+      .mockReturnValueOnce(u3.promise);
+    const onSubmit = jest.fn().mockResolvedValue(null);
+
+    render(
+      <CheckinForm
+        mode="create"
+        unitUrl="/unit/abc/"
+        maptilerKey="TEST_KEY"
+        gpsDriftFloorM={0}
+        onUploadImage={onUploadImage}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    await pickLocationLondon();
+
+    addFiles([
+      new File(['a'], 'a.heic', { type: 'image/heic' }),
+      new File(['b'], 'b.heic', { type: 'image/heic' }),
+      new File(['c'], 'c.heic', { type: 'image/heic' }),
+    ]);
+
+    // Three shrink spinners visible right away.
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole('status', { name: /Shrinking image/i }),
+      ).toHaveLength(3),
+    );
+
+    // Resolve all three conversions — each kicks off its own upload in
+    // parallel (no sequential gate).
+    await act(async () => {
+      c1.resolve(new File(['a'], 'a.webp', { type: 'image/webp' }));
+      c2.resolve(new File(['b'], 'b.webp', { type: 'image/webp' }));
+      c3.resolve(new File(['c'], 'c.webp', { type: 'image/webp' }));
+    });
+
+    await waitFor(() => expect(onUploadImage).toHaveBeenCalledTimes(3));
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole('status', { name: /Uploading photo/i }),
+      ).toHaveLength(3),
+    );
+    // Submit blocks while uploads are in flight.
+    expect(screen.getByRole('button', { name: /^Check in$/i })).toBeDisabled();
+
+    // Resolve uploads in a different order than they were started; the
+    // form must still emit tokens in the original photo order.
+    await act(async () => {
+      u2.resolve({ token: 'tok-b', previewUrl: '/p/b' });
+      u3.resolve({ token: 'tok-c', previewUrl: '/p/c' });
+      u1.resolve({ token: 'tok-a', previewUrl: '/p/a' });
+    });
+
+    await waitFor(() =>
+      expect(screen.getAllByLabelText(/Uploaded/i)).toHaveLength(3),
+    );
+    expect(
+      screen.getByRole('button', { name: /^Check in$/i }),
+    ).not.toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: /^Check in$/i }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0].pending_image_tokens).toEqual([
+      'tok-a',
+      'tok-b',
+      'tok-c',
+    ]);
+  });
+
+  it('removing one photo mid-upload leaves the others intact', async () => {
+    const c1 = deferredFile();
+    const c2 = deferredFile();
+    convertMock.mockReturnValueOnce(c1.promise).mockReturnValueOnce(c2.promise);
+
+    const u1 = deferredUpload();
+    const u2 = deferredUpload();
+    const onUploadImage = jest
+      .fn()
+      .mockReturnValueOnce(u1.promise)
+      .mockReturnValueOnce(u2.promise);
+    const onSubmit = jest.fn().mockResolvedValue(null);
+
+    render(
+      <CheckinForm
+        mode="create"
+        unitUrl="/unit/abc/"
+        maptilerKey="TEST_KEY"
+        gpsDriftFloorM={0}
+        onUploadImage={onUploadImage}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    await pickLocationLondon();
+    addFiles([
+      new File(['a'], 'a.heic', { type: 'image/heic' }),
+      new File(['b'], 'b.heic', { type: 'image/heic' }),
+    ]);
+
+    // Both shrinks resolve, both uploads start.
+    await act(async () => {
+      c1.resolve(new File(['a'], 'a.webp', { type: 'image/webp' }));
+      c2.resolve(new File(['b'], 'b.webp', { type: 'image/webp' }));
+    });
+    await waitFor(() => expect(onUploadImage).toHaveBeenCalledTimes(2));
+
+    // Remove the first photo while its upload is still in flight.
+    const removeButtons = screen.getAllByLabelText(/Remove photo/i);
+    fireEvent.click(removeButtons[0]);
+
+    // The late-arriving token for the removed photo must not resurrect
+    // anything. Only photo b survives.
+    await act(async () => {
+      u1.resolve({ token: 'tok-a-orphan', previewUrl: '/p/a' });
+      u2.resolve({ token: 'tok-b', previewUrl: '/p/b' });
+    });
+    await waitFor(() =>
+      expect(screen.getAllByLabelText(/Uploaded/i)).toHaveLength(1),
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /^Check in$/i }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0].pending_image_tokens).toEqual(['tok-b']);
+  });
+});
+
+// ── Edit (PATCH) flow with existing images ───────────────────────────────────
+
+describe('CheckinForm edit-mode payload', () => {
+  beforeEach(() => {
+    convertMock.mockReset();
+    convertMock.mockResolvedValue(
+      new File(['converted'], 'photo.webp', { type: 'image/webp' }),
+    );
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      username: 'tester',
+      name: 'Tester',
+      adminUrl: null,
+      loading: false,
+      refresh: jest.fn(),
+    });
+  });
+
+  it('posts pending_image_tokens + image_ids_order + remove_image_ids on save', async () => {
+    const onUploadImage = jest
+      .fn()
+      .mockResolvedValue({ token: 'tok-new', previewUrl: '/media/new.webp' });
+    const onSubmit = jest.fn().mockResolvedValue(null);
+
+    render(
+      <CheckinForm
+        mode="edit"
+        unitUrl="/unit/abc/"
+        maptilerKey="TEST_KEY"
+        gpsDriftFloorM={0}
+        onUploadImage={onUploadImage}
+        onSubmit={onSubmit}
+        initialData={{
+          location: '51.5074,-0.1278',
+          place: 'Trafalgar',
+          message: 'still here',
+          images: [
+            { id: 11, image: '/media/old.webp' },
+            { id: 22, image: '/media/old2.webp' },
+          ],
+        }}
+      />,
+    );
+
+    // Remove the first existing image (the X button on its thumbnail).
+    const removeButtons = await screen.findAllByLabelText(/Remove photo/i);
+    fireEvent.click(removeButtons[0]);
+
+    // Add one new photo. Auto-upload kicks off as soon as the mocked
+    // convertToWebP resolves (the default mock above resolves immediately).
+    addFile(new File(['orig'], 'new.heic', { type: 'image/heic' }));
+    await waitFor(() =>
+      expect(screen.getByLabelText(/Uploaded/i)).toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Save changes/i }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    const payload = onSubmit.mock.calls[0][0];
+    expect(payload.pending_image_tokens).toEqual(['tok-new']);
+    expect(payload.remove_image_ids).toEqual([11]);
+    // The surviving existing image keeps its id in image_ids_order; the
+    // server uses it to rewrite the order field on that row.
+    expect(payload.image_ids_order).toEqual([22]);
   });
 });

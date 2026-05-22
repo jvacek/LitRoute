@@ -51,6 +51,10 @@ def _checkin_url(unit) -> str:
     return reverse("api:checkin-list", kwargs={"identifier": unit.identifier})
 
 
+def _checkin_detail_url(unit, pk: int) -> str:
+    return reverse("api:checkin-detail", kwargs={"identifier": unit.identifier, "pk": pk})
+
+
 # Reused payload for /checkins/ — non-game units accept just a location.
 _LONDON_BODY = {"location": {"type": "Point", "coordinates": [-0.1278, 51.5074]}}
 
@@ -303,3 +307,131 @@ class TestAttachAtomicity:
         assert not CheckIn.objects.exists()
         pending = CheckInImage.objects.get(attach_token=good)
         assert pending.checkin_id is None
+
+
+# ── Edit (PATCH) flow ───────────────────────────────────────────────────────
+
+
+@pytest.mark.django_db
+class TestEditFlowWithPendingTokens:
+    """PATCH /api/units/<id>/checkins/<pk>/ now consumes pending_image_tokens
+    for newly-added photos (alongside remove_image_ids + image_ids_order for
+    existing ones). These checks are distinct from the create path: they
+    enforce the *total* image count (remaining-after-removal + new) and have
+    to leave existing images untouched on failure."""
+
+    def _make_authed_checkin_with_image(self, auth_client, unit):
+        """Create a check-in with one image attached, via the API."""
+        first_token = auth_client.post(_pending_url(unit), {"image": _upload()}, format="multipart").json()["token"]
+        res = auth_client.post(
+            _checkin_url(unit),
+            {**_LONDON_BODY, "pending_image_tokens": [first_token]},
+            format="json",
+        )
+        assert res.status_code == status.HTTP_201_CREATED
+        return res.json()["id"]
+
+    def test_patch_attaches_new_pending_image(self, auth_client, unit, mute_emails):
+        checkin_id = self._make_authed_checkin_with_image(auth_client, unit)
+        existing = CheckIn.objects.get(pk=checkin_id).images.get()
+        new_token = auth_client.post(_pending_url(unit), {"image": _upload(name="b.png")}, format="multipart").json()[
+            "token"
+        ]
+
+        res = auth_client.patch(
+            _checkin_detail_url(unit, checkin_id),
+            {"pending_image_tokens": [new_token]},
+            format="json",
+        )
+        assert res.status_code == status.HTTP_200_OK
+        images = list(CheckIn.objects.get(pk=checkin_id).images.order_by("order"))
+        # Existing image stays at order 0, new one appended at order 1.
+        assert [img.id for img in images] == [existing.id, *[i.id for i in images if i.id != existing.id]]
+        assert any(img.attach_token is None and img.id != existing.id for img in images)
+
+    def test_patch_removes_old_and_attaches_new_in_one_request(self, auth_client, unit, mute_emails):
+        checkin_id = self._make_authed_checkin_with_image(auth_client, unit)
+        existing = CheckIn.objects.get(pk=checkin_id).images.get()
+        new_token = auth_client.post(_pending_url(unit), {"image": _upload(name="b.png")}, format="multipart").json()[
+            "token"
+        ]
+
+        res = auth_client.patch(
+            _checkin_detail_url(unit, checkin_id),
+            {
+                "remove_image_ids": [existing.id],
+                "pending_image_tokens": [new_token],
+            },
+            format="json",
+        )
+        assert res.status_code == status.HTTP_200_OK
+        images = list(CheckIn.objects.get(pk=checkin_id).images.all())
+        assert len(images) == 1
+        assert images[0].id != existing.id
+        assert images[0].attach_token is None  # cleared on attach
+
+    def test_patch_rejects_exceeding_max_images(self, auth_client, unit, mute_emails):
+        # Set up a check-in already at the max-1 mark so the next PATCH would
+        # cross the line. The serializer accepts up to CHECKIN_MAX_IMAGES
+        # tokens per request, so we pre-attach four images to push us to the
+        # boundary.
+        from config.constants import CHECKIN_MAX_IMAGES  # noqa: PLC0415
+
+        tokens = [
+            auth_client.post(_pending_url(unit), {"image": _upload(name=f"{i}.png")}, format="multipart").json()[
+                "token"
+            ]
+            for i in range(CHECKIN_MAX_IMAGES - 1)
+        ]
+        res = auth_client.post(
+            _checkin_url(unit),
+            {**_LONDON_BODY, "pending_image_tokens": tokens},
+            format="json",
+        )
+        assert res.status_code == status.HTTP_201_CREATED
+        checkin_id = res.json()["id"]
+
+        # Two more tokens would push past the cap (count + 2 > MAX).
+        extras = [
+            auth_client.post(_pending_url(unit), {"image": _upload(name=f"x{i}.png")}, format="multipart").json()[
+                "token"
+            ]
+            for i in range(2)
+        ]
+        res = auth_client.patch(
+            _checkin_detail_url(unit, checkin_id),
+            {"pending_image_tokens": extras},
+            format="json",
+        )
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+        assert "pending_image_tokens" in res.json()
+        # Existing images untouched; "extra" tokens still pending and
+        # available for re-use against a different check-in.
+        assert CheckIn.objects.get(pk=checkin_id).images.count() == CHECKIN_MAX_IMAGES - 1
+        assert CheckInImage.objects.filter(attach_token__in=extras, checkin__isnull=True).count() == len(extras)
+
+    def test_patch_rejects_token_from_another_users_session(self, auth_client, unit, user, make_checkin, mute_emails):
+        """Anti-enumeration on the edit path: the owner's PATCH can't attach
+        a pending row that another session uploaded."""
+        # The auth_client owns the check-in.
+        checkin = make_checkin(unit, user)
+
+        # A different user uploads a pending image.
+        from rest_framework.test import APIClient  # noqa: PLC0415
+
+        from flamerelay.users.tests.factories import UserFactory  # noqa: PLC0415
+
+        other_user = UserFactory.create()
+        other_client = APIClient()
+        other_client.force_authenticate(user=other_user)
+        stolen_token = other_client.post(_pending_url(unit), {"image": _upload()}, format="multipart").json()["token"]
+
+        res = auth_client.patch(
+            _checkin_detail_url(unit, checkin.id),
+            {"pending_image_tokens": [stolen_token]},
+            format="json",
+        )
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+        assert "pending_image_tokens" in res.json()
+        # Stolen token still belongs to the other user.
+        assert CheckInImage.objects.get(attach_token=stolen_token).uploaded_by == other_user
