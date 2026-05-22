@@ -30,6 +30,7 @@ import { gameLeaderboardLoader } from './pages/GameLeaderboard.loader';
 import Privacy from './pages/Privacy';
 import Home from './pages/Home';
 import { homeLoader } from './pages/Home/loader';
+import { rootLoader } from './pages/root.loader';
 import Signup from './pages/Signup';
 import SocialConnections from './pages/SocialConnections';
 import Terms from './pages/Terms';
@@ -115,7 +116,7 @@ function Layout() {
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route element={<Layout />}>
+    <Route id="root" element={<Layout />} loader={rootLoader}>
       <Route path="/" element={<Home />} loader={homeLoader} />
       <Route path="/about/" element={<About />} />
       <Route path="/support/" element={<Support />} />

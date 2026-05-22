@@ -21,8 +21,7 @@ export default function GameLeaderboard() {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const fromIdentifier = searchParams.get('from');
-  const appConfig = useConfig();
-  const maptilerKey = appConfig?.maptilerKey ?? '';
+  const { maptilerKey } = useConfig();
   const { leaderboard: data, journeys: journeysPayload } =
     useLoaderData() as GameLeaderboardLoaderData;
   const journeys = journeysPayload.journeys;

@@ -64,7 +64,11 @@ function renderLeaderboard() {
 
 describe('GameLeaderboard check-in threshold filtering', () => {
   beforeEach(() => {
-    mockUseConfig.mockReturnValue(null);
+    mockUseConfig.mockReturnValue({
+      maptilerKey: '',
+      allowRegistration: false,
+      turnstileSiteKey: '',
+    });
   });
 
   afterEach(() => {

@@ -103,7 +103,7 @@ export default function CheckinForm({
   const mapRef = useRef<MapRef>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const showTurnstile =
-    mode === 'create' && !isAuthenticated && !!config?.turnstileSiteKey;
+    mode === 'create' && !isAuthenticated && !!config.turnstileSiteKey;
   const showNameField = mode === 'create' && !isAuthenticated;
 
   maptilerConfig.apiKey = maptilerKey;
@@ -933,7 +933,7 @@ export default function CheckinForm({
 
       {showTurnstile && (
         <Turnstile
-          siteKey={config!.turnstileSiteKey}
+          siteKey={config.turnstileSiteKey}
           onSuccess={setTurnstileToken}
           options={{ theme: 'light' }}
         />

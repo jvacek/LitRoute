@@ -18,8 +18,7 @@ interface CheckinResponse {
 export default function CheckinCreate() {
   const { t } = useTranslation();
   const { identifier = '' } = useParams<{ identifier: string }>();
-  const config = useConfig();
-  const maptilerKey = config?.maptilerKey ?? '';
+  const { maptilerKey } = useConfig();
   const navigate = useNavigate();
   const { isAuthenticated, refresh } = useAuth();
   const unitUrl = `/unit/${identifier}/`;

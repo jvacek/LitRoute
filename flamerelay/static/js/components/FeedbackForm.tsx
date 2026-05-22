@@ -19,7 +19,7 @@ export default function FeedbackForm() {
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
 
-  const showTurnstile = !isAuthenticated && !!config?.turnstileSiteKey;
+  const showTurnstile = !isAuthenticated && !!config.turnstileSiteKey;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -123,7 +123,7 @@ export default function FeedbackForm() {
       {showTurnstile && (
         <div className="mb-5 flex justify-center">
           <Turnstile
-            siteKey={config!.turnstileSiteKey}
+            siteKey={config.turnstileSiteKey}
             onSuccess={setTurnstileToken}
             options={{ theme: 'light' }}
           />

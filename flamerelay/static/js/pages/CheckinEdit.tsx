@@ -17,8 +17,7 @@ export default function CheckinEdit() {
     checkinId: string;
   }>();
   const checkinIdNum = parseInt(checkinId, 10);
-  const config = useConfig();
-  const maptilerKey = config?.maptilerKey ?? '';
+  const { maptilerKey } = useConfig();
   const navigate = useNavigate();
   const { isAuthenticated, refresh } = useAuth();
   const unitUrl = `/unit/${identifier}/`;

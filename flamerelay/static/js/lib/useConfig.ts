@@ -1,41 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useRouteLoaderData } from 'react-router-dom';
+import type { Config, RootLoaderData } from '../pages/root.loader';
 
-import { reportError } from './sentry';
+export type { Config } from '../pages/root.loader';
 
-export interface Config {
-  maptilerKey: string;
-  allowRegistration: boolean;
-  turnstileSiteKey: string;
-}
-
-let configPromise: Promise<Config> | null = null;
-
-function fetchConfig(): Promise<Config> {
-  if (!configPromise) {
-    configPromise = fetch('/api/config/')
-      .then((r) => {
-        if (!r.ok) throw new Error(`config fetch failed: ${r.status}`);
-        return r.json() as Promise<Config>;
-      })
-      .catch((err: unknown) => {
-        configPromise = null;
-        reportError(err, { where: 'useConfig.fetch' });
-        return {
-          maptilerKey: '',
-          allowRegistration: false,
-          turnstileSiteKey: '',
-        };
-      });
+/**
+ * App-wide runtime config, sourced from the root route loader. Guaranteed
+ * non-null inside the router tree — the root loader resolves (with a
+ * fallback shape on fetch failure) before any descendant renders.
+ */
+export function useConfig(): Config {
+  const data = useRouteLoaderData('root') as RootLoaderData | undefined;
+  if (!data) {
+    throw new Error(
+      'useConfig() must be used inside a route descendant of the root layout',
+    );
   }
-  return configPromise;
-}
-
-export function useConfig(): Config | null {
-  const [config, setConfig] = useState<Config | null>(null);
-
-  useEffect(() => {
-    void fetchConfig().then(setConfig);
-  }, []);
-
-  return config;
+  return data.config;
 }

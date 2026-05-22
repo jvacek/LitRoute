@@ -68,8 +68,7 @@ export default function Unit() {
   const { t } = useTranslation();
   const { identifier = '' } = useParams<{ identifier: string }>();
   const { isAuthenticated, username: currentUsername } = useAuth();
-  const config = useConfig();
-  const maptilerKey = config?.maptilerKey ?? '';
+  const { maptilerKey } = useConfig();
   const [searchParams] = useSearchParams();
   const showVerifiedBanner = searchParams.get('verified') === '1';
 
