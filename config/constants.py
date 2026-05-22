@@ -19,6 +19,12 @@ LOGIN_CODE_MAX_ATTEMPTS = 3
 
 CHECKIN_IMAGE_MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 CHECKIN_MAX_IMAGES = 5
+# Longest-edge cap (px) for uploaded check-in images. The frontend's
+# convertToWebP() resizes + reencodes to this before upload (see
+# flamerelay/static/js/lib/imageConversion.ts), and the backend's
+# ResizedImageField mirrors it so a properly-converted upload isn't
+# re-resized server-side. Keep both ends in sync.
+CHECKIN_IMAGE_MAX_EDGE_PX = 2560
 
 EMAIL_TASK_MAX_RETRIES = 3
 EMAIL_TASK_RETRY_BACKOFF_SECONDS = 60

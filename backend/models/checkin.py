@@ -8,6 +8,7 @@ from backend.services import send_email_to_followers_task, send_thank_you_email_
 from config.constants import (
     CHECKIN_ANONYMOUS_NAME_MAX_LENGTH,
     CHECKIN_EMAIL_DELAY_SECONDS,
+    CHECKIN_IMAGE_MAX_EDGE_PX,
 )
 from flamerelay.users.models import User
 
@@ -45,7 +46,7 @@ class CheckInImage(models.Model):
     checkin = models.ForeignKey(CheckIn, on_delete=models.CASCADE, related_name="images")
     image = ResizedImageField(
         upload_to=path_and_rename,
-        size=[1024, 1024],
+        size=[CHECKIN_IMAGE_MAX_EDGE_PX, CHECKIN_IMAGE_MAX_EDGE_PX],
         force_format="WEBP",
         quality=85,
         validators=[validate_image_size],
