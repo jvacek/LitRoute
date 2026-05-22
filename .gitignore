@@ -285,3 +285,7 @@ webpack-stats.json
 headless_example_project/
 scripts/.pull-prod-dump.sql.gz
 scripts/.verify-prod-backup/
+
+# Playwright
+/playwright-report/
+/test-results/

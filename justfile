@@ -56,6 +56,22 @@ manage +args:
 test *args:
     @docker compose run --rm django pytest {{args}}
 
+# e2e [args]: Run the Playwright e2e suite in an isolated compose project
+#             (flamerelay_e2e). Brings up its own django/node/postgres/redis on
+#             ports 8010/3010, leaving your `just up` dev stack untouched. First
+#             time: `npm i && npx playwright install chromium`.
+e2e *args:
+    @COMPOSE_PROJECT_NAME=flamerelay_e2e COMPOSE_FILE="docker-compose.local.yml:docker-compose.e2e.yml" \
+        docker compose up -d django node
+    @COMPOSE_PROJECT_NAME=flamerelay_e2e COMPOSE_FILE="docker-compose.local.yml:docker-compose.e2e.yml" \
+        docker compose run --rm django sh -c "python manage.py migrate && python manage.py seed_e2e_units"
+    @E2E_BASE_URL=http://localhost:3010 npx playwright test {{args}}
+
+# e2e-down: Stop and remove the isolated e2e stack and its volumes (DB, redis cache).
+e2e-down:
+    @COMPOSE_PROJECT_NAME=flamerelay_e2e COMPOSE_FILE="docker-compose.local.yml:docker-compose.e2e.yml" \
+        docker compose down -v
+
 # specs: Regenerate the OpenAPI schema YAML and the matching TypeScript types.
 #        YAML is produced in a one-shot django container (no `just up` required);
 #        TS types are generated on the host via openapi-typescript. Both

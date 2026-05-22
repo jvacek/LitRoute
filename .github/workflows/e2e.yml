@@ -1,0 +1,128 @@
+name: E2E
+
+# MANUAL-ONLY by design. No `push` or `pull_request` triggers — every run
+# is explicit. To kick one off: Actions → E2E → Run workflow, or via
+# `gh workflow run e2e.yml`.
+on:
+  workflow_dispatch:
+
+env:
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+concurrency:
+  group: e2e
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: '.node-version'
+          cache: 'npm'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Chromium (only if cache miss)
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - name: Install Chromium system deps (cache-hit path)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps chromium
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Create local env files
+        run: |
+          cp .envs/.local/.django.example .envs/.local/.django
+          cp .envs/.local/.postgres.example .envs/.local/.postgres
+          echo "POSTGRES_USER=postgres" >> .envs/.local/.postgres
+          echo "POSTGRES_PASSWORD=postgres" >> .envs/.local/.postgres
+
+      - name: Build and cache stack
+        uses: docker/bake-action@v7
+        with:
+          push: false
+          load: true
+          files: |
+            docker-compose.local.yml
+            docker-compose.e2e.yml
+          targets: |
+            django
+            postgres
+            node
+          set: |
+            django.cache-from=type=gha,scope=django-cached-e2e
+            django.cache-to=type=gha,scope=django-cached-e2e,mode=max
+            postgres.cache-from=type=gha,scope=postgres-cached-e2e
+            postgres.cache-to=type=gha,scope=postgres-cached-e2e,mode=max
+            node.cache-from=type=gha,scope=node-cached-e2e
+            node.cache-to=type=gha,scope=node-cached-e2e,mode=max
+
+      - name: Bring up the e2e stack
+        run: docker compose -f docker-compose.local.yml -f docker-compose.e2e.yml up -d django node
+        env:
+          COMPOSE_PROJECT_NAME: flamerelay_e2e
+
+      - name: Migrate and seed e2e fixtures
+        run: |
+          docker compose -f docker-compose.local.yml -f docker-compose.e2e.yml run --rm django \
+            sh -c "python manage.py migrate && python manage.py seed_e2e_units"
+        env:
+          COMPOSE_PROJECT_NAME: flamerelay_e2e
+
+      - name: Wait for webpack dev server (:3010)
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf -o /dev/null http://localhost:3010/; then
+              echo "Webpack ready after ${i}s"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Webpack failed to come up within 120s"
+          COMPOSE_PROJECT_NAME=flamerelay_e2e docker compose -f docker-compose.local.yml -f docker-compose.e2e.yml logs node | tail -50
+          exit 1
+
+      - name: Run Playwright tests
+        run: npx playwright test
+        env:
+          CI: 'true'
+          E2E_BASE_URL: http://localhost:3010
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.local.yml -f docker-compose.e2e.yml down -v
+        env:
+          COMPOSE_PROJECT_NAME: flamerelay_e2e

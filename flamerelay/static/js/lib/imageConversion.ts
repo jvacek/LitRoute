@@ -4,6 +4,9 @@
 // iPhone shot drops to ~25% of its pixel count and well under 1 MB at webp
 // 0.85. Multiplied across 5 photos, this keeps the upload comfortably under
 // the 20 MB nginx cap.
+// Mirrored on the backend (CHECKIN_IMAGE_MAX_EDGE_PX in config/constants.py).
+// Keep both values in sync — the backend's ResizedImageField is sized to
+// match so a properly-converted upload doesn't get re-resized server-side.
 const MAX_EDGE_PX = 2560;
 
 export async function convertToWebP(file: File): Promise<File> {

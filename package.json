@@ -6,6 +6,7 @@
     "@babel/preset-env": "^7.16.5",
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
+    "@playwright/test": "^1.60.0",
     "@sentry/webpack-plugin": "^5.3.0",
     "@size-limit/file": "^12.1.0",
     "@svgr/webpack": "^8.1.0",
@@ -93,6 +94,7 @@
     "lint": "eslint --max-warnings 0 flamerelay/static/js/",
     "typecheck": "tsc --noEmit",
     "test": "jest",
+    "e2e": "playwright test",
     "size": "size-limit",
     "gen:api": "openapi-typescript openapi.yaml -o flamerelay/static/js/api/schema.d.ts"
   },

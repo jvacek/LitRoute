@@ -1,0 +1,51 @@
+# Overlay for the Playwright e2e suite. Runs as a SEPARATE Docker Compose
+# project (set COMPOSE_PROJECT_NAME=flamerelay_e2e) so its containers,
+# networks, and volumes are isolated from the user's `just up` dev stack.
+#
+#   COMPOSE_PROJECT_NAME=flamerelay_e2e \
+#     COMPOSE_FILE=docker-compose.local.yml:docker-compose.e2e.yml \
+#     docker compose up -d django node
+#
+# Each service:
+#   - explicitly renamed container_name so it doesn't collide with the
+#     `flamerelay_local_*` names baked into the base file
+#   - host ports remapped (django 8010, node 3010, mailpit 8026, flower 5556)
+#     so two stacks can run side-by-side without port conflicts
+#   - django runs config.settings.e2e (always-passes Turnstile keys)
+#
+# Volumes get the project_name prefix automatically, so postgres/redis
+# state is fresh per project.
+services:
+  django:
+    container_name: flamerelay_e2e_django
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.e2e
+    ports: !override
+      - '8010:8000'
+
+  postgres:
+    container_name: flamerelay_e2e_postgres
+
+  redis:
+    container_name: flamerelay_e2e_redis
+
+  mailpit:
+    container_name: flamerelay_e2e_mailpit
+    ports: !override
+      - '8026:8025'
+
+  node:
+    container_name: flamerelay_e2e_node
+    ports: !override
+      - '3010:3000'
+
+  celeryworker:
+    container_name: flamerelay_e2e_celeryworker
+
+  celerybeat:
+    container_name: flamerelay_e2e_celerybeat
+
+  flower:
+    container_name: flamerelay_e2e_flower
+    ports: !override
+      - '5556:5555'
