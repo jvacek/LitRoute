@@ -100,7 +100,9 @@ function Layout() {
         aria-hidden="true"
       />
       <Navbar />
-      <BetaBanner />
+      {/* Home renders its own BetaBanner above the search form to avoid
+          pushing the hero below the fold on QR-landing. */}
+      {pathname !== '/' && <BetaBanner wrapperClassName="pt-3 pb-0" />}
       <div key={pathname} className="page-enter flex-1">
         <Suspense fallback={<div className="min-h-[60vh]" aria-busy="true" />}>
           {/* `key={pathname}` re-mounts the boundary on every navigation so a

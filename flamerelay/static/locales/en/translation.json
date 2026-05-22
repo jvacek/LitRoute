@@ -104,8 +104,8 @@
     "daysAgo_other": "{{count}} days ago",
     "feedback": "Send feedback",
     "message": "Still WIP!",
-    "seeChanges": "What's changed",
-    "seeChangesFresh": "Changes from {{ago}}",
+    "seeChanges": "See changes",
+    "seeChangesFresh": "Updated {{ago}}",
     "today": "today"
   },
   "changelog": {

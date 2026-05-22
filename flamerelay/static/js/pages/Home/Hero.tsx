@@ -2,8 +2,8 @@ import { useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 
-import scribbleDownSrc from '../../assets/arrows/scribble-down.svg';
 import scribbleUpSrc from '../../assets/arrows/scribble-up.svg';
+import BetaBanner from '../../components/BetaBanner';
 import LighterInput from './LighterInput';
 
 const IDENTIFIER_RE = /^\w{3,}-\d{2,}$/;
@@ -68,7 +68,7 @@ export function Hero() {
   }
 
   return (
-    <section className="parchment-glow flex min-h-[60vh] flex-col items-center justify-center px-6 pb-10 pt-16 text-center">
+    <section className="parchment-glow flex flex-col items-center justify-center px-6 pb-10 pt-8 text-center">
       {/* Eyebrow */}
       <p className="mb-5 text-sm font-medium uppercase tracking-widest text-smoke">
         {t('home.eyebrow')}
@@ -84,30 +84,7 @@ export function Hero() {
         {t('home.subheadline')}
       </p>
 
-      {/* Scribble annotation – mobile: above the form, arrow points down */}
-      <div className="mb-3 flex justify-center sm:hidden">
-        <div
-          className="relative -translate-x-4"
-          style={{ paddingBottom: '40px' }}
-        >
-          <Link
-            to="/unit/john-93"
-            className="font-handwriting inline-block text-base text-char/50 transition-colors hover:text-char/70"
-            style={{
-              transform: 'rotate(-3deg)',
-              transformOrigin: 'left center',
-            }}
-          >
-            {t('home.tryExample')}
-          </Link>
-          <img
-            src={scribbleDownSrc}
-            alt=""
-            aria-hidden="true"
-            className="absolute bottom-0 left-4 w-7"
-          />
-        </div>
-      </div>
+      <BetaBanner wrapperClassName="pt-1 pb-4" />
 
       {/* Search */}
       <form
@@ -192,8 +169,8 @@ export function Hero() {
         )}
       </form>
 
-      {/* Scribble annotation – desktop: below the form, arrow points up */}
-      <div className="mt-6 hidden justify-center sm:flex">
+      {/* Scribble annotation – below the form, arrow points up at it */}
+      <div className="mt-6 flex justify-center">
         <div
           className="relative -translate-x-10"
           style={{ paddingTop: '44px' }}

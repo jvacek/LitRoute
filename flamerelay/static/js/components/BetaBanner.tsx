@@ -18,7 +18,15 @@ function daysSince(date: Date): number {
   return Math.floor((Date.now() - date.getTime()) / MS_PER_DAY);
 }
 
-export default function BetaBanner() {
+// Callers own the vertical padding via `wrapperClassName` because the
+// surrounding space differs by page — the home Hero has a sub-headline above
+// and a form below, while non-home pages sit the banner directly under the
+// sticky navbar and the page-level top padding.
+export default function BetaBanner({
+  wrapperClassName = '',
+}: {
+  wrapperClassName?: string;
+}) {
   const { t } = useTranslation();
   const days = LATEST_DATE ? daysSince(LATEST_DATE) : null;
   const showFresh = days !== null && days >= 0 && days < FRESH_CHANGE_MAX_DAYS;
@@ -29,28 +37,24 @@ export default function BetaBanner() {
     : t('beta.seeChanges');
 
   return (
-    <div className="flex justify-center px-4 pt-3">
+    <div className={`flex justify-center px-3 ${wrapperClassName}`}>
       <Link
         to="/changelog/"
-        className="group inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border border-amber/40 bg-amber/10 px-4 py-1.5 text-xs font-medium text-char/80 shadow-sm transition-all hover:-translate-y-px hover:border-amber/60 hover:bg-amber/20 hover:text-char hover:shadow"
+        className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-amber/60 bg-amber/30 px-3 py-1 text-[11px] font-medium text-char shadow-sm backdrop-blur-md transition-all hover:-translate-y-px hover:border-amber hover:bg-amber/40 hover:shadow"
       >
-        <span className="rounded-full bg-amber px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-char">
+        <span className="rounded-full bg-amber px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-char">
           {t('beta.badge')}
         </span>
-        <span className="text-char">{t('beta.message')}</span>
-        <span aria-hidden="true" className="text-amber/60">
+        <span>{t('beta.message')}</span>
+        <span aria-hidden="true" className="text-amber/70">
           |
         </span>
-        <span className="text-char/80">{t('beta.feedback')}</span>
-        <span aria-hidden="true" className="text-amber/60">
+        <span>{t('beta.feedback')}</span>
+        <span aria-hidden="true" className="text-amber/70">
           |
         </span>
-        <span className="text-char/80">{changesLabel}</span>
-        <span
-          aria-hidden="true"
-          className="text-amber transition-transform group-hover:translate-x-0.5"
-        >
-          →
+        <span className="font-semibold underline decoration-amber decoration-2 underline-offset-2">
+          {changesLabel}
         </span>
       </Link>
     </div>
