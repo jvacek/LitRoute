@@ -23,6 +23,11 @@ import LowPrecisionLocationModal from './LowPrecisionLocationModal';
 import PhotoUpload from './PhotoUpload';
 
 const MAX_IMAGES = 5;
+// nginx caps the multipart body at 20 MB (see compose/production/nginx/
+// flamerelay.nginx.conf). Reserve 1 MB headroom for non-image fields, the
+// turnstile token, and multipart framing.
+export const MAX_TOTAL_UPLOAD_MB = 19;
+export const MAX_TOTAL_UPLOAD_BYTES = MAX_TOTAL_UPLOAD_MB * 1024 * 1024;
 // Game-mode required fields must contain at least this many word characters
 // (Unicode letters or numbers) so the leaderboard isn't populated with junk
 // like "..." or "ab".
@@ -325,6 +330,18 @@ export default function CheckinForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    const totalImageBytes = imageFiles.reduce((sum, f) => sum + f.size, 0);
+    if (totalImageBytes > MAX_TOTAL_UPLOAD_BYTES) {
+      setErrors({
+        images: [
+          t('checkin.form.errors.imagesTooLarge', {
+            max: MAX_TOTAL_UPLOAD_MB,
+          }),
+        ],
+      });
+      return;
+    }
 
     if (isGpsEnforced) {
       // The submit button is disabled until confirmStep is set, so the only

@@ -127,6 +127,7 @@
       "errors": {
         "connectionFailed": "Couldn't reach the server. Your photos and message are still here — check your connection and try again.",
         "gpsRequired": "Location access is required for this unit. Please allow location access in your browser and try again.",
+        "imagesTooLarge": "Your photos are too large to upload. Try fewer or smaller images (under {{max}} MB total).",
         "locationRequired": "Please click the map to set your location.",
         "maxPhotos": "Maximum {{max}} photos per check-in.",
         "nameRequired": "Please add a name so your check-in counts on the leaderboard.",

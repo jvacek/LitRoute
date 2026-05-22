@@ -5,7 +5,7 @@ import { apiFetch } from '../api';
 import { useAuth } from '../AuthContext';
 import { storeEditToken } from '../lib/editTokens';
 import { useConfig } from '../lib/useConfig';
-import CheckinForm from '../components/CheckinForm';
+import CheckinForm, { MAX_TOTAL_UPLOAD_MB } from '../components/CheckinForm';
 import GuestEmailCapture from '../components/GuestEmailCapture';
 import TeamBadge from '../components/TeamBadge';
 import type { CheckinCreateLoaderData } from './CheckinCreate.loader';
@@ -66,9 +66,21 @@ export default function CheckinCreate() {
       }
       return null;
     }
-    const json = (await res.json()) as Record<string, string[]> & {
-      detail?: string;
-    };
+    if (res.status === 413) {
+      return {
+        images: [
+          t('checkin.form.errors.imagesTooLarge', { max: MAX_TOTAL_UPLOAD_MB }),
+        ],
+      };
+    }
+    let json: (Record<string, string[]> & { detail?: string }) | null = null;
+    try {
+      json = (await res.json()) as Record<string, string[]> & {
+        detail?: string;
+      };
+    } catch {
+      return { non_field_errors: [t('common.unexpectedError')] };
+    }
     if (json.detail) {
       return { non_field_errors: [json.detail] };
     }

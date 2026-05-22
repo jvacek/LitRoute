@@ -6,6 +6,7 @@ import { useAuth } from '../AuthContext';
 import { getEditToken } from '../lib/editTokens';
 import { useConfig } from '../lib/useConfig';
 import CheckinForm, {
+  MAX_TOTAL_UPLOAD_MB,
   type CheckinFormInitialData,
 } from '../components/CheckinForm';
 import type { CheckinEditLoaderData } from './CheckinEdit.loader';
@@ -67,7 +68,18 @@ export default function CheckinEdit() {
       navigate('/accounts/login/');
       return null;
     }
-    return (await res.json()) as Record<string, string[]>;
+    if (res.status === 413) {
+      return {
+        images: [
+          t('checkin.form.errors.imagesTooLarge', { max: MAX_TOTAL_UPLOAD_MB }),
+        ],
+      };
+    }
+    try {
+      return (await res.json()) as Record<string, string[]>;
+    } catch {
+      return { non_field_errors: [t('common.unexpectedError')] };
+    }
   }
 
   return (
