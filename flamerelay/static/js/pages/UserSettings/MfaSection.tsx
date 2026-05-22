@@ -20,7 +20,15 @@ import {
   useReauthentication,
 } from '../../lib/useReauthentication';
 import { ReauthForm } from '../../components/ReauthForm';
-import { inputClass, labelClass } from '../../styles';
+import {
+  emberBtnMd,
+  inputClass,
+  labelClass,
+  outlineBtnMd,
+  outlineBtnSm,
+  primaryBtnMd,
+  primaryBtnSm,
+} from '../../styles';
 
 function TotpQrCode({ url }: { url: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -275,11 +283,7 @@ export default function MfaSection() {
             />
           </div>
           <div className="flex gap-2">
-            <button
-              type="submit"
-              disabled={busy}
-              className="rounded-btn bg-amber px-[18px] py-[7px] text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
-            >
+            <button type="submit" disabled={busy} className={primaryBtnMd}>
               {busy
                 ? `${t('settings.mfa.setup.activate.loading')}…`
                 : t('settings.mfa.setup.activate.default')}
@@ -290,7 +294,7 @@ export default function MfaSection() {
                 setView('overview');
                 setErrors([]);
               }}
-              className="rounded-btn border border-char/15 px-[18px] py-[7px] text-sm font-medium text-char transition-colors hover:bg-linen"
+              className={outlineBtnMd}
             >
               {t('common.cancel')}
             </button>
@@ -325,11 +329,7 @@ export default function MfaSection() {
             />
           </div>
           <div className="flex gap-2">
-            <button
-              type="submit"
-              disabled={busy}
-              className="rounded-btn bg-ember px-[18px] py-[7px] text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
-            >
+            <button type="submit" disabled={busy} className={emberBtnMd}>
               {busy
                 ? `${t('settings.mfa.deactivate.remove.loading')}…`
                 : t('settings.mfa.deactivate.remove.default')}
@@ -341,7 +341,7 @@ export default function MfaSection() {
                 setErrors([]);
                 setTotpCode('');
               }}
-              className="rounded-btn border border-char/15 px-[18px] py-[7px] text-sm font-medium text-char transition-colors hover:bg-linen"
+              className={outlineBtnMd}
             >
               {t('common.cancel')}
             </button>
@@ -369,7 +369,7 @@ export default function MfaSection() {
           <button
             type="button"
             onClick={() => setView('recovery-codes-generate')}
-            className="rounded-btn border border-char/15 px-[18px] py-[7px] text-sm font-medium text-char transition-colors hover:bg-linen"
+            className={outlineBtnMd}
           >
             {t('settings.mfa.recoveryCodes.generateNew')}
           </button>
@@ -399,7 +399,7 @@ export default function MfaSection() {
             type="button"
             onClick={handleGenerateCodes}
             disabled={busy}
-            className="rounded-btn bg-ember px-[18px] py-[7px] text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
+            className={emberBtnMd}
           >
             {busy
               ? `${t('settings.mfa.recoveryCodes.generating.loading')}…`
@@ -408,7 +408,7 @@ export default function MfaSection() {
           <button
             type="button"
             onClick={() => setView('recovery-codes')}
-            className="rounded-btn border border-char/15 px-[18px] py-[7px] text-sm font-medium text-char transition-colors hover:bg-linen"
+            className={outlineBtnMd}
           >
             {t('common.cancel')}
           </button>
@@ -441,7 +441,7 @@ export default function MfaSection() {
                 setErrors([]);
                 setView('totp-deactivate');
               }}
-              className="rounded-btn border border-char/15 px-3 py-[5px] text-sm font-medium text-char transition-colors hover:bg-linen"
+              className={outlineBtnSm}
             >
               {t('common.remove')}
             </button>
@@ -450,7 +450,7 @@ export default function MfaSection() {
               type="button"
               onClick={startTotpSetup}
               disabled={busy}
-              className="rounded-btn bg-amber px-3 py-[5px] text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
+              className={primaryBtnSm}
             >
               {busy
                 ? `${t('common.loading')}…`
@@ -480,7 +480,7 @@ export default function MfaSection() {
               type="button"
               onClick={openRecoveryCodes}
               disabled={busy || !totp}
-              className="rounded-btn border border-char/15 px-3 py-[5px] text-sm font-medium text-char transition-colors hover:bg-linen disabled:opacity-40"
+              className={`${outlineBtnSm} disabled:opacity-40`}
             >
               {busy
                 ? `${t('common.loading')}…`

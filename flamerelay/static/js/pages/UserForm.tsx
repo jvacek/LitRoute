@@ -4,6 +4,7 @@ import { Link, useLoaderData, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { useAuth } from '../AuthContext';
 import { reportError } from '../lib/sentry';
+import { outlineBtnLg, primaryBtnLg } from '../styles';
 import type { UserFormLoaderData } from './UserForm.loader';
 
 export default function UserForm() {
@@ -78,19 +79,12 @@ export default function UserForm() {
         )}
 
         <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-btn bg-amber px-[22px] py-[9px] text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
-          >
+          <button type="submit" disabled={submitting} className={primaryBtnLg}>
             {submitting
               ? `${t('common.saving')}…`
               : t('userForm.submit.default')}
           </button>
-          <Link
-            to="/profile/"
-            className="rounded-btn border border-char/15 px-[22px] py-[9px] text-sm font-medium text-char transition-colors hover:bg-linen"
-          >
+          <Link to="/profile/" className={outlineBtnLg}>
             {t('common.cancel')}
           </Link>
         </div>

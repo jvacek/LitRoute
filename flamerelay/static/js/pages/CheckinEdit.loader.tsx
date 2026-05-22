@@ -7,6 +7,7 @@ import {
 } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import type { components } from '../api/schema';
+import { amberCharBtnLg } from '../styles';
 
 export type CheckinEditLoaderData = {
   checkin: components['schemas']['CheckIn'];
@@ -52,10 +53,7 @@ export function CheckinEditErrorElement() {
       <p className="mb-8 max-w-sm text-smoke">
         {t('errorPage.404.description')}
       </p>
-      <Link
-        to="/"
-        className="rounded-btn bg-amber px-[22px] py-[9px] text-sm font-semibold tracking-wide text-char transition-transform hover:-translate-y-px active:translate-y-0"
-      >
+      <Link to="/" className={amberCharBtnLg}>
         {t('errorPage.backToHome')}
       </Link>
     </div>

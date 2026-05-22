@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../api';
+import { amberCharBtnLg } from '../styles';
 
 function LighterIllustration() {
   return (
@@ -98,7 +99,7 @@ export default function GuestEmailCapture({
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-btn bg-amber px-[22px] py-[9px] text-sm font-semibold tracking-wide text-char transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
+          className={`w-full ${amberCharBtnLg}`}
         >
           {loading ? `${t('common.sending')}…` : t('checkin.guestEmailSubmit')}
         </button>

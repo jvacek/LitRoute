@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { amberCharBtnLg } from '../styles';
 
 interface ErrorPageProps {
   code: number;
@@ -59,10 +60,7 @@ export default function ErrorPage({
         {headline}
       </h1>
       <p className="mt-3 max-w-sm text-smoke">{exception || description}</p>
-      <Link
-        to="/"
-        className="mt-8 rounded-btn bg-amber px-[22px] py-[9px] text-sm font-semibold tracking-wide text-char transition-transform hover:-translate-y-px active:translate-y-0"
-      >
+      <Link to="/" className={`mt-8 ${amberCharBtnLg}`}>
         {t('errorPage.backToHome')}
       </Link>
     </div>

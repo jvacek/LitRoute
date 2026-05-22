@@ -9,7 +9,13 @@ import {
   type EmailAddress,
   type AllauthError,
 } from '../../lib/allauthApi';
-import { inputClass, labelClass } from '../../styles';
+import {
+  inputClass,
+  labelClass,
+  outlineBtnMd,
+  outlineBtnSm,
+  primaryBtnMd,
+} from '../../styles';
 
 export default function EmailSection() {
   const { t } = useTranslation();
@@ -143,7 +149,7 @@ export default function EmailSection() {
             <button
               onClick={() => handleConfirm(readyToSwitch, primary.email)}
               disabled={busy}
-              className="rounded-btn bg-amber px-[18px] py-[7px] text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
+              className={primaryBtnMd}
             >
               {busy
                 ? `${t('common.confirming')}…`
@@ -152,7 +158,7 @@ export default function EmailSection() {
             <button
               onClick={() => handleCancel(readyToSwitch.email)}
               disabled={busy}
-              className="rounded-btn border border-char/15 px-[18px] py-[7px] text-sm font-medium text-char transition-colors hover:bg-linen disabled:opacity-50"
+              className={`${outlineBtnMd} disabled:opacity-50`}
             >
               {t('common.cancel')}
             </button>
@@ -173,7 +179,7 @@ export default function EmailSection() {
             <button
               onClick={() => handleResend(pending.email)}
               disabled={busy}
-              className="rounded-btn border border-char/15 px-3 py-[5px] text-sm font-medium text-char transition-colors hover:bg-linen disabled:opacity-50"
+              className={`${outlineBtnSm} disabled:opacity-50`}
             >
               {busy
                 ? `${t('common.sending')}…`
@@ -206,11 +212,7 @@ export default function EmailSection() {
               className={inputClass}
             />
           </div>
-          <button
-            type="submit"
-            disabled={busy}
-            className="rounded-btn bg-amber px-[18px] py-[7px] text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
-          >
+          <button type="submit" disabled={busy} className={primaryBtnMd}>
             {busy
               ? `${t('settings.email.changeEmail.loading')}…`
               : t('settings.email.changeEmail.default')}

@@ -16,7 +16,7 @@ import { convertToWebP } from '../lib/imageConversion';
 import { geodesicCirclePolygon, zoomForDriftRadius } from '../lib/maps';
 import { isNetworkError, reportError } from '../lib/sentry';
 import { useConfig } from '../lib/useConfig';
-import { fieldErrorClass } from '../styles';
+import { fieldErrorClass, outlineBtnLg, primaryBtnLg } from '../styles';
 
 import LocationDeniedModal from './LocationDeniedModal';
 import LowPrecisionLocationModal from './LowPrecisionLocationModal';
@@ -791,7 +791,7 @@ export default function CheckinForm({
                       type="button"
                       onClick={handleGpsCapture}
                       disabled={submitting}
-                      className="rounded-btn bg-amber px-[22px] py-[9px] text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
+                      className={primaryBtnLg}
                     >
                       {submitting
                         ? `${t('checkin.form.useMyLocation.loading')}…`
@@ -956,7 +956,7 @@ export default function CheckinForm({
         <button
           type="submit"
           disabled={submitting || (isGpsEnforced && !confirmStep)}
-          className="rounded-btn bg-amber px-[22px] py-[9px] text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
+          className={primaryBtnLg}
         >
           {submitting
             ? isCreate
@@ -966,10 +966,7 @@ export default function CheckinForm({
               ? t('checkin.form.submit.create')
               : t('checkin.form.submit.save')}
         </button>
-        <a
-          href={unitUrl}
-          className="rounded-btn border border-char/15 px-[22px] py-[9px] text-sm font-medium text-char transition-colors hover:bg-linen"
-        >
+        <a href={unitUrl} className={outlineBtnLg}>
           {t('common.cancel')}
         </a>
       </div>

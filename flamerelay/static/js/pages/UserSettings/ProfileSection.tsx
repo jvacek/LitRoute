@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../../api';
 import { reportError } from '../../lib/sentry';
-import { inputClass } from '../../styles';
+import { inputClass, primaryBtnMd } from '../../styles';
 
 export default function ProfileSection() {
   const { t } = useTranslation();
@@ -74,11 +74,7 @@ export default function ProfileSection() {
         </p>
       )}
       <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded-btn bg-amber px-[18px] py-[7px] text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
-        >
+        <button type="submit" disabled={submitting} className={primaryBtnMd}>
           {submitting
             ? `${t('common.saving')}…`
             : t('settings.profile.submit.default')}

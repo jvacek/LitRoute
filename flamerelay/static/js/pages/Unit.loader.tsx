@@ -8,6 +8,7 @@ import {
 } from 'react-router-dom';
 import { apiClient } from '../api/client';
 import type { components } from '../api/schema';
+import { amberCharBtnLg } from '../styles';
 
 export type UnitLoaderData = {
   unit: components['schemas']['Unit'];
@@ -71,10 +72,7 @@ export function UnitErrorElement() {
           }}
         />
       </p>
-      <Link
-        to="/"
-        className="rounded-btn bg-amber px-[22px] py-[9px] text-sm font-semibold tracking-wide text-char transition-transform hover:-translate-y-px active:translate-y-0"
-      >
+      <Link to="/" className={amberCharBtnLg}>
         {t('unit.notFound.cta')}
       </Link>
     </div>

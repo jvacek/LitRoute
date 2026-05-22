@@ -6,7 +6,18 @@ const btnBase =
 // Primary amber buttons
 export const primaryBtnLg = `${btnBase} bg-amber px-[22px] py-[9px] text-sm font-semibold text-white`;
 export const primaryBtnMd = `${btnBase} bg-amber px-[18px] py-[7px] text-sm font-semibold text-white`;
+export const primaryBtnSm = `${btnBase} bg-amber px-3 py-[5px] text-sm font-semibold text-white`;
 export const primaryBtn = `w-full ${primaryBtnMd}`; // full-width variant for auth pages
+
+// Amber buttons with dark text — used on light hero/error-state CTAs (Lg) and
+// the Unit page's dark-background hero (Md). Distinct from primaryBtn* which
+// use white text.
+export const amberCharBtnLg = `${btnBase} bg-amber px-[22px] py-[9px] text-sm font-semibold text-char`;
+export const amberCharBtnMd = `${btnBase} bg-amber px-[18px] py-[7px] text-sm font-medium text-char`;
+
+// Outline button intended for dark backgrounds (Unit page hero). Uses a
+// translucent-white border + fill so it reads against the dark image overlay.
+export const outlineOnDarkBtnMd = `${btnBase} border border-white/20 bg-white/15 px-[18px] py-[7px] text-sm font-medium text-white`;
 
 // Ember (destructive/warning) buttons
 export const emberBtnMd = `${btnBase} bg-ember px-[18px] py-[7px] text-sm font-semibold text-white`;

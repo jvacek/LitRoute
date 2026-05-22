@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { IS_LOCAL } from '../env';
 import logoUrl from '../../images/favicons/litroute.svg';
+import { primaryBtnMd } from '../styles';
 import LanguagePicker from './LanguagePicker';
 
 export default function Navbar() {
@@ -123,10 +124,7 @@ function NavLinks({ isAuthenticated }: { isAuthenticated: boolean }) {
           {t('common.profile')}
         </Link>
       ) : (
-        <Link
-          to="/accounts/login/"
-          className="rounded-btn bg-amber px-[18px] py-[7px] text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0"
-        >
+        <Link to="/accounts/login/" className={primaryBtnMd}>
           {t('nav.signIn')}
         </Link>
       )}

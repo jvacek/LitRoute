@@ -16,6 +16,7 @@ import GuestEmailCapture from '../components/GuestEmailCapture';
 import ImageCarousel from '../components/ImageCarousel';
 import TeamBadge from '../components/TeamBadge';
 import type UnitMapComponent from '../components/UnitMap';
+import { amberCharBtnMd, outlineOnDarkBtnMd } from '../styles';
 import { getEditToken } from '../lib/editTokens';
 import { getGameConfig } from '../lib/gameConfig';
 import { haversineKm } from '../lib/haversine';
@@ -418,10 +419,7 @@ export default function Unit() {
               {/* CTAs */}
               <div className="flex flex-wrap items-center gap-3">
                 {unit.can_check_in !== false && (
-                  <Link
-                    to={checkinUrl}
-                    className="rounded-btn bg-amber px-[18px] py-[7px] text-sm font-medium tracking-wide text-char transition-transform hover:-translate-y-px active:translate-y-0"
-                  >
+                  <Link to={checkinUrl} className={amberCharBtnMd}>
                     {t('unit.checkinBtn')}
                   </Link>
                 )}
@@ -447,7 +445,7 @@ export default function Unit() {
                     {getGameConfig(unit.game.mode)?.hasLeaderboard && (
                       <Link
                         to={`/game/${unit.game.id}/leaderboard/?from=${encodeURIComponent(unit.identifier)}`}
-                        className="rounded-btn bg-amber px-[18px] py-[7px] text-sm font-medium tracking-wide text-char transition-transform hover:-translate-y-px active:translate-y-0"
+                        className={amberCharBtnMd}
                       >
                         {t('unit.game.leaderboardLink')}
                       </Link>
@@ -455,7 +453,7 @@ export default function Unit() {
                     <button
                       type="button"
                       onClick={() => setShowGameModal(true)}
-                      className="rounded-btn border border-white/20 bg-white/15 px-[18px] py-[7px] text-sm font-medium tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0"
+                      className={outlineOnDarkBtnMd}
                     >
                       {t('unit.game.showRules')}
                     </button>
