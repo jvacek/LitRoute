@@ -14,7 +14,7 @@ import { captureGpsLocation } from '../lib/captureGpsLocation';
 import { clampToCircle } from '../lib/haversine';
 import { convertToWebP } from '../lib/imageConversion';
 import { geodesicCirclePolygon, zoomForDriftRadius } from '../lib/maps';
-import { reportError } from '../lib/sentry';
+import { isNetworkError, reportError } from '../lib/sentry';
 import { useConfig } from '../lib/useConfig';
 import { fieldErrorClass } from '../styles';
 
@@ -386,7 +386,10 @@ export default function CheckinForm({
         }
       } catch (err) {
         reportError(err, { where: 'CheckinForm.submit', mode: 'confirm' });
-        setErrors({ non_field_errors: [t('common.unexpectedError')] });
+        const errorKey = isNetworkError(err)
+          ? 'checkin.form.errors.connectionFailed'
+          : 'common.unexpectedError';
+        setErrors({ non_field_errors: [t(errorKey)] });
       } finally {
         setSubmitting(false);
       }
@@ -429,7 +432,10 @@ export default function CheckinForm({
       if (errs) setErrors(errs);
     } catch (err) {
       reportError(err, { where: 'CheckinForm.submit', mode });
-      setErrors({ non_field_errors: [t('common.unexpectedError')] });
+      const errorKey = isNetworkError(err)
+        ? 'checkin.form.errors.connectionFailed'
+        : 'common.unexpectedError';
+      setErrors({ non_field_errors: [t(errorKey)] });
     } finally {
       setSubmitting(false);
     }
