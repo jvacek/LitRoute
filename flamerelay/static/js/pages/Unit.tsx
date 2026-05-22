@@ -16,7 +16,7 @@ import GuestEmailCapture from '../components/GuestEmailCapture';
 import ImageCarousel from '../components/ImageCarousel';
 import TeamBadge from '../components/TeamBadge';
 import type UnitMapComponent from '../components/UnitMap';
-import { amberCharBtnMd, outlineOnDarkBtnMd } from '../styles';
+import { amberCharBtnMd, fieldErrorClass, outlineOnDarkBtnMd } from '../styles';
 import { getEditToken } from '../lib/editTokens';
 import { getGameConfig } from '../lib/gameConfig';
 import { haversineKm } from '../lib/haversine';
@@ -94,6 +94,8 @@ export default function Unit() {
   const [gameRank, setGameRank] = useState<number | null>(null);
   const [gameTotal, setGameTotal] = useState<number | null>(null);
   const [followLoading, setFollowLoading] = useState(false);
+  const [followError, setFollowError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   // sessionStorage is read at mount only — unit.game is fixed from the loader
   // (route remounts on navigation), so a useState initializer fits better than
   // a useEffect with a setState call.
@@ -286,6 +288,7 @@ export default function Unit() {
       return;
     }
     setFollowLoading(true);
+    setFollowError(null);
     try {
       const method = unit?.is_following ? 'DELETE' : 'POST';
       const r = await apiFetch(`/api/units/${identifier}/follow/`, {
@@ -293,13 +296,15 @@ export default function Unit() {
       });
       if (!r.ok) {
         const body = await r.json().catch(() => ({}));
-        alert(body?.detail ?? t('unit.followError'));
+        setFollowError(body?.detail ?? t('unit.followError'));
         return;
       }
       setUnit((u) => (u ? { ...u, is_following: !u.is_following } : u));
     } catch (e) {
+      // Quiet on network throws — the button visibly stayed in its prior
+      // state, the user can retry. reportError filters network noise from
+      // Sentry; real bugs still surface there.
       reportError(e, { where: 'Unit.follow' });
-      alert(t('unit.followError'));
     } finally {
       setFollowLoading(false);
     }
@@ -312,16 +317,22 @@ export default function Unit() {
       const token = getEditToken(checkinId);
       if (token) headers['X-Edit-Token'] = token;
     }
-    const r = await apiFetch(
-      `/api/units/${identifier}/checkins/${checkinId}/`,
-      { method: 'DELETE', headers },
-    );
-    if (!r.ok) {
-      const body = await r.json().catch(() => ({}));
-      alert(body?.detail ?? t('unit.deleteError'));
-      return;
+    setDeleteError(null);
+    try {
+      const r = await apiFetch(
+        `/api/units/${identifier}/checkins/${checkinId}/`,
+        { method: 'DELETE', headers },
+      );
+      if (!r.ok) {
+        const body = await r.json().catch(() => ({}));
+        setDeleteError(body?.detail ?? t('unit.deleteError'));
+        return;
+      }
+      setCheckins((cs) => cs.filter((c) => c.id !== checkinId));
+    } catch (e) {
+      // Quiet on network throws — the row didn't disappear, user can retry.
+      reportError(e, { where: 'Unit.delete' });
     }
-    setCheckins((cs) => cs.filter((c) => c.id !== checkinId));
   }
 
   function handleMarkerClick(checkin: CheckInData) {
@@ -439,6 +450,11 @@ export default function Unit() {
                 >
                   {unit.is_following ? t('unit.unfollow') : t('unit.follow')}
                 </button>
+                {followError && (
+                  <p role="alert" className="basis-full text-sm text-ember">
+                    {followError}
+                  </p>
+                )}
 
                 {unit.game && (
                   <div className="ml-auto flex flex-wrap items-center gap-3">
@@ -530,6 +546,11 @@ export default function Unit() {
         <h2 className="font-heading mb-6 text-2xl font-bold text-char">
           {t('unit.travelLog')}
         </h2>
+        {deleteError && (
+          <p role="alert" className={`${fieldErrorClass} mb-4`}>
+            {deleteError}
+          </p>
+        )}
         {checkins.length === 0 ? (
           <div className="rounded-card border border-char/10 bg-white px-6 py-10 text-center shadow-sm">
             {/* Placeholder for hand-drawn illustration — swap this div for an <img> when the asset is ready */}
