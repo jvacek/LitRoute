@@ -1,5 +1,5 @@
-import { Turnstile } from '@marsidev/react-turnstile';
-import { useState } from 'react';
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../AuthContext';
 import { apiFetch } from '../api';
@@ -15,6 +15,8 @@ export default function FeedbackForm() {
   const [message, setMessage] = useState('');
   const [email, setEmail] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileError, setTurnstileError] = useState(false);
+  const turnstileRef = useRef<TurnstileInstance | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
@@ -48,6 +50,14 @@ export default function FeedbackForm() {
       } else {
         const json = (await res.json()) as { detail?: string };
         setError(json.detail ?? t('feedback.errorGeneric'));
+        // Server-side captcha rejection: reset the widget so the user can
+        // submit again. Detail string is set in
+        // backend/api/views/feedback.py.
+        if (json.detail?.toLowerCase().includes('captcha')) {
+          setTurnstileToken('');
+          setTurnstileError(true);
+          turnstileRef.current?.reset();
+        }
       }
     } catch {
       setError(t('feedback.errorGeneric'));
@@ -121,12 +131,40 @@ export default function FeedbackForm() {
       )}
 
       {showTurnstile && (
-        <div className="mb-5 flex justify-center">
+        <div className="mb-5 flex flex-col items-center gap-2">
           <Turnstile
+            ref={turnstileRef}
             siteKey={config.turnstileSiteKey}
-            onSuccess={setTurnstileToken}
-            options={{ theme: 'light' }}
+            onSuccess={(token) => {
+              setTurnstileToken(token);
+              setTurnstileError(false);
+            }}
+            onError={() => {
+              setTurnstileToken('');
+              setTurnstileError(true);
+            }}
+            onExpire={() => {
+              setTurnstileToken('');
+              turnstileRef.current?.reset();
+            }}
+            options={{ theme: 'light', appearance: 'interaction-only' }}
           />
+          {turnstileError && (
+            <div className="flex flex-col items-center gap-1">
+              <p className={fieldErrorClass}>{t('feedback.captchaFailed')}</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setTurnstileError(false);
+                  setError('');
+                  turnstileRef.current?.reset();
+                }}
+                className="text-sm text-amber underline"
+              >
+                {t('feedback.captchaRetry')}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
