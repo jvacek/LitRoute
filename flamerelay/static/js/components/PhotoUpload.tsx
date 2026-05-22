@@ -82,19 +82,46 @@ function DragHandle({ className }: { className?: string }) {
   );
 }
 
-function CheckIcon({ className }: { className?: string }) {
+function CloudCheckIcon({ className }: { className?: string }) {
+  // Heroicons "cloud" silhouette (battle-tested path that closes cleanly
+  // along its bottom edge — our earlier hand-rolled path left a notch
+  // where `z` drew an unwanted vertical line back to the start point) plus
+  // a white tick stroked over the center. The wrapping span supplies a
+  // drop-shadow so the icon stays legible against any photo background.
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <path
+        d="M2.25 15a4.5 4.5 0 0 0 4.5 4.5H18a3.75 3.75 0 0 0 1.332-7.257 3 3 0 0 0-3.758-3.848 5.25 5.25 0 0 0-10.233 2.33A4.502 4.502 0 0 0 2.25 15z"
+        fill="currentColor"
+      />
+      <path
+        d="m9.4 14.5 2.2 2.2 4-4.5"
+        fill="none"
+        stroke="white"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function TrashIcon({ className }: { className?: string }) {
   return (
     <svg
-      viewBox="0 0 12 12"
+      viewBox="0 0 16 16"
       className={className}
       fill="none"
       stroke="currentColor"
-      strokeWidth={2.2}
+      strokeWidth={1.6}
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
     >
-      <path d="M2.5 6.5 5 9l4.5-5" />
+      <path d="M3 4.5h10" />
+      <path d="M6.2 4.5V3a.7.7 0 0 1 .7-.7h2.2a.7.7 0 0 1 .7.7v1.5" />
+      <path d="M4.6 4.5l.7 8.2a1 1 0 0 0 1 .9h3.4a1 1 0 0 0 1-.9l.7-8.2" />
+      <path d="M7 7v4M9 7v4" />
     </svg>
   );
 }
@@ -226,28 +253,37 @@ function Thumbnail({
       {/* Shrink-fall-back banner. Persists as long as the photo was
           uploaded at full size — useful transparency for the user. Hidden
           while shrinking is still in flight (we don't yet know if it'll
-          fail) and when there's an upload error (the error badge takes
-          priority). */}
-      {!isShrinking && shrinkFailed && !hasUploadError && shrinkFailedLabel && (
-        <div
-          className="pointer-events-none absolute bottom-0.5 left-0.5 right-0.5 truncate rounded-full bg-ember/90 px-1.5 py-0.5 text-center text-[10px] font-medium leading-none text-white"
-          title={shrinkFailedLabel}
-          aria-label={shrinkFailedLabel}
-        >
-          {shrinkFailedLabel}
-        </div>
-      )}
+          fail), when there's an upload error (the error badge takes
+          priority), and once the upload has succeeded (the cloud-check
+          badge in the bottom-left would otherwise collide with it, and
+          "✓ uploaded" is the more useful signal at that point). */}
+      {!isShrinking &&
+        shrinkFailed &&
+        !hasUploadError &&
+        !uploaded &&
+        shrinkFailedLabel && (
+          <div
+            className="pointer-events-none absolute bottom-0.5 left-0.5 right-0.5 truncate rounded-full bg-ember/90 px-1.5 py-0.5 text-center text-[10px] font-medium leading-none text-white"
+            title={shrinkFailedLabel}
+            aria-label={shrinkFailedLabel}
+          >
+            {shrinkFailedLabel}
+          </div>
+        )}
 
-      {/* Uploaded checkmark (top-LEFT, amber). Shape + position make this
-          visually distinct from the round red delete button at top-RIGHT. */}
+      {/* Uploaded cloud-with-check badge. Lives in the BOTTOM-LEFT inside
+          the thumbnail bounds — using a negative offset like the delete
+          button would make adjacent thumbnails' badges overlap each
+          other. A green cloud icon also reads as "this is on the server
+          now" rather than just a generic "OK". */}
       {!isUploading && !isShrinking && uploaded && uploadedLabel && (
-        <div
-          className="pointer-events-none absolute -left-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-amber text-white shadow-sm ring-2 ring-white"
+        <span
+          className="pointer-events-none absolute bottom-1 left-1 inline-flex h-5 w-5 items-center justify-center text-moss drop-shadow"
           title={uploadedLabel}
           aria-label={uploadedLabel}
         >
-          <CheckIcon className="h-3 w-3" />
-        </div>
+          <CloudCheckIcon className="h-5 w-5" />
+        </span>
       )}
 
       {/* Upload-failed badge: same top-LEFT slot as the checkmark (mutually
@@ -311,10 +347,10 @@ function Thumbnail({
           e.stopPropagation();
           onRemove();
         }}
-        className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ember text-xs text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember"
+        className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-ember text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ember"
         aria-label={removeLabel}
       >
-        &#x2715;
+        <TrashIcon className="h-3 w-3" />
       </button>
     </div>
   );

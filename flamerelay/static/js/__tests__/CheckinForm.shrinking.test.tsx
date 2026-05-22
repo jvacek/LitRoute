@@ -230,9 +230,16 @@ describe('CheckinForm shrinking state machine', () => {
     const conv = deferredFile();
     convertMock.mockReset();
     convertMock.mockReturnValueOnce(conv.promise);
-    const onUploadImage = jest
-      .fn()
-      .mockResolvedValue({ token: 'tok-2', previewUrl: '/media/y.heic' });
+    // Deferred upload so we can verify the "couldn't shrink — uploading
+    // original" banner during the upload window. Once the upload resolves
+    // the badge becomes the cloud-check, which masks the banner.
+    let resolveUpload!: (v: { token: string; previewUrl: string }) => void;
+    const uploadPromise = new Promise<{ token: string; previewUrl: string }>(
+      (res) => {
+        resolveUpload = res;
+      },
+    );
+    const onUploadImage = jest.fn().mockReturnValue(uploadPromise);
     const onSubmit = jest.fn().mockResolvedValue(null);
 
     render(
@@ -258,6 +265,10 @@ describe('CheckinForm shrinking state machine', () => {
     expect(
       await screen.findByLabelText(/Couldn't shrink — uploading original/i),
     ).toBeInTheDocument();
+
+    await act(async () => {
+      resolveUpload({ token: 'tok-2', previewUrl: '/media/y.heic' });
+    });
 
     fireEvent.click(screen.getByRole('button', { name: /^Check in$/i }));
 

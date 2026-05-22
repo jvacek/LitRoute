@@ -153,4 +153,20 @@ describe('PhotoUpload upload lifecycle visuals', () => {
     expect(screen.getByLabelText(UPLOAD_FAILED_LABEL)).toBeInTheDocument();
     expect(screen.queryByLabelText(FAILED_LABEL)).not.toBeInTheDocument();
   });
+
+  it('hides the shrink-fallback banner once the upload succeeds', () => {
+    // After upload completes the cloud-check badge sits in the bottom-left
+    // and would collide with the banner. The ✓ already tells the user the
+    // photo is on the server, so the banner becomes redundant.
+    renderUpload([
+      {
+        key: 'k1',
+        preview: 'blob:1',
+        shrinkFailed: true,
+        uploaded: true,
+      },
+    ]);
+    expect(screen.getByLabelText(UPLOADED_LABEL)).toBeInTheDocument();
+    expect(screen.queryByLabelText(FAILED_LABEL)).not.toBeInTheDocument();
+  });
 });

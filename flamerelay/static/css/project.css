@@ -13,6 +13,10 @@
   --color-parchment: #faf6ee;
   --color-linen: #f0ead8;
   --color-blueprint: #c1dffb;
+  /* Earthy success green — used for the "uploaded to server" cloud badge
+     on check-in photos. Muted so it sits with the warm brand palette
+     instead of fighting it. */
+  --color-moss: #3a7d44;
 
   /* Typography */
   --font-heading: 'Fraunces', Georgia, serif;
