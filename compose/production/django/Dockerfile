@@ -10,6 +10,9 @@ RUN --mount=type=cache,target=/root/.npm npm ci
 COPY ./tsconfig.json ${APP_HOME}/
 COPY ./webpack ${APP_HOME}/webpack
 COPY ./flamerelay/static ${APP_HOME}/flamerelay/static
+# CHANGELOG.md is parsed at build time by webpack/loaders/changelog-loader.js
+# and rendered on /changelog/, so the client-builder stage needs it.
+COPY ./CHANGELOG.md ${APP_HOME}/CHANGELOG.md
 
 # Build-time secrets for Sentry source map upload. ARG-only (no ENV) keeps the
 # auth token out of the final image's layer history. The trailing inline env
