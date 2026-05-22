@@ -114,11 +114,23 @@ export default function CheckinForm({
     new Set(),
   );
   // Successful pending-image uploads, keyed by imageKey. Persists across
-  // retries: if photo 3 of 5 fails, photos 1 and 2 keep their tokens and
-  // only photo 3 re-uploads on the next submit. Cleared when the user
-  // removes a photo. (No paired "failed keys" set — the absence of a token
-  // is the same signal, and tracking both would double the bookkeeping.)
+  // retries and across the entire form lifetime (photos auto-upload as
+  // soon as their shrink finishes, so by submit time most tokens are
+  // already in place). Cleared when the user removes a photo.
   const [uploadedTokens, setUploadedTokens] = useState<Map<string, string>>(
+    new Map(),
+  );
+  // Keys whose upload is currently in flight. Drives the per-thumbnail
+  // upload spinner and disables the submit button so the user can't ship
+  // a half-finished payload.
+  const [uploadingKeys, setUploadingKeys] = useState<Set<string>>(new Set());
+  // Map of failed background uploads → i18n message key, so the per-photo
+  // popover can show "Photo too big" vs "Too many photos queued" vs
+  // "Couldn't reach the server" instead of one generic blob. The user can
+  // tap a retry button on the popover to re-run the upload for just that
+  // photo; the form's submit-time `uploadMissingTokens` also acts as a
+  // bulk retry path.
+  const [uploadErrors, setUploadErrors] = useState<Map<string, string>>(
     new Map(),
   );
   // {current, total} drives the "Uploading 2/5…" label on the submit button.
@@ -348,6 +360,7 @@ export default function CheckinForm({
             next.delete(key);
             return next;
           });
+          if (imageKeysRef.current.indexOf(key) === -1) return;
           setImageFiles((prev) => {
             const idx = imageKeysRef.current.indexOf(key);
             if (idx === -1) return prev;
@@ -355,6 +368,7 @@ export default function CheckinForm({
             next[idx] = converted;
             return next;
           });
+          startBackgroundUpload(key, converted);
         },
         () => {
           setShrinkingKeys((prev) => {
@@ -369,9 +383,70 @@ export default function CheckinForm({
             next.add(key);
             return next;
           });
+          if (imageKeysRef.current.indexOf(key) === -1) return;
+          startBackgroundUpload(key, original);
         },
       );
     });
+  }
+
+  function uploadErrorMessageKey(err: unknown): string {
+    const code = err instanceof PendingUploadError ? err.code : 'server';
+    return code === 'too_large'
+      ? 'checkin.form.errors.imageTooLarge'
+      : code === 'rate_limited'
+        ? 'checkin.form.errors.uploadRateLimited'
+        : code === 'captcha_required'
+          ? 'checkin.form.errors.captchaRequired'
+          : code === 'network'
+            ? 'checkin.form.errors.connectionFailed'
+            : 'common.unexpectedError';
+  }
+
+  function startBackgroundUpload(key: string, file: File) {
+    setUploadingKeys((prev) => new Set(prev).add(key));
+    setUploadErrors((prev) => {
+      if (!prev.has(key)) return prev;
+      const next = new Map(prev);
+      next.delete(key);
+      return next;
+    });
+    onUploadImage(file, showTurnstile ? turnstileToken : undefined).then(
+      ({ token }) => {
+        setUploadingKeys((prev) => {
+          if (!prev.has(key)) return prev;
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
+        // If the user removed the photo mid-upload, drop the token on the
+        // floor; the orphan row will be reaped by the TTL cleanup task.
+        if (imageKeysRef.current.indexOf(key) === -1) return;
+        setUploadedTokens((prev) => new Map(prev).set(key, token));
+      },
+      (err) => {
+        setUploadingKeys((prev) => {
+          if (!prev.has(key)) return prev;
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
+        if (imageKeysRef.current.indexOf(key) === -1) return;
+        const messageKey = uploadErrorMessageKey(err);
+        setUploadErrors((prev) => new Map(prev).set(key, messageKey));
+        if (!(err instanceof PendingUploadError)) {
+          reportError(err, { where: 'CheckinForm.bgUpload', mode });
+        }
+      },
+    );
+  }
+
+  function retryBackgroundUpload(key: string) {
+    const idx = imageKeysRef.current.indexOf(key);
+    if (idx === -1) return;
+    const file = imageFiles[idx];
+    if (!file) return;
+    startBackgroundUpload(key, file);
   }
 
   function removeNewImage(key: string) {
@@ -393,6 +468,18 @@ export default function CheckinForm({
       return next;
     });
     setUploadedTokens((prev) => {
+      if (!prev.has(key)) return prev;
+      const next = new Map(prev);
+      next.delete(key);
+      return next;
+    });
+    setUploadingKeys((prev) => {
+      if (!prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+    setUploadErrors((prev) => {
       if (!prev.has(key)) return prev;
       const next = new Map(prev);
       next.delete(key);
@@ -469,19 +556,7 @@ export default function CheckinForm({
         setUploadedTokens(new Map(localTokens));
       } catch (err) {
         setUploadProgress(null);
-        const code =
-          err instanceof PendingUploadError ? err.code : ('server' as const);
-        const msgKey =
-          code === 'too_large'
-            ? 'checkin.form.errors.imageTooLarge'
-            : code === 'rate_limited'
-              ? 'checkin.form.errors.uploadRateLimited'
-              : code === 'captcha_required'
-                ? 'checkin.form.errors.captchaRequired'
-                : code === 'network'
-                  ? 'checkin.form.errors.connectionFailed'
-                  : 'common.unexpectedError';
-        setErrors({ images: [t(msgKey)] });
+        setErrors({ images: [t(uploadErrorMessageKey(err))] });
         if (!(err instanceof PendingUploadError)) {
           reportError(err, { where: 'CheckinForm.upload', mode });
         }
@@ -653,7 +728,16 @@ export default function CheckinForm({
     preview: imagePreviews[i] ?? '',
     isShrinking: shrinkingKeys.has(key),
     shrinkFailed: shrinkFailedKeys.has(key),
+    isUploading: uploadingKeys.has(key),
+    uploaded: uploadedTokens.has(key),
+    uploadErrorMessageKey: uploadErrors.get(key),
   }));
+
+  // Block submit while any photo is still being shrunk or uploaded, so the
+  // user can't ship before the background pipeline catches up. Photos in
+  // error state don't block — clicking submit will trigger the bulk retry
+  // path in `uploadMissingTokens`.
+  const hasPhotosInFlight = shrinkingKeys.size > 0 || uploadingKeys.size > 0;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -1084,6 +1168,7 @@ export default function CheckinForm({
         onRemoveNew={removeNewImage}
         onRemoveExisting={removeExistingImage}
         onReorder={handleReorder}
+        onRetryUpload={retryBackgroundUpload}
         error={errors.images?.join(' ')}
       />
 
@@ -1161,7 +1246,9 @@ export default function CheckinForm({
       <div className="flex gap-3">
         <button
           type="submit"
-          disabled={submitting || (isGpsEnforced && !confirmStep)}
+          disabled={
+            submitting || hasPhotosInFlight || (isGpsEnforced && !confirmStep)
+          }
           className={primaryBtnLg}
         >
           {uploadProgress

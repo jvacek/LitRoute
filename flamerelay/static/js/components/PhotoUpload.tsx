@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { fieldErrorClass } from '../styles';
@@ -10,6 +10,10 @@ export interface NewImage {
   preview: string;
   isShrinking?: boolean;
   shrinkFailed?: boolean;
+  isUploading?: boolean;
+  uploaded?: boolean;
+  /** i18n key resolved by PhotoUpload; surfaced in the per-photo error popup. */
+  uploadErrorMessageKey?: string;
 }
 
 export interface PhotoUploadProps {
@@ -20,6 +24,8 @@ export interface PhotoUploadProps {
   onRemoveNew: (key: string) => void;
   onRemoveExisting: (id: number) => void;
   onReorder: (newFileKeys: string[], existingIdOrder: number[]) => void;
+  /** Called when the user taps "Retry" on a per-photo upload error popup. */
+  onRetryUpload?: (key: string) => void;
   error?: string;
 }
 
@@ -76,6 +82,37 @@ function DragHandle({ className }: { className?: string }) {
   );
 }
 
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 12 12"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2.2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M2.5 6.5 5 9l4.5-5" />
+    </svg>
+  );
+}
+
+function ExclamationIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 12 12"
+      className={className}
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <rect x="5.2" y="2" width="1.6" height="4.6" rx="0.5" />
+      <circle cx="6" cy="9.2" r="0.9" />
+    </svg>
+  );
+}
+
 function Spinner({ label }: { label: string }) {
   return (
     <div
@@ -116,8 +153,18 @@ function Thumbnail({
   isDropTarget,
   isShrinking,
   shrinkFailed,
+  isUploading,
+  uploaded,
+  uploadErrorMessage,
   shrinkingLabel,
+  uploadingLabel,
   shrinkFailedLabel,
+  uploadedLabel,
+  uploadFailedLabel,
+  retryLabel,
+  errorPopupOpen,
+  onToggleErrorPopup,
+  onRetryUpload,
   onRemove,
   onHandlePointerDown,
   removeLabel,
@@ -129,12 +176,27 @@ function Thumbnail({
   isDropTarget: boolean;
   isShrinking?: boolean;
   shrinkFailed?: boolean;
+  isUploading?: boolean;
+  uploaded?: boolean;
+  uploadErrorMessage?: string;
   shrinkingLabel?: string;
+  uploadingLabel?: string;
   shrinkFailedLabel?: string;
+  uploadedLabel?: string;
+  uploadFailedLabel?: string;
+  retryLabel?: string;
+  errorPopupOpen?: boolean;
+  onToggleErrorPopup?: () => void;
+  onRetryUpload?: () => void;
   onRemove: () => void;
   onHandlePointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
   removeLabel: string;
 }) {
+  // Status-corner badge (top-left) is mutually exclusive: spinner during
+  // shrink/upload, ✓ when done, ⚠ when upload failed. The delete button
+  // lives at top-right with a distinct round red shape, so the user can't
+  // confuse "remove this photo" with "this photo had an error".
+  const hasUploadError = !isUploading && !!uploadErrorMessage;
   return (
     <div
       data-item-key={thumbKey}
@@ -157,8 +219,16 @@ function Thumbnail({
       />
 
       {isShrinking && shrinkingLabel && <Spinner label={shrinkingLabel} />}
+      {!isShrinking && isUploading && uploadingLabel && (
+        <Spinner label={uploadingLabel} />
+      )}
 
-      {!isShrinking && shrinkFailed && shrinkFailedLabel && (
+      {/* Shrink-fall-back banner. Persists as long as the photo was
+          uploaded at full size — useful transparency for the user. Hidden
+          while shrinking is still in flight (we don't yet know if it'll
+          fail) and when there's an upload error (the error badge takes
+          priority). */}
+      {!isShrinking && shrinkFailed && !hasUploadError && shrinkFailedLabel && (
         <div
           className="pointer-events-none absolute bottom-0.5 left-0.5 right-0.5 truncate rounded-full bg-ember/90 px-1.5 py-0.5 text-center text-[10px] font-medium leading-none text-white"
           title={shrinkFailedLabel}
@@ -168,10 +238,72 @@ function Thumbnail({
         </div>
       )}
 
-      {/* Drag handle icon — visual affordance only, not the hit target */}
-      <div className="pointer-events-none absolute left-1 top-1">
-        <DragHandle className="h-4 w-4 text-white drop-shadow-sm" />
-      </div>
+      {/* Uploaded checkmark (top-LEFT, amber). Shape + position make this
+          visually distinct from the round red delete button at top-RIGHT. */}
+      {!isUploading && !isShrinking && uploaded && uploadedLabel && (
+        <div
+          className="pointer-events-none absolute -left-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-amber text-white shadow-sm ring-2 ring-white"
+          title={uploadedLabel}
+          aria-label={uploadedLabel}
+        >
+          <CheckIcon className="h-3 w-3" />
+        </div>
+      )}
+
+      {/* Upload-failed badge: same top-LEFT slot as the checkmark (mutually
+          exclusive), but on a dark "char" background with an exclamation
+          glyph — different shape AND color from delete (red ✕ at right). */}
+      {hasUploadError && uploadFailedLabel && (
+        <button
+          type="button"
+          data-error-popup
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleErrorPopup?.();
+          }}
+          className="absolute -left-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-md bg-char text-white shadow-sm ring-2 ring-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber"
+          aria-label={uploadFailedLabel}
+          aria-haspopup="dialog"
+          aria-expanded={errorPopupOpen}
+        >
+          <ExclamationIcon className="h-3 w-3" />
+        </button>
+      )}
+
+      {/* Click-to-toggle popup with the localized error + retry. Anchored
+          below the thumbnail so it doesn't cover the photo itself. */}
+      {hasUploadError && errorPopupOpen && (
+        <div
+          role="dialog"
+          data-error-popup
+          aria-label={uploadFailedLabel}
+          onClick={(e) => e.stopPropagation()}
+          className="absolute left-0 top-full z-20 mt-1 w-52 rounded-card border border-char/10 bg-white p-2.5 text-left text-xs text-char shadow-md"
+        >
+          <p className="mb-2 leading-snug">{uploadErrorMessage}</p>
+          {onRetryUpload && retryLabel && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRetryUpload();
+              }}
+              className="rounded bg-amber px-2 py-1 text-xs font-medium text-white hover:bg-amber/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber"
+            >
+              {retryLabel}
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Drag handle icon — visual affordance only, not the hit target.
+          Suppress while a status badge is occupying the top-left slot so
+          they don't collide. */}
+      {!uploaded && !hasUploadError && (
+        <div className="pointer-events-none absolute left-1 top-1">
+          <DragHandle className="h-4 w-4 text-white drop-shadow-sm" />
+        </div>
+      )}
 
       <button
         type="button"
@@ -196,6 +328,7 @@ export default function PhotoUpload({
   onRemoveNew,
   onRemoveExisting,
   onReorder,
+  onRetryUpload,
   error,
 }: PhotoUploadProps) {
   const { t } = useTranslation();
@@ -203,7 +336,25 @@ export default function PhotoUpload({
   const [dragItemKey, setDragItemKey] = useState<string | null>(null);
   const [dropItemKey, setDropItemKey] = useState<string | null>(null);
   const [orderPreference, setOrderPreference] = useState<string[]>([]);
+  const [openErrorKey, setOpenErrorKey] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Outside-click closes any open error popup. We tag the popup AND the
+  // toggle badge with `data-error-popup`; a click that isn't inside either
+  // element closes the popup. Using `click` instead of `mousedown` so the
+  // badge's own onClick gets to fire first and toggle the state without
+  // racing against the document listener.
+  useEffect(() => {
+    if (!openErrorKey) return;
+    function handler(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-error-popup]')) {
+        setOpenErrorKey(null);
+      }
+    }
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [openErrorKey]);
 
   const orderedItems = useMemo<OrderedItem[]>(() => {
     const allItems: OrderedItem[] = [
@@ -444,6 +595,9 @@ export default function PhotoUpload({
                     ? (existingMap.get(item.id) ?? '')
                     : (newImg?.preview ?? '');
                 if (!src) return null;
+                const uploadErrorMessage = newImg?.uploadErrorMessageKey
+                  ? t(newImg.uploadErrorMessageKey)
+                  : undefined;
                 return (
                   <Thumbnail
                     key={key}
@@ -458,8 +612,34 @@ export default function PhotoUpload({
                     isDropTarget={dropItemKey === key}
                     isShrinking={newImg?.isShrinking}
                     shrinkFailed={newImg?.shrinkFailed}
+                    isUploading={newImg?.isUploading}
+                    uploaded={newImg?.uploaded}
+                    uploadErrorMessage={uploadErrorMessage}
                     shrinkingLabel={t('photoUpload.shrinking')}
+                    uploadingLabel={t('photoUpload.uploading')}
                     shrinkFailedLabel={t('photoUpload.shrinkFailed')}
+                    uploadedLabel={t('photoUpload.uploaded')}
+                    uploadFailedLabel={t('photoUpload.uploadFailed')}
+                    retryLabel={t('photoUpload.retry')}
+                    errorPopupOpen={
+                      item.type === 'new' && openErrorKey === item.key
+                    }
+                    onToggleErrorPopup={
+                      item.type === 'new'
+                        ? () =>
+                            setOpenErrorKey((curr) =>
+                              curr === item.key ? null : item.key,
+                            )
+                        : undefined
+                    }
+                    onRetryUpload={
+                      item.type === 'new' && onRetryUpload
+                        ? () => {
+                            setOpenErrorKey(null);
+                            onRetryUpload(item.key);
+                          }
+                        : undefined
+                    }
                     onRemove={() =>
                       item.type === 'existing'
                         ? onRemoveExisting(item.id)

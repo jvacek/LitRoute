@@ -123,6 +123,7 @@ beforeAll(() => {
 
 import CheckinForm from '../components/CheckinForm';
 import { convertToWebP } from '../lib/imageConversion';
+import { PendingUploadError } from '../lib/uploadPendingImage';
 import { useAuth } from '../AuthContext';
 
 const convertMock = jest.mocked(convertToWebP);
@@ -298,5 +299,157 @@ describe('CheckinForm shrinking state machine', () => {
       screen.queryByRole('status', { name: /Shrinking image/i }),
     ).not.toBeInTheDocument();
     expect(screen.queryByAltText(/Preview/i)).not.toBeInTheDocument();
+  });
+});
+
+// ── Auto-upload (post-shrink) ────────────────────────────────────────────────
+
+function deferredUpload() {
+  let resolve!: (v: { token: string; previewUrl: string }) => void;
+  let reject!: (e: unknown) => void;
+  const promise = new Promise<{ token: string; previewUrl: string }>(
+    (res, rej) => {
+      resolve = res;
+      reject = rej;
+    },
+  );
+  return { promise, resolve, reject };
+}
+
+describe('CheckinForm auto-upload after shrink', () => {
+  beforeEach(() => {
+    convertMock.mockReset();
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      username: 'tester',
+      name: 'Tester',
+      adminUrl: null,
+      loading: false,
+      refresh: jest.fn(),
+    });
+  });
+
+  it('kicks off the upload as soon as conversion resolves, without waiting for submit', async () => {
+    const conv = deferredFile();
+    convertMock.mockReturnValueOnce(conv.promise);
+    const onUploadImage = jest
+      .fn()
+      .mockResolvedValue({ token: 'tok-1', previewUrl: '/media/x.webp' });
+
+    render(
+      <CheckinForm
+        mode="create"
+        unitUrl="/unit/abc/"
+        maptilerKey="TEST_KEY"
+        gpsDriftFloorM={0}
+        onUploadImage={onUploadImage}
+        onSubmit={jest.fn()}
+      />,
+    );
+
+    addFile(new File(['orig'], 'photo.heic', { type: 'image/heic' }));
+    await screen.findByRole('status', { name: /Shrinking image/i });
+    expect(onUploadImage).not.toHaveBeenCalled();
+
+    // Resolving the shrink should auto-trigger an upload — no submit click.
+    await act(async () => {
+      conv.resolve(
+        new File(['converted'], 'photo.webp', { type: 'image/webp' }),
+      );
+    });
+
+    await waitFor(() => expect(onUploadImage).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(screen.getByLabelText(/Uploaded/i)).toBeInTheDocument(),
+    );
+  });
+
+  it('disables the submit button while an upload is in flight', async () => {
+    const conv = deferredFile();
+    convertMock.mockReturnValueOnce(conv.promise);
+    const upload = deferredUpload();
+    const onUploadImage = jest.fn().mockReturnValue(upload.promise);
+
+    render(
+      <CheckinForm
+        mode="create"
+        unitUrl="/unit/abc/"
+        maptilerKey="TEST_KEY"
+        gpsDriftFloorM={0}
+        onUploadImage={onUploadImage}
+        onSubmit={jest.fn()}
+      />,
+    );
+
+    await pickLocationLondon();
+    addFile(new File(['orig'], 'photo.heic', { type: 'image/heic' }));
+
+    await act(async () => {
+      conv.resolve(
+        new File(['converted'], 'photo.webp', { type: 'image/webp' }),
+      );
+    });
+
+    // Upload is now in flight (the mock hasn't resolved yet).
+    await screen.findByRole('status', { name: /Uploading photo/i });
+    expect(screen.getByRole('button', { name: /^Check in$/i })).toBeDisabled();
+
+    await act(async () => {
+      upload.resolve({ token: 'tok-1', previewUrl: '/media/x.webp' });
+    });
+
+    // Upload settled → button re-enabled.
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: /^Check in$/i }),
+      ).not.toBeDisabled(),
+    );
+  });
+
+  it('surfaces background upload errors via the per-photo popup and retries on click', async () => {
+    const conv = deferredFile();
+    convertMock.mockReturnValueOnce(conv.promise);
+    const onUploadImage = jest
+      .fn()
+      // First attempt: network error. Retry: success.
+      .mockRejectedValueOnce(new PendingUploadError('network', 'Load failed'))
+      .mockResolvedValueOnce({ token: 'tok-1', previewUrl: '/media/x.webp' });
+
+    render(
+      <CheckinForm
+        mode="create"
+        unitUrl="/unit/abc/"
+        maptilerKey="TEST_KEY"
+        gpsDriftFloorM={0}
+        onUploadImage={onUploadImage}
+        onSubmit={jest.fn()}
+      />,
+    );
+
+    addFile(new File(['orig'], 'photo.heic', { type: 'image/heic' }));
+    await act(async () => {
+      conv.resolve(
+        new File(['converted'], 'photo.webp', { type: 'image/webp' }),
+      );
+    });
+
+    // Initial upload failed → error badge visible, popup hidden.
+    const badge = await screen.findByLabelText(/Upload failed/i);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    fireEvent.click(badge);
+    const popup = screen.getByRole('dialog');
+    expect(popup).toHaveTextContent(/Couldn't reach the server/i);
+
+    // Retry → onUploadImage called again; on success, checkmark replaces
+    // the error badge.
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /Retry/i }));
+    });
+    await waitFor(() => expect(onUploadImage).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(screen.getByLabelText(/Uploaded/i)).toBeInTheDocument(),
+    );
+    expect(screen.queryByLabelText(/Upload failed/i)).not.toBeInTheDocument();
   });
 });

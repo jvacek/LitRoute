@@ -500,6 +500,7 @@
     "optional": "(optional)",
     "preview": "Preview",
     "removePhoto": "Remove photo",
+    "retry": "Retry",
     "shrinkFailed": "Couldn't shrink — uploading original",
     "shrinking": "Shrinking image",
     "tips": {
@@ -508,6 +509,9 @@
       "lighter": "Lighter in hand or on a surface makes a great shot",
       "location": "Show where you are — a landmark, a view, or your surroundings"
     },
+    "uploadFailed": "Upload failed",
+    "uploaded": "Uploaded",
+    "uploading": "Uploading photo",
     "zoneAriaAdd": "Photo upload zone — click or drag to add photos",
     "zoneAriaFull": "Photo upload zone — maximum reached"
   },
