@@ -4,10 +4,11 @@ import { useLoaderData, useNavigate, useParams } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { useAuth } from '../AuthContext';
 import { getEditToken } from '../lib/editTokens';
+import { uploadPendingImage } from '../lib/uploadPendingImage';
 import { useConfig } from '../lib/useConfig';
 import CheckinForm, {
-  MAX_TOTAL_UPLOAD_MB,
   type CheckinFormInitialData,
+  type CheckinSubmitPayload,
 } from '../components/CheckinForm';
 import type { CheckinEditLoaderData } from './CheckinEdit.loader';
 
@@ -50,14 +51,20 @@ export default function CheckinEdit() {
     };
   });
 
-  async function handleSubmit(data: FormData) {
-    const headers: Record<string, string> = {};
+  async function handleUploadImage(file: File, turnstileToken?: string) {
+    return await uploadPendingImage(identifier, file, { turnstileToken });
+  }
+
+  async function handleSubmit(payload: CheckinSubmitPayload) {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
     if (!isAuthenticated && editToken) {
       headers['X-Edit-Token'] = editToken;
     }
     const res = await apiFetch(
       `/api/units/${identifier}/checkins/${checkinIdNum}/`,
-      { method: 'PATCH', body: data, headers },
+      { method: 'PATCH', body: JSON.stringify(payload), headers },
     );
     if (res.ok) {
       navigate(unitUrl);
@@ -67,13 +74,6 @@ export default function CheckinEdit() {
       await refresh();
       navigate('/accounts/login/');
       return null;
-    }
-    if (res.status === 413) {
-      return {
-        images: [
-          t('checkin.form.errors.imagesTooLarge', { max: MAX_TOTAL_UPLOAD_MB }),
-        ],
-      };
     }
     try {
       return (await res.json()) as Record<string, string[]>;
@@ -93,6 +93,7 @@ export default function CheckinEdit() {
         unitUrl={unitUrl}
         maptilerKey={maptilerKey}
         gpsDriftFloorM={0}
+        onUploadImage={handleUploadImage}
         onSubmit={handleSubmit}
       />
     </main>

@@ -43,7 +43,11 @@ class CheckIn(models.Model):
 
 
 class CheckInImage(models.Model):
-    checkin = models.ForeignKey(CheckIn, on_delete=models.CASCADE, related_name="images")
+    # Nullable while an upload is "pending" — the row exists, the file is on
+    # disk, but the user hasn't yet submitted the parent check-in. Attach
+    # happens atomically via a single conditional UPDATE in
+    # CheckinImageManager.attach_pending().
+    checkin = models.ForeignKey(CheckIn, null=True, blank=True, on_delete=models.CASCADE, related_name="images")
     image = ResizedImageField(
         upload_to=path_and_rename,
         size=[CHECKIN_IMAGE_MAX_EDGE_PX, CHECKIN_IMAGE_MAX_EDGE_PX],
@@ -52,6 +56,20 @@ class CheckInImage(models.Model):
         validators=[validate_image_size],
     )
     order = models.PositiveSmallIntegerField(default=0)
+    # Unguessable handle returned to the uploader. Cleared on attach so an
+    # already-attached row can't be re-claimed.
+    attach_token = models.CharField(max_length=64, unique=True, null=True, blank=True, db_index=True)
+    # Ownership at attach time. Authed uploads set `uploaded_by`; anonymous
+    # uploads set `session_key`. Attach matches on the same identity.
+    uploaded_by = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.CASCADE, related_name="pending_uploads"
+    )
+    session_key = models.CharField(max_length=40, blank=True)
+    # Explicit `default=timezone.now` rather than `auto_now_add=True` so the
+    # initial migration can backfill existing (already-attached) rows without
+    # an interactive prompt. The cleanup task only looks at rows where
+    # checkin_id IS NULL, so the value on already-attached rows is unused.
+    uploaded_at = models.DateTimeField(default=timezone.now, editable=False)
 
     class Meta:
         ordering = ["order"]

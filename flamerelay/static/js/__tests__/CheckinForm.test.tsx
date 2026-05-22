@@ -1,6 +1,6 @@
 /**
- * Asserts the FormData payload that `CheckinForm` hands to `onSubmit` for
- * the two flows that have to keep working: a non-game unit (location + place
+ * Asserts the payload object that `CheckinForm` hands to `onSubmit` for the
+ * two flows that have to keep working: a non-game unit (location + place
  * + message, no GPS fields) and a GPS-enforced game unit (adds `gps_location`
  * and `gps_accuracy_m`). The page-level `CheckinCreate` only forwards this
  * payload to `apiFetch`, so the contract checked here is what hits the API.
@@ -136,13 +136,11 @@ async function captureAndWaitForReadySubmit() {
   );
 }
 
-function readFormData(fd: FormData): Record<string, string> {
-  const out: Record<string, string> = {};
-  for (const [k, v] of fd.entries()) {
-    out[k] = typeof v === 'string' ? v : '(file)';
-  }
-  return out;
-}
+// A no-op uploader is plenty for these payload-shape tests — no file is
+// ever added through the input, so it should never actually be called.
+const noopUpload = jest
+  .fn<Promise<{ token: string; previewUrl: string }>, [File, string?]>()
+  .mockResolvedValue({ token: 'unused', previewUrl: 'unused' });
 
 describe('CheckinForm submit payload', () => {
   beforeEach(() => {
@@ -168,6 +166,7 @@ describe('CheckinForm submit payload', () => {
         unitUrl="/unit/abc/"
         maptilerKey="TEST_KEY"
         gpsDriftFloorM={0}
+        onUploadImage={noopUpload}
         onSubmit={onSubmit}
       />,
     );
@@ -189,17 +188,17 @@ describe('CheckinForm submit payload', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Check in$/i }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-    const fd = onSubmit.mock.calls[0][0] as FormData;
-    const entries = readFormData(fd);
+    const payload = onSubmit.mock.calls[0][0];
 
-    expect(JSON.parse(entries.location)).toEqual({
+    expect(payload.location).toEqual({
       type: 'Point',
       coordinates: [-0.0876, 51.5079],
     });
-    expect(entries.place).toBe('London Bridge, United Kingdom');
-    expect(entries.message).toBe('Found it near the market!');
-    expect(fd.has('gps_location')).toBe(false);
-    expect(fd.has('gps_accuracy_m')).toBe(false);
+    expect(payload.place).toBe('London Bridge, United Kingdom');
+    expect(payload.message).toBe('Found it near the market!');
+    expect(payload.gps_location).toBeUndefined();
+    expect(payload.gps_accuracy_m).toBeUndefined();
+    expect(payload.pending_image_tokens).toEqual([]);
   });
 
   it('GPS-enforced unit: posts location + gps_location + gps_accuracy_m + place', async () => {
@@ -212,6 +211,7 @@ describe('CheckinForm submit payload', () => {
         maptilerKey="TEST_KEY"
         isGpsEnforced
         gpsDriftFloorM={50}
+        onUploadImage={noopUpload}
         onSubmit={onSubmit}
       />,
     );
@@ -225,19 +225,18 @@ describe('CheckinForm submit payload', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Check in$/i }));
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-    const fd = onSubmit.mock.calls[0][0] as FormData;
-    const entries = readFormData(fd);
+    const payload = onSubmit.mock.calls[0][0];
 
-    expect(JSON.parse(entries.location)).toEqual({
+    expect(payload.location).toEqual({
       type: 'Point',
       coordinates: [-0.1278, 51.5074],
     });
-    expect(JSON.parse(entries.gps_location)).toEqual({
+    expect(payload.gps_location).toEqual({
       type: 'Point',
       coordinates: [-0.1278, 51.5074],
     });
-    expect(entries.gps_accuracy_m).toBe('18');
-    expect(entries.place).toBe('London Bridge');
+    expect(payload.gps_accuracy_m).toBe(18);
+    expect(payload.place).toBe('London Bridge');
   });
 
   it('non-game unit: blocks submit + surfaces location error when no pin set', async () => {
@@ -248,6 +247,7 @@ describe('CheckinForm submit payload', () => {
         unitUrl="/unit/abc/"
         maptilerKey="TEST_KEY"
         gpsDriftFloorM={0}
+        onUploadImage={noopUpload}
         onSubmit={onSubmit}
       />,
     );
@@ -270,6 +270,7 @@ describe('CheckinForm submit payload', () => {
         maptilerKey="TEST_KEY"
         isGpsEnforced
         gpsDriftFloorM={50}
+        onUploadImage={noopUpload}
         onSubmit={onSubmit}
       />,
     );
@@ -305,6 +306,7 @@ describe('CheckinForm submit payload', () => {
         maptilerKey="TEST_KEY"
         isGpsEnforced
         gpsDriftFloorM={50}
+        onUploadImage={noopUpload}
         onSubmit={onSubmit}
       />,
     );

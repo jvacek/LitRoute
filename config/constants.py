@@ -19,6 +19,18 @@ LOGIN_CODE_MAX_ATTEMPTS = 3
 
 CHECKIN_IMAGE_MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
 CHECKIN_MAX_IMAGES = 5
+
+# Per-image upload flow: images are POSTed to /api/units/<id>/pending-images/
+# one at a time, then attached to the check-in by token. Pending rows that
+# never get attached are swept by a Celery beat task after this TTL.
+CHECKIN_PENDING_UPLOAD_TTL_HOURS = 24
+# Per-session cap on outstanding (not-yet-attached) pending uploads. Prevents
+# the endpoint becoming a free file store while still allowing a reasonable
+# burst when the user is mid-edit and re-trying.
+CHECKIN_PENDING_UPLOAD_MAX_PER_SESSION = 20
+# Cleanup task batch size — keeps each transaction short so concurrent attach
+# UPDATEs aren't stuck waiting on a long-running cleanup row scan.
+CHECKIN_PENDING_UPLOAD_CLEANUP_BATCH_SIZE = 200
 # Longest-edge cap (px) for uploaded check-in images. The frontend's
 # convertToWebP() resizes + reencodes to this before upload (see
 # flamerelay/static/js/lib/imageConversion.ts), and the backend's

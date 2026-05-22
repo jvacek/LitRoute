@@ -4,8 +4,11 @@ import { useLoaderData, useNavigate, useParams } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { useAuth } from '../AuthContext';
 import { storeEditToken } from '../lib/editTokens';
+import { uploadPendingImage } from '../lib/uploadPendingImage';
 import { useConfig } from '../lib/useConfig';
-import CheckinForm, { MAX_TOTAL_UPLOAD_MB } from '../components/CheckinForm';
+import CheckinForm, {
+  type CheckinSubmitPayload,
+} from '../components/CheckinForm';
 import GuestEmailCapture from '../components/GuestEmailCapture';
 import TeamBadge from '../components/TeamBadge';
 import type { CheckinCreateLoaderData } from './CheckinCreate.loader';
@@ -45,10 +48,15 @@ export default function CheckinCreate() {
     return null;
   });
 
-  async function handleSubmit(data: FormData) {
+  async function handleUploadImage(file: File, turnstileToken?: string) {
+    return await uploadPendingImage(identifier, file, { turnstileToken });
+  }
+
+  async function handleSubmit(payload: CheckinSubmitPayload) {
     const res = await apiFetch(`/api/units/${identifier}/checkins/`, {
       method: 'POST',
-      body: data,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
     });
     if (res.status === 401) {
       await refresh();
@@ -65,13 +73,6 @@ export default function CheckinCreate() {
         navigate(unitUrl);
       }
       return null;
-    }
-    if (res.status === 413) {
-      return {
-        images: [
-          t('checkin.form.errors.imagesTooLarge', { max: MAX_TOTAL_UPLOAD_MB }),
-        ],
-      };
     }
     let json: (Record<string, string[]> & { detail?: string }) | null = null;
     try {
@@ -120,6 +121,7 @@ export default function CheckinCreate() {
         maptilerKey={maptilerKey}
         isGpsEnforced={isGpsEnforced}
         gpsDriftFloorM={gpsDriftFloorM}
+        onUploadImage={handleUploadImage}
         onSubmit={handleSubmit}
       />
     </main>

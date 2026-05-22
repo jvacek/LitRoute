@@ -31,6 +31,7 @@ from .stats import get_cached_globe_pins, get_cached_stats
 from .tasks import (
     EmailTask,
     cleanup_orphaned_checkin_images,
+    cleanup_orphaned_pending_uploads,
     delete_checkin_image_file_task,
     render_thank_you_email,
     send_email_to_followers_task,
@@ -43,6 +44,7 @@ __all__ = [
     "EmailTask",
     "cached_with_lock",
     "cleanup_orphaned_checkin_images",
+    "cleanup_orphaned_pending_uploads",
     "compute_game_journeys",
     "compute_game_leaderboard",
     "delete_checkin_image_file_task",

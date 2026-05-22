@@ -125,14 +125,19 @@
       "clickToMove": "Click the map to move the pin.",
       "dismiss": "Dismiss",
       "errors": {
+        "captchaFailed": "We couldn't verify you weren't a bot. Tap the button below to try again.",
+        "captchaRequired": "Please pass the bot check before uploading photos.",
+        "captchaRetry": "Try the check again",
         "connectionFailed": "Couldn't reach the server. Your photos and message are still here — check your connection and try again.",
         "gpsRequired": "Location access is required for this unit. Please allow location access in your browser and try again.",
+        "imageTooLarge": "One of your photos is too large to upload. Try a smaller one.",
         "imagesTooLarge": "Your photos are too large to upload. Try fewer or smaller images (under {{max}} MB total).",
         "locationRequired": "Please click the map to set your location.",
         "maxPhotos": "Maximum {{max}} photos per check-in.",
         "nameRequired": "Please add a name so your check-in counts on the leaderboard.",
         "placeRequired": "Please add a place with at least 3 letters so your check-in counts on the leaderboard.",
-        "svgNotSupported": "Only raster images (JPEG, PNG, WebP, etc.) are supported. SVG files cannot be uploaded."
+        "svgNotSupported": "Only raster images (JPEG, PNG, WebP, etc.) are supported. SVG files cannot be uploaded.",
+        "uploadRateLimited": "Too many photos queued. Finish your check-in or wait a moment before adding more."
       },
       "gameRequiredNote": {
         "anon": "Place and your name are required so your check-in counts on the leaderboard.",
@@ -175,7 +180,8 @@
       "submit": {
         "create": "Check in",
         "creating": "Submitting",
-        "save": "Save changes"
+        "save": "Save changes",
+        "uploading": "Uploading photo {{current}} of {{total}}…"
       },
       "useMyLocation": {
         "default": "Use my location",
@@ -324,7 +330,9 @@
     }
   },
   "feedback": {
+    "captchaFailed": "We couldn't verify you weren't a bot. Tap the button below to try again.",
     "captchaPending": "Please complete the captcha before submitting.",
+    "captchaRetry": "Try the check again",
     "emailHelpAnonymous": "Optional — if you leave this blank we won't be able to follow up with you.",
     "emailHelpAuthenticated": "Signed in as {{name}} — we'll send a confirmation to your account email.",
     "emailLabel": "Your email (optional)",
@@ -504,7 +512,29 @@
     "zoneAriaFull": "Photo upload zone — maximum reached"
   },
   "privacy": {
-    "body": "We're working on a full policy. The short version: we store as little as possible, never sell your data, and only use your email to send you notifications you've opted into.",
+    "intro": "We store as little as we need to make LitRoute work, never sell your data, and only email you about lighters you've chosen to follow. This page lists what we collect, why, and which third parties touch your data along the way.",
+    "sections": {
+      "rights": {
+        "body": "You can delete your account at any time from your settings — that removes your email, name, photos, and messages. The locations and timestamps of your past check-ins stay attached to the lighter (anonymised) so the relay's travel history isn't broken. For anything else, send a request via the feedback form.",
+        "title": "Your rights"
+      },
+      "thirdParties": {
+        "body": "LitRoute relies on a few external services. Each gets only the data needed to do its job.",
+        "items": {
+          "cloudflare": "<b>Cloudflare Turnstile</b> — a bot-detection challenge that runs silently when anonymous visitors submit a check-in or feedback message. Cloudflare receives your IP address and limited browser/device signals to assess whether the request is automated. See <a>Cloudflare's Turnstile Privacy Policy</a>.",
+          "facebook": "<b>Facebook Login</b> — only if you choose to sign in with Facebook. Meta sees that you've signed into LitRoute and we receive your name and email. <a>Meta Privacy Policy</a>.",
+          "google": "<b>Google Sign-In</b> — only if you choose to sign in with Google. Google sees that you've signed into LitRoute and we receive your name and email. <a>Google Privacy Policy</a>.",
+          "mailtrap": "<b>Mailtrap</b> — the service that actually delivers notification and confirmation emails. Your email address is shared with Mailtrap so it can route messages to you. <a>Mailtrap Privacy Policy</a>.",
+          "maptiler": "<b>MapTiler</b> — provides the map tiles and place search you see on the check-in screen. Your approximate location and search queries are sent to MapTiler. <a>MapTiler Privacy Policy</a>.",
+          "sentry": "<b>Sentry</b> — captures error reports when something breaks. Reports include the URL you were on, your browser type, and a stack trace, so we can fix the bug. We've configured Sentry to scrub personal data. <a>Sentry Privacy Policy</a>."
+        },
+        "title": "Third parties"
+      },
+      "whatWeStore": {
+        "body": "If you create an account: your email, an optional display name, and any sign-in methods you connect (Google, Facebook, passkeys). If you check in: your photos, the message you write, the location you pin, the timestamp, and — when the unit requires it — the GPS fix your browser hands us. If you follow a lighter as a guest: just your email, used only to send updates until you unsubscribe.",
+        "title": "What we store"
+      }
+    },
     "title": "Privacy Policy"
   },
   "privateRoute": {},

@@ -1,5 +1,5 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { Turnstile } from '@marsidev/react-turnstile';
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import {
   config as maptilerConfig,
   geocoding,
@@ -15,6 +15,10 @@ import { clampToCircle } from '../lib/haversine';
 import { convertToWebP } from '../lib/imageConversion';
 import { geodesicCirclePolygon, zoomForDriftRadius } from '../lib/maps';
 import { isNetworkError, reportError } from '../lib/sentry';
+import {
+  PendingUploadError,
+  type PendingUploadResult,
+} from '../lib/uploadPendingImage';
 import { useConfig } from '../lib/useConfig';
 import { fieldErrorClass, outlineBtnLg, primaryBtnLg } from '../styles';
 
@@ -23,15 +27,25 @@ import LowPrecisionLocationModal from './LowPrecisionLocationModal';
 import PhotoUpload from './PhotoUpload';
 
 const MAX_IMAGES = 5;
-// nginx caps the multipart body at 20 MB (see compose/production/nginx/
-// flamerelay.nginx.conf). Reserve 1 MB headroom for non-image fields, the
-// turnstile token, and multipart framing.
-export const MAX_TOTAL_UPLOAD_MB = 19;
-export const MAX_TOTAL_UPLOAD_BYTES = MAX_TOTAL_UPLOAD_MB * 1024 * 1024;
 // Game-mode required fields must contain at least this many word characters
 // (Unicode letters or numbers) so the leaderboard isn't populated with junk
 // like "..." or "ab".
 const MIN_REQUIRED_WORD_CHARS = 3;
+
+type GeoJSONPoint = { type: 'Point'; coordinates: [number, number] };
+
+export interface CheckinSubmitPayload {
+  location: GeoJSONPoint;
+  gps_location?: GeoJSONPoint;
+  gps_accuracy_m?: number;
+  place: string;
+  message: string;
+  anonymous_name?: string;
+  pending_image_tokens: string[];
+  remove_image_ids?: number[];
+  image_ids_order?: number[];
+  turnstile_token?: string;
+}
 
 function countWordChars(s: string): number {
   return (s.match(/[\p{L}\p{N}]/gu) ?? []).length;
@@ -64,7 +78,16 @@ interface CheckinFormProps {
   maptilerKey: string;
   isGpsEnforced?: boolean;
   gpsDriftFloorM: number;
-  onSubmit: (data: FormData) => Promise<Record<string, string[]> | null>;
+  /** Upload one photo and resolve to its attach token. The form calls this
+   * sequentially for each new photo before invoking `onSubmit`. The page
+   * layer is expected to wire this to `uploadPendingImage(identifier, ...)`. */
+  onUploadImage: (
+    file: File,
+    turnstileToken?: string,
+  ) => Promise<PendingUploadResult>;
+  onSubmit: (
+    payload: CheckinSubmitPayload,
+  ) => Promise<Record<string, string[]> | null>;
 }
 
 export default function CheckinForm({
@@ -74,6 +97,7 @@ export default function CheckinForm({
   maptilerKey,
   isGpsEnforced = false,
   gpsDriftFloorM,
+  onUploadImage,
   onSubmit,
 }: CheckinFormProps) {
   const { t } = useTranslation();
@@ -89,6 +113,21 @@ export default function CheckinForm({
   const [shrinkFailedKeys, setShrinkFailedKeys] = useState<Set<string>>(
     new Set(),
   );
+  // Successful pending-image uploads, keyed by imageKey. Persists across
+  // retries: if photo 3 of 5 fails, photos 1 and 2 keep their tokens and
+  // only photo 3 re-uploads on the next submit. Cleared when the user
+  // removes a photo. (No paired "failed keys" set — the absence of a token
+  // is the same signal, and tracking both would double the bookkeeping.)
+  const [uploadedTokens, setUploadedTokens] = useState<Map<string, string>>(
+    new Map(),
+  );
+  // {current, total} drives the "Uploading 2/5…" label on the submit button.
+  // null = no upload in progress (either submitting the check-in itself, or
+  // idle).
+  const [uploadProgress, setUploadProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
   // imageKeys mirror used inside async conversion callbacks. Conversions
   // resolve out-of-order and may reorder via PhotoUpload's drag-to-reorder,
   // so we re-resolve a key's current position at swap time rather than
@@ -104,6 +143,8 @@ export default function CheckinForm({
   const [geolocating, setGeolocating] = useState(false);
   const [showPrivacyHint, setShowPrivacyHint] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileError, setTurnstileError] = useState(false);
+  const turnstileRef = useRef<TurnstileInstance | null>(null);
   const [anonymousName, setAnonymousName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<GeocodingFeature[]>([]);
@@ -351,6 +392,12 @@ export default function CheckinForm({
       next.delete(key);
       return next;
     });
+    setUploadedTokens((prev) => {
+      if (!prev.has(key)) return prev;
+      const next = new Map(prev);
+      next.delete(key);
+      return next;
+    });
   }
 
   function removeExistingImage(id: number) {
@@ -391,20 +438,80 @@ export default function CheckinForm({
     });
   }
 
+  /**
+   * Sequentially upload any imageFiles that don't yet have a token. Returns
+   * the full ordered token list on success, or `null` if anything failed
+   * (in which case `setErrors` has been called). On retry, keys with a
+   * token in `uploadedTokens` skip — only the failed ones re-upload.
+   */
+  async function uploadMissingTokens(): Promise<string[] | null> {
+    // Start from current state but mutate locally so the loop sees its own
+    // writes — React state updates are batched/async and would lag behind.
+    const localTokens = new Map(uploadedTokens);
+    const total = imageKeys.length;
+    if (total === 0) {
+      setUploadProgress(null);
+      return [];
+    }
+    setUploadProgress({ current: 0, total });
+    for (let i = 0; i < imageKeys.length; i++) {
+      const key = imageKeys[i];
+      if (localTokens.has(key)) continue;
+      const file = imageFiles[i];
+      if (!file) continue;
+      setUploadProgress({ current: i + 1, total });
+      try {
+        const { token } = await onUploadImage(
+          file,
+          showTurnstile ? turnstileToken : undefined,
+        );
+        localTokens.set(key, token);
+        setUploadedTokens(new Map(localTokens));
+      } catch (err) {
+        setUploadProgress(null);
+        const code =
+          err instanceof PendingUploadError ? err.code : ('server' as const);
+        const msgKey =
+          code === 'too_large'
+            ? 'checkin.form.errors.imageTooLarge'
+            : code === 'rate_limited'
+              ? 'checkin.form.errors.uploadRateLimited'
+              : code === 'captcha_required'
+                ? 'checkin.form.errors.captchaRequired'
+                : code === 'network'
+                  ? 'checkin.form.errors.connectionFailed'
+                  : 'common.unexpectedError';
+        setErrors({ images: [t(msgKey)] });
+        if (!(err instanceof PendingUploadError)) {
+          reportError(err, { where: 'CheckinForm.upload', mode });
+        }
+        return null;
+      }
+    }
+    setUploadProgress(null);
+    return imageKeys.map((k) => localTokens.get(k)!);
+  }
+
+  async function submitWithTokens(
+    payload: CheckinSubmitPayload,
+    metaMode: string,
+  ): Promise<void> {
+    try {
+      const errs = await onSubmit(payload);
+      if (errs) setErrors(errs);
+    } catch (err) {
+      reportError(err, { where: 'CheckinForm.submit', mode: metaMode });
+      const errorKey = isNetworkError(err)
+        ? 'checkin.form.errors.connectionFailed'
+        : 'common.unexpectedError';
+      setErrors({ non_field_errors: [t(errorKey)] });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
-    const totalImageBytes = imageFiles.reduce((sum, f) => sum + f.size, 0);
-    if (totalImageBytes > MAX_TOTAL_UPLOAD_BYTES) {
-      setErrors({
-        images: [
-          t('checkin.form.errors.imagesTooLarge', {
-            max: MAX_TOTAL_UPLOAD_MB,
-          }),
-        ],
-      });
-      return;
-    }
 
     if (isGpsEnforced) {
       // The submit button is disabled until confirmStep is set, so the only
@@ -434,45 +541,33 @@ export default function CheckinForm({
 
       setSubmitting(true);
       setErrors({});
-      const data = new FormData();
-      data.append(
-        'location',
-        JSON.stringify({
+
+      const tokens = await uploadMissingTokens();
+      if (tokens === null) {
+        setSubmitting(false);
+        return;
+      }
+      const payload: CheckinSubmitPayload = {
+        location: {
           type: 'Point',
           coordinates: [confirmStep.pinLng, confirmStep.pinLat],
-        }),
-      );
-      data.append(
-        'gps_location',
-        JSON.stringify({
+        },
+        gps_location: {
           type: 'Point',
           coordinates: [confirmStep.gpsLng, confirmStep.gpsLat],
-        }),
-      );
-      data.append('gps_accuracy_m', String(Math.round(confirmStep.accuracyM)));
-      data.append('place', place);
-      data.append('message', message);
+        },
+        gps_accuracy_m: Math.round(confirmStep.accuracyM),
+        place,
+        message,
+        pending_image_tokens: tokens,
+      };
       if (showNameField && anonymousName.trim()) {
-        data.append('anonymous_name', anonymousName.trim());
+        payload.anonymous_name = anonymousName.trim();
       }
-      imageFiles.forEach((f) => data.append('images', f));
       if (showTurnstile && turnstileToken) {
-        data.append('turnstile_token', turnstileToken);
+        payload.turnstile_token = turnstileToken;
       }
-      try {
-        const errs = await onSubmit(data);
-        if (errs) {
-          setErrors(errs);
-        }
-      } catch (err) {
-        reportError(err, { where: 'CheckinForm.submit', mode: 'confirm' });
-        const errorKey = isNetworkError(err)
-          ? 'checkin.form.errors.connectionFailed'
-          : 'common.unexpectedError';
-        setErrors({ non_field_errors: [t(errorKey)] });
-      } finally {
-        setSubmitting(false);
-      }
+      await submitWithTokens(payload, 'confirm');
       return;
     }
 
@@ -483,42 +578,34 @@ export default function CheckinForm({
     setSubmitting(true);
     setErrors({});
 
-    const [lat, lng] = location.split(',').map(Number);
-    const data = new FormData();
-    data.append(
-      'location',
-      JSON.stringify({ type: 'Point', coordinates: [lng, lat] }),
-    );
-    data.append('place', place);
-    data.append('message', message);
-    if (showNameField && anonymousName.trim()) {
-      data.append('anonymous_name', anonymousName.trim());
+    const tokens = await uploadMissingTokens();
+    if (tokens === null) {
+      setSubmitting(false);
+      return;
     }
-    imageFiles.forEach((f) => data.append('images', f));
+
+    const [lat, lng] = location.split(',').map(Number);
+    const payload: CheckinSubmitPayload = {
+      location: { type: 'Point', coordinates: [lng, lat] },
+      place,
+      message,
+      pending_image_tokens: tokens,
+    };
+    if (showNameField && anonymousName.trim()) {
+      payload.anonymous_name = anonymousName.trim();
+    }
     if (mode === 'edit') {
-      data.append('remove_image_ids', JSON.stringify(removedImageIds));
-      const orderedExistingIds =
+      payload.remove_image_ids = removedImageIds;
+      payload.image_ids_order =
         existingIdOrder.length > 0
           ? existingIdOrder
           : existingImages.map((img) => img.id);
-      data.append('image_ids_order', JSON.stringify(orderedExistingIds));
     }
     if (showTurnstile && turnstileToken) {
-      data.append('turnstile_token', turnstileToken);
+      payload.turnstile_token = turnstileToken;
     }
 
-    try {
-      const errs = await onSubmit(data);
-      if (errs) setErrors(errs);
-    } catch (err) {
-      reportError(err, { where: 'CheckinForm.submit', mode });
-      const errorKey = isNetworkError(err)
-        ? 'checkin.form.errors.connectionFailed'
-        : 'common.unexpectedError';
-      setErrors({ non_field_errors: [t(errorKey)] });
-    } finally {
-      setSubmitting(false);
-    }
+    await submitWithTokens(payload, mode);
   }
 
   const isCreate = mode === 'create';
@@ -1014,11 +1101,48 @@ export default function CheckinForm({
       )}
 
       {showTurnstile && (
-        <Turnstile
-          siteKey={config.turnstileSiteKey}
-          onSuccess={setTurnstileToken}
-          options={{ theme: 'light' }}
-        />
+        <div className="flex flex-col items-center gap-2">
+          <Turnstile
+            ref={turnstileRef}
+            siteKey={config.turnstileSiteKey}
+            onSuccess={(token) => {
+              setTurnstileToken(token);
+              setTurnstileError(false);
+            }}
+            onError={() => {
+              setTurnstileToken('');
+              setTurnstileError(true);
+            }}
+            onExpire={() => {
+              setTurnstileToken('');
+              turnstileRef.current?.reset();
+            }}
+            options={{ theme: 'light', appearance: 'interaction-only' }}
+          />
+          {(turnstileError || errors.captcha) && (
+            <div className="flex flex-col items-center gap-1">
+              <p className={fieldErrorClass}>
+                {t('checkin.form.errors.captchaFailed')}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setTurnstileError(false);
+                  setErrors((e) => {
+                    if (!e.captcha) return e;
+                    const next = { ...e };
+                    delete next.captcha;
+                    return next;
+                  });
+                  turnstileRef.current?.reset();
+                }}
+                className="text-sm text-amber underline"
+              >
+                {t('checkin.form.errors.captchaRetry')}
+              </button>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Mobile users may have field errors scrolled out of view above the
@@ -1040,13 +1164,18 @@ export default function CheckinForm({
           disabled={submitting || (isGpsEnforced && !confirmStep)}
           className={primaryBtnLg}
         >
-          {submitting
-            ? isCreate
-              ? `${t('checkin.form.submit.creating')}…`
-              : `${t('common.saving')}…`
-            : isCreate
-              ? t('checkin.form.submit.create')
-              : t('checkin.form.submit.save')}
+          {uploadProgress
+            ? t('checkin.form.submit.uploading', {
+                current: uploadProgress.current,
+                total: uploadProgress.total,
+              })
+            : submitting
+              ? isCreate
+                ? `${t('checkin.form.submit.creating')}…`
+                : `${t('common.saving')}…`
+              : isCreate
+                ? t('checkin.form.submit.create')
+                : t('checkin.form.submit.save')}
         </button>
         <a href={unitUrl} className={outlineBtnLg}>
           {t('common.cancel')}

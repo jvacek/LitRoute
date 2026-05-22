@@ -9,6 +9,8 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
 from config.constants import (
+    CHECKIN_PENDING_UPLOAD_CLEANUP_BATCH_SIZE,
+    CHECKIN_PENDING_UPLOAD_TTL_HOURS,
     EMAIL_TASK_MAX_RETRIES,
     EMAIL_TASK_RETRY_BACKOFF_MAX_SECONDS,
     EMAIL_TASK_RETRY_BACKOFF_SECONDS,
@@ -53,6 +55,52 @@ def cleanup_orphaned_checkin_images():
             deleted += 1
     logger.info("Deleted %d orphaned checkin images", deleted)
     return deleted
+
+
+@shared_task(name="backend.services.cleanup_orphaned_pending_uploads")
+def cleanup_orphaned_pending_uploads():
+    """Delete pending CheckInImage rows that were never attached to a CheckIn.
+
+    Race-safe against concurrent `attach_pending`:
+      - `select_for_update(skip_locked=True)` skips rows currently held by
+        an attach UPDATE, so cleanup never blocks the live request path.
+        Skipped rows will be picked up next run (if still pending).
+      - The DELETE re-checks `checkin__isnull=True` + `uploaded_at__lt` so
+        a row that *was* claimed between the SELECT and the DELETE is
+        excluded — never deletes a freshly-attached row.
+
+    The existing `post_delete` signal on CheckInImage fires per-row and
+    schedules `delete_checkin_image_file_task` to remove the file via
+    `transaction.on_commit`, so we get storage cleanup for free.
+    """
+
+    from datetime import timedelta  # noqa: PLC0415
+
+    from django.db import transaction  # noqa: PLC0415
+    from django.utils import timezone  # noqa: PLC0415
+
+    from backend.models import CheckInImage  # noqa: PLC0415
+
+    cutoff = timezone.now() - timedelta(hours=CHECKIN_PENDING_UPLOAD_TTL_HOURS)
+    total_deleted = 0
+    while True:
+        with transaction.atomic():
+            candidate_ids = list(
+                CheckInImage.objects.select_for_update(skip_locked=True)
+                .filter(checkin__isnull=True, uploaded_at__lt=cutoff)
+                .values_list("id", flat=True)[:CHECKIN_PENDING_UPLOAD_CLEANUP_BATCH_SIZE]
+            )
+            if not candidate_ids:
+                break
+            deleted, _ = CheckInImage.objects.filter(
+                id__in=candidate_ids,
+                checkin__isnull=True,
+                uploaded_at__lt=cutoff,
+            ).delete()
+            total_deleted += deleted
+    if total_deleted:
+        logger.info("Deleted %d orphaned pending uploads", total_deleted)
+    return total_deleted
 
 
 @shared_task(name="backend.services.send_email_to_followers_task", base=EmailTask, serializer="json")

@@ -40,6 +40,11 @@ urlpatterns = [
         name="checkin-list",
     ),
     path(
+        "units/<str:identifier>/pending-images/",
+        CheckInViewSet.as_view({"post": "pending_images"}),
+        name="pending-images",
+    ),
+    path(
         "units/<str:identifier>/checkins/<int:pk>/",
         CheckInViewSet.as_view({"patch": "partial_update", "delete": "destroy"}),
         name="checkin-detail",

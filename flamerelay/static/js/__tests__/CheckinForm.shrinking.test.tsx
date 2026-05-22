@@ -2,9 +2,10 @@
  * Covers the state-machine plumbing that connects `convertToWebP` to the
  * UI flags `PhotoUpload` reads. The visual rendering of those flags is
  * covered in `PhotoUpload.test.tsx`; here we drive a controllable mock of
- * `convertToWebP` and assert what ends up in the FormData that `CheckinForm`
- * hands to `onSubmit` — i.e., whether the converted file or the original
- * survives a happy path, a rejection, and a remove-mid-conversion race.
+ * `convertToWebP` and assert which `File` the form hands to `onUploadImage`
+ * — i.e., whether the converted (resized webp) file or the original
+ * (untouched) file survives a happy path, a rejection, and a remove-
+ * mid-conversion race.
  */
 import '@testing-library/jest-dom';
 import {
@@ -168,10 +169,13 @@ describe('CheckinForm shrinking state machine', () => {
     });
   });
 
-  it('swaps the original file for the converted file in the submit payload', async () => {
+  it('hands the converted file to onUploadImage and forwards the token to onSubmit', async () => {
     const conv = deferredFile();
     convertMock.mockReset();
     convertMock.mockReturnValueOnce(conv.promise);
+    const onUploadImage = jest
+      .fn()
+      .mockResolvedValue({ token: 'tok-1', previewUrl: '/media/x.webp' });
     const onSubmit = jest.fn().mockResolvedValue(null);
 
     render(
@@ -180,6 +184,7 @@ describe('CheckinForm shrinking state machine', () => {
         unitUrl="/unit/abc/"
         maptilerKey="TEST_KEY"
         gpsDriftFloorM={0}
+        onUploadImage={onUploadImage}
         onSubmit={onSubmit}
       />,
     );
@@ -204,16 +209,21 @@ describe('CheckinForm shrinking state machine', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /^Check in$/i }));
 
+    await waitFor(() => expect(onUploadImage).toHaveBeenCalledTimes(1));
+    const uploadedFile = onUploadImage.mock.calls[0][0] as File;
+    expect(uploadedFile.name).toBe('photo.webp');
+
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-    const fd = onSubmit.mock.calls[0][0] as FormData;
-    const uploaded = fd.getAll('images') as File[];
-    expect(uploaded.map((f) => f.name)).toEqual(['photo.webp']);
+    expect(onSubmit.mock.calls[0][0].pending_image_tokens).toEqual(['tok-1']);
   });
 
-  it('keeps the original file and surfaces the fallback badge on rejection', async () => {
+  it('hands the original file to onUploadImage when conversion rejects, and surfaces the fallback badge', async () => {
     const conv = deferredFile();
     convertMock.mockReset();
     convertMock.mockReturnValueOnce(conv.promise);
+    const onUploadImage = jest
+      .fn()
+      .mockResolvedValue({ token: 'tok-2', previewUrl: '/media/y.heic' });
     const onSubmit = jest.fn().mockResolvedValue(null);
 
     render(
@@ -222,6 +232,7 @@ describe('CheckinForm shrinking state machine', () => {
         unitUrl="/unit/abc/"
         maptilerKey="TEST_KEY"
         gpsDriftFloorM={0}
+        onUploadImage={onUploadImage}
         onSubmit={onSubmit}
       />,
     );
@@ -241,16 +252,19 @@ describe('CheckinForm shrinking state machine', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /^Check in$/i }));
 
+    await waitFor(() => expect(onUploadImage).toHaveBeenCalledTimes(1));
+    const uploadedFile = onUploadImage.mock.calls[0][0] as File;
+    expect(uploadedFile.name).toBe('photo.heic');
+
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
-    const fd = onSubmit.mock.calls[0][0] as FormData;
-    const uploaded = fd.getAll('images') as File[];
-    expect(uploaded.map((f) => f.name)).toEqual(['photo.heic']);
+    expect(onSubmit.mock.calls[0][0].pending_image_tokens).toEqual(['tok-2']);
   });
 
   it('drops a late-resolving conversion if the image was removed mid-shrink', async () => {
     const conv = deferredFile();
     convertMock.mockReset();
     convertMock.mockReturnValueOnce(conv.promise);
+    const onUploadImage = jest.fn();
 
     render(
       <CheckinForm
@@ -258,6 +272,7 @@ describe('CheckinForm shrinking state machine', () => {
         unitUrl="/unit/abc/"
         maptilerKey="TEST_KEY"
         gpsDriftFloorM={0}
+        onUploadImage={onUploadImage}
         onSubmit={jest.fn()}
       />,
     );

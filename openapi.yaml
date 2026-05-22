@@ -490,6 +490,53 @@ paths:
               schema:
                 $ref: '#/components/schemas/GuestFollowError'
           description: ''
+  /api/units/{identifier}/pending-images/:
+    post:
+      operationId: units_pending_images_create
+      description: |-
+        Accept one image at a time, return `{ token, preview_url }`.
+
+        Tokens are later passed back in `pending_image_tokens` on the
+        check-in POST/PATCH. Splits the multi-photo upload across many
+        small requests so the user gets per-photo progress and so each
+        request stays well under nginx's 20 MB body cap.
+
+        Marked `non_atomic_requests` because anon callers need a Django
+        session row persisted *outside* a transaction that could roll
+        back — if the view's atomic block rolled back a fresh session
+        row, SessionMiddleware would raise SessionInterrupted on the
+        response-phase save. The view writes exactly one CheckInImage
+        row, so request-level atomicity isn't needed.
+      parameters:
+      - in: path
+        name: identifier
+        schema:
+          type: string
+        required: true
+      tags:
+      - units
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckIn'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CheckIn'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CheckIn'
+        required: true
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckIn'
+          description: ''
 components:
   schemas:
     CheckIn:
@@ -545,6 +592,13 @@ components:
           minimum: 0
           writeOnly: true
           nullable: true
+        pending_image_tokens:
+          type: array
+          items:
+            type: string
+            maxLength: 64
+          writeOnly: true
+          maxItems: 5
         within_edit_grace_period:
           type: boolean
           readOnly: true
@@ -963,6 +1017,13 @@ components:
           minimum: 0
           writeOnly: true
           nullable: true
+        pending_image_tokens:
+          type: array
+          items:
+            type: string
+            maxLength: 64
+          writeOnly: true
+          maxItems: 5
         within_edit_grace_period:
           type: boolean
           readOnly: true

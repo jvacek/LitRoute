@@ -5,7 +5,7 @@ from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
 
 from backend.models import CheckIn, CheckInImage, Game, Team, Unit
-from config.constants import CHECKIN_EDIT_GRACE_PERIOD_HOURS
+from config.constants import CHECKIN_EDIT_GRACE_PERIOD_HOURS, CHECKIN_MAX_IMAGES
 
 
 class CheckInImageSerializer(serializers.ModelSerializer):
@@ -24,6 +24,16 @@ class CheckInSerializer(serializers.ModelSerializer):
     # for server-side drift/speed validation but never exposed in responses.
     gps_location = GeometryField(required=False, allow_null=True, write_only=True)
     gps_accuracy_m = serializers.IntegerField(required=False, allow_null=True, min_value=0, write_only=True)
+    # Tokens returned by /api/units/<id>/pending-images/. The viewset attaches
+    # the matching pending CheckInImage rows after the parent CheckIn is
+    # saved; the order of this list becomes the photo order on the check-in.
+    pending_image_tokens = serializers.ListField(
+        child=serializers.CharField(max_length=64),
+        required=False,
+        allow_empty=True,
+        max_length=CHECKIN_MAX_IMAGES,
+        write_only=True,
+    )
 
     class Meta:
         model = CheckIn
@@ -38,6 +48,7 @@ class CheckInSerializer(serializers.ModelSerializer):
             "location",
             "gps_location",
             "gps_accuracy_m",
+            "pending_image_tokens",
             "within_edit_grace_period",
             "anonymous_name",
         ]
@@ -55,15 +66,18 @@ class CheckInSerializer(serializers.ModelSerializer):
         # the payload to support the server-side drift/speed checks but are
         # never persisted (storing the raw device GPS would defeat the whole
         # point of the pin-nudge UX, which is to let users avoid sharing their
-        # exact position).
+        # exact position). pending_image_tokens is consumed by the view layer
+        # after the CheckIn is saved, never by the model.
         validated_data.pop("gps_location", None)
         validated_data.pop("gps_accuracy_m", None)
+        validated_data.pop("pending_image_tokens", None)
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         validated_data.pop("location", None)
         validated_data.pop("gps_location", None)
         validated_data.pop("gps_accuracy_m", None)
+        validated_data.pop("pending_image_tokens", None)
         return super().update(instance, validated_data)
 
     def get_created_by_username(self, obj: CheckIn) -> str | None:
