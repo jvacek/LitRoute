@@ -85,6 +85,18 @@ export default function CheckinForm({
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imageKeys, setImageKeys] = useState<string[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [shrinkingKeys, setShrinkingKeys] = useState<Set<string>>(new Set());
+  const [shrinkFailedKeys, setShrinkFailedKeys] = useState<Set<string>>(
+    new Set(),
+  );
+  // imageKeys mirror used inside async conversion callbacks. Conversions
+  // resolve out-of-order and may reorder via PhotoUpload's drag-to-reorder,
+  // so we re-resolve a key's current position at swap time rather than
+  // capturing the index from when conversion started.
+  const imageKeysRef = useRef<string[]>([]);
+  useEffect(() => {
+    imageKeysRef.current = imageKeys;
+  }, [imageKeys]);
   const [removedImageIds, setRemovedImageIds] = useState<number[]>([]);
   const [existingIdOrder, setExistingIdOrder] = useState<number[]>([]);
   const [submitting, setSubmitting] = useState(false);
@@ -231,7 +243,7 @@ export default function CheckinForm({
     return () => urls.forEach((u) => URL.revokeObjectURL(u));
   }, [imageFiles]);
 
-  async function handleAddFiles(files: File[]) {
+  function handleAddFiles(files: File[]) {
     if (!files.length) return;
 
     const unsupported = files.filter(
@@ -247,26 +259,30 @@ export default function CheckinForm({
       return;
     }
 
-    const remaining = MAX_IMAGES - existingImages.length;
-    const allowed = files.slice(0, remaining);
+    const remaining = MAX_IMAGES - existingImages.length - imageKeys.length;
+    const allowed = files.slice(0, Math.max(0, remaining));
+    if (!allowed.length) {
+      setErrors((e) => ({
+        ...e,
+        images: [t('checkin.form.errors.maxPhotos', { max: MAX_IMAGES })],
+      }));
+      return;
+    }
 
-    const converted = await Promise.all(
-      allowed.map(async (f) => {
-        try {
-          return await convertToWebP(f);
-        } catch {
-          return f;
-        }
-      }),
-    );
-
-    const newKeys = converted.map(
+    const newKeys = allowed.map(
       () => `${Date.now()}-${Math.random().toString(36).slice(2)}`,
     );
-    const cap = MAX_IMAGES - existingImages.length;
 
-    setImageFiles((prev) => [...prev, ...converted].slice(0, cap));
-    setImageKeys((prev) => [...prev, ...newKeys].slice(0, cap));
+    // Push originals + previews immediately so the user sees thumbnails
+    // without waiting for the canvas/encode roundtrip; each converted file
+    // swaps in over its placeholder as conversion completes.
+    setImageFiles((prev) => [...prev, ...allowed]);
+    setImageKeys((prev) => [...prev, ...newKeys]);
+    setShrinkingKeys((prev) => {
+      const next = new Set(prev);
+      newKeys.forEach((k) => next.add(k));
+      return next;
+    });
 
     if (files.length > remaining) {
       setErrors((e) => ({
@@ -280,6 +296,41 @@ export default function CheckinForm({
         return next;
       });
     }
+
+    allowed.forEach((original, i) => {
+      const key = newKeys[i];
+      convertToWebP(original).then(
+        (converted) => {
+          setShrinkingKeys((prev) => {
+            if (!prev.has(key)) return prev;
+            const next = new Set(prev);
+            next.delete(key);
+            return next;
+          });
+          setImageFiles((prev) => {
+            const idx = imageKeysRef.current.indexOf(key);
+            if (idx === -1) return prev;
+            const next = [...prev];
+            next[idx] = converted;
+            return next;
+          });
+        },
+        () => {
+          setShrinkingKeys((prev) => {
+            if (!prev.has(key)) return prev;
+            const next = new Set(prev);
+            next.delete(key);
+            return next;
+          });
+          setShrinkFailedKeys((prev) => {
+            if (prev.has(key)) return prev;
+            const next = new Set(prev);
+            next.add(key);
+            return next;
+          });
+        },
+      );
+    });
   }
 
   function removeNewImage(key: string) {
@@ -288,6 +339,18 @@ export default function CheckinForm({
       return idx === -1 ? prev : prev.filter((_, i) => i !== idx);
     });
     setImageKeys((prev) => prev.filter((k) => k !== key));
+    setShrinkingKeys((prev) => {
+      if (!prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
+    setShrinkFailedKeys((prev) => {
+      if (!prev.has(key)) return prev;
+      const next = new Set(prev);
+      next.delete(key);
+      return next;
+    });
   }
 
   function removeExistingImage(id: number) {
@@ -501,6 +564,8 @@ export default function CheckinForm({
   const newImages = imageKeys.map((key, i) => ({
     key,
     preview: imagePreviews[i] ?? '',
+    isShrinking: shrinkingKeys.has(key),
+    shrinkFailed: shrinkFailedKeys.has(key),
   }));
 
   return (

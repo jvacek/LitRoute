@@ -8,6 +8,8 @@ import type { ExistingImage } from './CheckinForm';
 export interface NewImage {
   key: string;
   preview: string;
+  isShrinking?: boolean;
+  shrinkFailed?: boolean;
 }
 
 export interface PhotoUploadProps {
@@ -74,12 +76,48 @@ function DragHandle({ className }: { className?: string }) {
   );
 }
 
+function Spinner({ label }: { label: string }) {
+  return (
+    <div
+      role="status"
+      aria-label={label}
+      className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-card bg-black/40"
+    >
+      <svg
+        className="h-6 w-6 animate-spin text-white"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <circle
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeOpacity={0.25}
+        />
+        <path
+          d="M22 12a10 10 0 0 0-10-10"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+        />
+      </svg>
+    </div>
+  );
+}
+
 function Thumbnail({
   thumbKey,
   src,
   alt,
   isDragging,
   isDropTarget,
+  isShrinking,
+  shrinkFailed,
+  shrinkingLabel,
+  shrinkFailedLabel,
   onRemove,
   onHandlePointerDown,
   removeLabel,
@@ -89,6 +127,10 @@ function Thumbnail({
   alt: string;
   isDragging: boolean;
   isDropTarget: boolean;
+  isShrinking?: boolean;
+  shrinkFailed?: boolean;
+  shrinkingLabel?: string;
+  shrinkFailedLabel?: string;
   onRemove: () => void;
   onHandlePointerDown: (e: React.PointerEvent<HTMLDivElement>) => void;
   removeLabel: string;
@@ -113,6 +155,18 @@ function Thumbnail({
         loading="lazy"
         draggable={false}
       />
+
+      {isShrinking && shrinkingLabel && <Spinner label={shrinkingLabel} />}
+
+      {!isShrinking && shrinkFailed && shrinkFailedLabel && (
+        <div
+          className="pointer-events-none absolute bottom-0.5 left-0.5 right-0.5 truncate rounded-full bg-ember/90 px-1.5 py-0.5 text-center text-[10px] font-medium leading-none text-white"
+          title={shrinkFailedLabel}
+          aria-label={shrinkFailedLabel}
+        >
+          {shrinkFailedLabel}
+        </div>
+      )}
 
       {/* Drag handle icon — visual affordance only, not the hit target */}
       <div className="pointer-events-none absolute left-1 top-1">
@@ -177,7 +231,7 @@ export default function PhotoUpload({
   const isFull = totalImages >= maxImages;
 
   const existingMap = new Map(existingImages.map((img) => [img.id, img.image]));
-  const newMap = new Map(newImages.map((img) => [img.key, img.preview]));
+  const newMap = new Map(newImages.map((img) => [img.key, img]));
 
   // ── Reorder helper ────────────────────────────────────────────────────────
 
@@ -383,10 +437,12 @@ export default function PhotoUpload({
             <div className="flex flex-wrap gap-2">
               {orderedItems.map((item) => {
                 const key = itemKey(item);
+                const newImg =
+                  item.type === 'new' ? newMap.get(item.key) : null;
                 const src =
                   item.type === 'existing'
                     ? (existingMap.get(item.id) ?? '')
-                    : (newMap.get(item.key) ?? '');
+                    : (newImg?.preview ?? '');
                 if (!src) return null;
                 return (
                   <Thumbnail
@@ -400,6 +456,10 @@ export default function PhotoUpload({
                     }
                     isDragging={dragItemKey === key}
                     isDropTarget={dropItemKey === key}
+                    isShrinking={newImg?.isShrinking}
+                    shrinkFailed={newImg?.shrinkFailed}
+                    shrinkingLabel={t('photoUpload.shrinking')}
+                    shrinkFailedLabel={t('photoUpload.shrinkFailed')}
                     onRemove={() =>
                       item.type === 'existing'
                         ? onRemoveExisting(item.id)

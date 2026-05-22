@@ -492,6 +492,8 @@
     "optional": "(optional)",
     "preview": "Preview",
     "removePhoto": "Remove photo",
+    "shrinkFailed": "Couldn't shrink — uploading original",
+    "shrinking": "Shrinking image",
     "tips": {
       "heading": "Photo tips",
       "hide": "Cover or hide the lighter's name — it's the page's password",
