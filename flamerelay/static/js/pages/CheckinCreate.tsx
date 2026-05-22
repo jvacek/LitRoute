@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLoaderData, useNavigate, useParams } from 'react-router-dom';
 import { apiFetch } from '../api';
@@ -48,6 +48,12 @@ export default function CheckinCreate() {
     return null;
   });
 
+  useEffect(() => {
+    if (guestCheckinId !== null) {
+      window.scrollTo(0, 0);
+    }
+  }, [guestCheckinId]);
+
   async function handleUploadImage(file: File, turnstileToken?: string) {
     return await uploadPendingImage(identifier, file, { turnstileToken });
   }
@@ -68,7 +74,6 @@ export default function CheckinCreate() {
       if (!isAuthenticated && json.edit_token) {
         storeEditToken(json.id, json.edit_token);
         setGuestCheckinId(json.id);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         navigate(unitUrl);
       }
