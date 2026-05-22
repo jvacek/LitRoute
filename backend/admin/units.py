@@ -1,8 +1,18 @@
-from django.contrib import admin
+from django import forms
+from django.contrib import admin, messages
 from django.db.models import Count
+from django.shortcuts import render
 from django.utils.html import format_html_join
 
-from backend.models import CheckIn, Unit
+from backend.models import CheckIn, Game, Unit
+
+
+class AssignGameForm(forms.Form):
+    game = forms.ModelChoiceField(
+        queryset=Game.objects.order_by("name"),
+        label="Game",
+        empty_label="— select a game —",
+    )
 
 
 class CheckInInline(admin.TabularInline):
@@ -29,6 +39,7 @@ class UnitAdmin(admin.ModelAdmin):
         "date_created",
         "created_by",
         "team",
+        "game",
         "follower_count",
         "checkin_count",
     )
@@ -36,6 +47,38 @@ class UnitAdmin(admin.ModelAdmin):
     list_select_related = ("team", "created_by", "game")
     filter_horizontal = ["followers"]
     inlines = [CheckInInline]
+    actions = ["unassign_game", "assign_game"]
+
+    @admin.action(description="Un-assign game from selected lighters")
+    def unassign_game(self, request, queryset):
+        assigned = queryset.filter(game__isnull=False)
+        count = assigned.update(game=None)
+        if count:
+            self.message_user(request, f"Un-assigned game from {count} lighter(s).", level=messages.SUCCESS)
+        else:
+            self.message_user(request, "None of the selected lighters had a game assigned.", level=messages.WARNING)
+
+    @admin.action(description="Assign game to selected lighters…")
+    def assign_game(self, request, queryset):
+        if "apply" in request.POST:
+            form = AssignGameForm(request.POST)
+            if form.is_valid():
+                game = form.cleaned_data["game"]
+                count = queryset.update(game=game)
+                self.message_user(request, f"Assigned {count} lighter(s) to {game.name}.", level=messages.SUCCESS)
+                return None
+        else:
+            form = AssignGameForm()
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Assign game to lighters",
+            "opts": self.opts,
+            "units": queryset,
+            "form": form,
+            "action_checkbox_name": admin.helpers.ACTION_CHECKBOX_NAME,
+            "selected_ids": queryset.values_list("pk", flat=True),
+        }
+        return render(request, "admin/backend/unit/assign_game.html", context)
 
     @admin.display(description="Followers", ordering="follower_count")
     def follower_count(self, obj):

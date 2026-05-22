@@ -1,0 +1,38 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    › <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    › <a href="{% url 'admin:backend_unit_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    › Assign game
+  </div>
+{% endblock breadcrumbs %}
+{% block content %}
+  <p>
+    Pick a game to assign to the following {{ units|length }} lighter{{ units|length|pluralize }}.
+    This will overwrite any game they are currently assigned to.
+  </p>
+  <ul>
+    {% for unit in units %}
+      <li>
+        <strong>{{ unit.identifier }}</strong>
+        {% if unit.game %}— currently in <em>{{ unit.game.name }}</em>{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+  <form method="post">
+    {% csrf_token %}
+    {% for pk in selected_ids %}<input type="hidden" name="{{ action_checkbox_name }}" value="{{ pk }}" />{% endfor %}
+    <input type="hidden" name="action" value="assign_game" />
+    <input type="hidden" name="index" value="0" />
+    <fieldset class="module aligned">
+      {{ form.as_div }}
+    </fieldset>
+    <div class="submit-row">
+      <a href="{% url 'admin:backend_unit_changelist' %}"
+         class="button cancel-link">Cancel</a>
+      <input type="submit" name="apply" value="Assign game" class="default" />
+    </div>
+  </form>
+{% endblock content %}
