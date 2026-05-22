@@ -23,3 +23,10 @@ declare module '*.css' {
   const content: Record<string, string>;
   export default content;
 }
+
+declare module '*CHANGELOG.md' {
+  export type ChangelogEntry = { date: string; html: string };
+  export const entries: ChangelogEntry[];
+  const _default: ChangelogEntry[];
+  export default _default;
+}

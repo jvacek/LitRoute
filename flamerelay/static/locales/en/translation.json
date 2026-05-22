@@ -98,6 +98,25 @@
       "yourNameFallback": "Your Name"
     }
   },
+  "beta": {
+    "badge": "Beta",
+    "daysAgo_one": "{{count}} day ago",
+    "daysAgo_other": "{{count}} days ago",
+    "feedback": "Send feedback",
+    "message": "Still WIP!",
+    "seeChanges": "What's changed",
+    "seeChangesFresh": "Changes from {{ago}}",
+    "today": "today"
+  },
+  "changelog": {
+    "disclaimer": "Heads up: this is a beta. Things will break, look weird, or behave in surprising ways. Lower your expectations a notch — and if you see something broken, please let me know.",
+    "empty": "Nothing here yet.",
+    "feedbackHeading": "See something broken?",
+    "feedbackSubheading": "Tell me what happened. Bugs, weird behaviour, half-finished bits — all of it helps.",
+    "historyHeading": "What's changed",
+    "subtitle": "An honest log of what's shipping and what's still in flux.",
+    "title": "What's new"
+  },
   "checkin": {
     "createTitle": "New check-in",
     "editTitle": "Edit check-in",
@@ -324,6 +343,7 @@
     "youFallback": "you"
   },
   "footer": {
+    "changelog": "What's new",
     "feedback": "Send feedback",
     "footerNav": "Footer navigation",
     "tagline": "Track your lighter's journey",

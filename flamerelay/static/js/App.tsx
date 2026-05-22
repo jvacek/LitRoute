@@ -9,6 +9,7 @@ import {
 } from 'react-router-dom';
 import { AuthProvider } from './AuthContext';
 import PrivateRoute from './PrivateRoute';
+import BetaBanner from './components/BetaBanner';
 import Footer from './components/Footer';
 import Navbar from './components/Navbar';
 import doodlesSrc from './assets/backgrounds/pattern.webp';
@@ -60,6 +61,7 @@ const Login = lazy(
   () => import(/* webpackChunkName: "pages-Login" */ './pages/Login'),
 );
 const UserSettings = lazy(() => import('./pages/UserSettings'));
+const Changelog = lazy(() => import('./pages/Changelog'));
 
 // Capture is handled by Sentry.reactErrorHandler() wired into createRoot's
 // onCaughtError; this boundary only renders the fallback UI.
@@ -98,6 +100,7 @@ function Layout() {
         aria-hidden="true"
       />
       <Navbar />
+      <BetaBanner />
       <div key={pathname} className="page-enter flex-1">
         <Suspense fallback={<div className="min-h-[60vh]" aria-busy="true" />}>
           {/* `key={pathname}` re-mounts the boundary on every navigation so a
@@ -122,6 +125,7 @@ const router = createBrowserRouter(
       <Route path="/support/" element={<Support />} />
       <Route path="/contribute/" element={<ContributorGuide />} />
       <Route path="/feedback/" element={<Feedback />} />
+      <Route path="/changelog/" element={<Changelog />} />
       <Route path="/privacy/" element={<Privacy />} />
       <Route path="/terms/" element={<Terms />} />
       <Route path="/accounts/login/" element={<Login />} />

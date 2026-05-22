@@ -129,6 +129,12 @@ module.exports = {
         type: 'asset/resource',
       },
       {
+        // CHANGELOG.md → pre-rendered HTML at build time. The marked dep
+        // stays in devDependencies; no markdown parser ships to the browser.
+        test: /CHANGELOG\.md$/,
+        use: [path.resolve(__dirname, 'loaders/changelog-loader.js')],
+      },
+      {
         // PostCSS/Tailwind runs only on project CSS; node_modules CSS is extracted as-is below
         test: /\.css$/i,
         exclude: /node_modules/,

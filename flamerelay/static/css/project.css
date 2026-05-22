@@ -260,3 +260,57 @@ html {
     font-size: 16px;
   }
 }
+
+/* Build-time-rendered changelog body — scoped styles for HTML emitted by
+   webpack/loaders/changelog-loader.js. No global markdown styles, just the
+   tags this loader actually produces (p, ul, ol, li, h3, a, code, strong, em). */
+.changelog-body {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--color-char) 80%, transparent);
+}
+.changelog-body > * + * {
+  margin-top: 0.75rem;
+}
+.changelog-body h3 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-char);
+  margin-top: 1rem;
+}
+.changelog-body ul,
+.changelog-body ol {
+  padding-left: 1.25rem;
+}
+.changelog-body ul {
+  list-style: disc;
+}
+.changelog-body ol {
+  list-style: decimal;
+}
+.changelog-body li::marker {
+  color: var(--color-amber);
+}
+.changelog-body li + li {
+  margin-top: 0.5rem;
+}
+.changelog-body a {
+  color: var(--color-amber);
+  text-underline-offset: 2px;
+}
+.changelog-body a:hover {
+  text-decoration: underline;
+}
+.changelog-body code {
+  background: var(--color-linen);
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  color: var(--color-char);
+}
+.changelog-body strong {
+  font-weight: 600;
+  color: var(--color-char);
+}
