@@ -82,7 +82,7 @@ jest.mock('../lib/haversine', () => ({
 
 jest.mock('../AuthContext', () => ({
   __esModule: true,
-  useAuth: () => ({ isAuthenticated: true, refresh: jest.fn() }),
+  useAuth: jest.fn(() => ({ isAuthenticated: true, refresh: jest.fn() })),
 }));
 
 jest.mock('../lib/useConfig', () => ({
@@ -108,9 +108,33 @@ jest.mock('../components/LowPrecisionLocationModal', () => ({
 }));
 
 import CheckinForm from '../components/CheckinForm';
+import { useAuth } from '../AuthContext';
 import { captureGpsLocation } from '../lib/captureGpsLocation';
 
 const mockCapture = jest.mocked(captureGpsLocation);
+const mockUseAuth = jest.mocked(useAuth);
+
+function gpsOk() {
+  mockCapture.mockResolvedValue({
+    kind: 'ok',
+    position: {
+      latitude: 51.5074,
+      longitude: -0.1278,
+      accuracyM: 18,
+      altitude: null,
+    },
+    isLowPrecision: false,
+  });
+}
+
+async function captureAndWaitForReadySubmit() {
+  fireEvent.click(screen.getByRole('button', { name: /Use my location/i }));
+  await waitFor(() =>
+    expect(
+      screen.getByRole('button', { name: /^Check in$/i }),
+    ).not.toBeDisabled(),
+  );
+}
 
 function readFormData(fd: FormData): Record<string, string> {
   const out: Record<string, string> = {};
@@ -121,6 +145,17 @@ function readFormData(fd: FormData): Record<string, string> {
 }
 
 describe('CheckinForm submit payload', () => {
+  beforeEach(() => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      username: 'tester',
+      name: 'Tester',
+      adminUrl: null,
+      loading: false,
+      refresh: jest.fn(),
+    });
+  });
+
   afterEach(() => {
     jest.clearAllMocks();
   });
@@ -168,17 +203,7 @@ describe('CheckinForm submit payload', () => {
   });
 
   it('GPS-enforced unit: posts location + gps_location + gps_accuracy_m + place', async () => {
-    mockCapture.mockResolvedValue({
-      kind: 'ok',
-      position: {
-        latitude: 51.5074,
-        longitude: -0.1278,
-        accuracyM: 18,
-        altitude: null,
-      },
-      isLowPrecision: false,
-    });
-
+    gpsOk();
     const onSubmit = jest.fn().mockResolvedValue(null);
     render(
       <CheckinForm
@@ -191,15 +216,7 @@ describe('CheckinForm submit payload', () => {
       />,
     );
 
-    // Pre-capture: only the "Use my location" button is rendered inside the
-    // map placeholder. Submit stays disabled until confirmStep is set.
-    fireEvent.click(screen.getByRole('button', { name: /Use my location/i }));
-
-    await waitFor(() =>
-      expect(
-        screen.getByRole('button', { name: /^Check in$/i }),
-      ).not.toBeDisabled(),
-    );
+    await captureAndWaitForReadySubmit();
 
     fireEvent.change(screen.getByLabelText(/^Place/i), {
       target: { value: 'London Bridge' },
@@ -221,5 +238,88 @@ describe('CheckinForm submit payload', () => {
     });
     expect(entries.gps_accuracy_m).toBe('18');
     expect(entries.place).toBe('London Bridge');
+  });
+
+  it('non-game unit: blocks submit + surfaces location error when no pin set', async () => {
+    const onSubmit = jest.fn().mockResolvedValue(null);
+    render(
+      <CheckinForm
+        mode="create"
+        unitUrl="/unit/abc/"
+        maptilerKey="TEST_KEY"
+        gpsDriftFloorM={0}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /^Check in$/i }));
+
+    expect(
+      await screen.findByText(/click the map to set your location/i),
+    ).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('GPS-enforced unit: blocks submit when place has < 3 word chars', async () => {
+    gpsOk();
+    const onSubmit = jest.fn().mockResolvedValue(null);
+    render(
+      <CheckinForm
+        mode="create"
+        unitUrl="/unit/abc/"
+        maptilerKey="TEST_KEY"
+        isGpsEnforced
+        gpsDriftFloorM={50}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    await captureAndWaitForReadySubmit();
+
+    fireEvent.change(screen.getByLabelText(/^Place/i), {
+      target: { value: 'ab' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /^Check in$/i }));
+
+    expect(
+      await screen.findByText(/at least 3 letters so your check-in counts/i),
+    ).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('GPS-enforced + anonymous: blocks submit when anonymous_name is empty', async () => {
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: false,
+      username: '',
+      name: '',
+      adminUrl: null,
+      loading: false,
+      refresh: jest.fn(),
+    });
+    gpsOk();
+    const onSubmit = jest.fn().mockResolvedValue(null);
+    render(
+      <CheckinForm
+        mode="create"
+        unitUrl="/unit/abc/"
+        maptilerKey="TEST_KEY"
+        isGpsEnforced
+        gpsDriftFloorM={50}
+        onSubmit={onSubmit}
+      />,
+    );
+
+    await captureAndWaitForReadySubmit();
+
+    fireEvent.change(screen.getByLabelText(/^Place/i), {
+      target: { value: 'London Bridge' },
+    });
+    // Leave the (required) Your name field blank.
+    fireEvent.click(screen.getByRole('button', { name: /^Check in$/i }));
+
+    expect(
+      await screen.findByText(/add a name so your check-in counts/i),
+    ).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
   });
 });
