@@ -42,14 +42,13 @@ const { isAuthenticated, username, name, isSuperuser, loading, refresh } =
 
 ## Global config (useConfig)
 
-`flamerelay/static/js/lib/useConfig.ts` fetches `GET /api/config/` once and caches the result in a module-level promise. Use it anywhere you need the MapTiler key or registration flag:
+App-wide runtime config (MapTiler key, Turnstile site key, registration flag) is sourced from the **root route loader** in `pages/root.loader.ts`. The loader fetches `GET /api/config/` once per page load (singleton-cached promise) and resolves before any descendant route renders, so `useConfig()` always returns a non-null `Config`:
 
 ```tsx
-const config = useConfig();
-const maptilerKey = config?.maptilerKey ?? '';
+const { maptilerKey, turnstileSiteKey, allowRegistration } = useConfig();
 ```
 
-`config` is `null` on first render until the fetch resolves. If the fetch fails, `configPromise` is reset to `null` so the next component mount retries; the failed call returns `{ maptilerKey: '', allowRegistration: false }`.
+If `/api/config/` fails, the loader reports it via `reportError`, clears the cache so the next navigation can retry, and returns a fallback `{ maptilerKey: '', allowRegistration: false, turnstileSiteKey: '' }`. Consumers do not need null-checks or `?? ''` defenses — the loader guarantees the contract.
 
 Never hardcode the MapTiler key — always read it from `useConfig()`.
 
@@ -131,6 +130,15 @@ Wire both `loader` and `errorElement` on the `<Route>` in App.tsx:
 ```
 
 Non-404 errors `throw error` to bubble to the parent error boundary (the per-route `<ErrorBoundary>` in Layout).
+
+### App-wide resources (root loader)
+
+For data that's stable across navigation and needed in many routes, use the **root route loader** (`pages/root.loader.ts`) instead of a per-page loader. The root `<Route id="root">` resolves before any descendant renders, so consumers can rely on a non-null value with no defensive checks. Cache the fetch in a module-level singleton promise so the endpoint is hit at most once per page load — React Router re-invokes parent loaders on every navigation, and the singleton makes those invocations free.
+
+Currently this pattern hosts `/api/config/`. The runtime contract for adding a new app-wide resource is:
+
+1. Fetch it in `pages/root.loader.ts` under the same singleton-cached pattern, with a soft-fail fallback if it must not block the app.
+2. Add a typed accessor hook in `lib/` that reads via `useRouteLoaderData('root')`. See `lib/useConfig.ts`.
 
 ### When to use a loader vs. a useEffect
 
@@ -481,8 +489,7 @@ All buttons share a lift-on-hover pattern (`hover:-translate-y-px active:transla
 Map pages use **MapLibre GL JS** via **react-map-gl** (`react-map-gl/maplibre`). Tiles are served by MapTiler — the API key comes from `useConfig()`:
 
 ```tsx
-const config = useConfig();
-const maptilerKey = config?.maptilerKey ?? '';
+const { maptilerKey } = useConfig();
 ```
 
 Style URL pattern:
