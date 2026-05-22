@@ -64,6 +64,7 @@ dev = [
   "ipdb==0.13.13",
   # "mypy==1.20.0",
   # "pre-commit==4.5.1",
+  "nplusone",
   "psycopg[c]==3.3.4",
   "pyrefly>=1",
   "pytest==9.0.3",
@@ -73,6 +74,9 @@ dev = [
   "watchfiles==1.1.1",
   "werkzeug[watchdog]==3.1.8",
 ]
+
+[tool.uv]
+sources.nplusone = { url = "https://github.com/DavidMikeSimon/nplusone/archive/303f989ea85d0e119fafd065df2fcb831adba1b9.zip" }
 
 [tool.ruff]
 target-version = "py314"
