@@ -28,6 +28,13 @@ CHECKIN_PENDING_UPLOAD_TTL_HOURS = 24
 # the endpoint becoming a free file store while still allowing a reasonable
 # burst when the user is mid-edit and re-trying.
 CHECKIN_PENDING_UPLOAD_MAX_PER_SESSION = 20
+# How long an anon session's Turnstile verification stays valid. Set to one
+# hour so a normal check-in (upload a few photos, type a message, submit)
+# never hits a re-verify in the middle, while a stolen session cookie
+# eventually re-prompts. The check is recorded as a Unix timestamp on the
+# Django session under `pending_uploads_verified`; comparison is absolute,
+# not rolling — repeated requests don't extend the window.
+CHECKIN_PENDING_UPLOAD_CAPTCHA_TTL_SECONDS = 60 * 60  # 1 hour
 # Cleanup task batch size — keeps each transaction short so concurrent attach
 # UPDATEs aren't stuck waiting on a long-running cleanup row scan.
 CHECKIN_PENDING_UPLOAD_CLEANUP_BATCH_SIZE = 200

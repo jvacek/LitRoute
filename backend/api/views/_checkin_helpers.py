@@ -6,6 +6,7 @@ import json
 import logging
 import re
 import secrets
+import time
 import uuid
 from datetime import timedelta
 
@@ -19,6 +20,7 @@ from config.constants import (
     CHECKIN_IMAGE_MAX_UPLOAD_BYTES,
     CHECKIN_MAX_IMAGES,
     CHECKIN_MAX_IMPLIED_SPEED_KMH,
+    CHECKIN_PENDING_UPLOAD_CAPTCHA_TTL_SECONDS,
     CHECKIN_PENDING_UPLOAD_MAX_PER_SESSION,
     CHECKIN_PENDING_UPLOAD_TTL_HOURS,
     GAME_CHECKIN_MIN_GAP_SECONDS,
@@ -73,20 +75,36 @@ def _identity_filter(request) -> dict:
     return {"session_key": request.session.session_key or _NO_SESSION_SENTINEL}
 
 
+_CAPTCHA_SESSION_KEY = "pending_uploads_verified"
+
+
+def _captcha_cache_is_fresh(request) -> bool:
+    """True if this anon session passed Turnstile within the TTL window.
+
+    Stored as a Unix epoch float; absolute TTL (not rolling) so a session
+    cookie has a bounded lifetime regardless of how often it's used. Legacy
+    `True` boolean values from before the TTL existed are treated as
+    expired so the user re-verifies on their next request."""
+    verified_at = request.session.get(_CAPTCHA_SESSION_KEY)
+    if not isinstance(verified_at, (int, float)):
+        return False
+    return time.time() - verified_at < CHECKIN_PENDING_UPLOAD_CAPTCHA_TTL_SECONDS
+
+
 def _verify_pending_upload_captcha(request) -> None:
-    """Anon-only Turnstile gate, cached for the lifetime of the Django
-    session. First pending-upload of an anon session must include a
-    `turnstile_token`; subsequent uploads in the same session skip the
-    check. Authed users skip entirely."""
+    """Anon-only Turnstile gate, cached on the Django session for
+    CHECKIN_PENDING_UPLOAD_CAPTCHA_TTL_SECONDS. First pending-upload of an
+    anon session must include a `turnstile_token`; subsequent uploads
+    within the window skip the check. Authed users skip entirely."""
     if request.user.is_authenticated:
         return
-    if request.session.get("pending_uploads_verified"):
+    if _captcha_cache_is_fresh(request):
         return
     turnstile_token = request.data.get("turnstile_token", "")
     remote_ip = request.headers.get("cf-connecting-ip") or request.META.get("REMOTE_ADDR", "")
     if not turnstile.verify_turnstile(turnstile_token, remote_ip):
         raise serializers.ValidationError({"captcha": ["Captcha verification failed. Please try again."]})
-    request.session["pending_uploads_verified"] = True
+    request.session[_CAPTCHA_SESSION_KEY] = time.time()
 
 
 def create_pending_upload(unit: Unit, request) -> CheckInImage:
@@ -224,12 +242,12 @@ class CheckinValidator:
             raise PermissionDenied(msg)
 
     def check_anon_captcha(self) -> None:
-        """Anon-only Turnstile check. Skipped if the session already passed
-        Turnstile during a pending-image upload — one solve per session
-        covers the whole upload+submit flow."""
+        """Anon-only Turnstile check. Skipped if the session passed Turnstile
+        within CHECKIN_PENDING_UPLOAD_CAPTCHA_TTL_SECONDS — one solve per
+        session window covers the whole upload+submit flow."""
         if self.request.user.is_authenticated:
             return
-        if self.request.session.get("pending_uploads_verified"):
+        if _captcha_cache_is_fresh(self.request):
             return
         turnstile_token = self.request.data.get("turnstile_token", "")
         remote_ip = self.request.headers.get("cf-connecting-ip") or self.request.META.get("REMOTE_ADDR", "")

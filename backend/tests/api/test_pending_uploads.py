@@ -13,6 +13,7 @@ Behaviour we care about (and that isn't already covered by DRF/Django):
 
 from __future__ import annotations
 
+import time
 from datetime import timedelta
 from io import BytesIO
 from unittest.mock import patch
@@ -28,6 +29,7 @@ from rest_framework.test import APIClient
 from backend.models import CheckIn, CheckInImage
 from config.constants import (
     CHECKIN_IMAGE_MAX_UPLOAD_BYTES,
+    CHECKIN_PENDING_UPLOAD_CAPTCHA_TTL_SECONDS,
     CHECKIN_PENDING_UPLOAD_MAX_PER_SESSION,
     CHECKIN_PENDING_UPLOAD_TTL_HOURS,
 )
@@ -165,6 +167,31 @@ class TestPendingUploadTurnstileGate:
             res = auth_client.post(_pending_url(unit), {"image": _upload()}, format="multipart")
         assert res.status_code == status.HTTP_201_CREATED
         mock_verify.assert_not_called()
+
+    def test_captcha_cache_expires_after_ttl(self, client, unit, pending_uploads_request_atomic):
+        """The Turnstile-verified flag has a bounded lifetime. Once the
+        CHECKIN_PENDING_UPLOAD_CAPTCHA_TTL_SECONDS window has elapsed since
+        the last successful verify, the next upload must re-solve Turnstile
+        — protects against a session cookie that's outlived its trust.
+        """
+        # First upload at "now" — captcha verifies via autouse fixture and
+        # the cache timestamp lands on the session.
+        first = client.post(_pending_url(unit), {"image": _upload()}, format="multipart")
+        assert first.status_code == status.HTTP_201_CREATED
+
+        # Jump time forward past the TTL. Patch the module-local `time` so
+        # the cache-freshness check sees an expired timestamp; the verify
+        # mock returns False so a re-verify path produces a clean 400.
+        future = time.time() + CHECKIN_PENDING_UPLOAD_CAPTCHA_TTL_SECONDS + 1
+        with (
+            pending_uploads_request_atomic(),
+            patch("backend.api.views._checkin_helpers.time.time", return_value=future),
+            patch("backend.api.views.turnstile.verify_turnstile", return_value=False) as mock_verify,
+        ):
+            second = client.post(_pending_url(unit), {"image": _upload(name="2.png")}, format="multipart")
+        assert second.status_code == status.HTTP_400_BAD_REQUEST
+        assert "captcha" in second.json()
+        mock_verify.assert_called_once()  # cache was treated as expired
 
     @pytest.mark.django_db(transaction=True)
     def test_session_state_survives_validation_failure(self, client, unit):

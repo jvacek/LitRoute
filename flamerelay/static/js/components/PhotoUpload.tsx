@@ -740,7 +740,7 @@ export default function PhotoUpload({
         ref={inputRef}
         id="images"
         type="file"
-        accept="image/jpeg,image/png,image/gif,image/webp,image/bmp,image/tiff,image/heic,image/heif"
+        accept="image/*"
         multiple
         className="sr-only"
         aria-hidden="true"
