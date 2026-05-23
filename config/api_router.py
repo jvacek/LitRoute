@@ -11,6 +11,7 @@ from backend.api.views import (
     GlobePinsView,
     GuestFollowView,
     GuestVerifyView,
+    PendingImageUploadView,
     StatsView,
     UnitViewSet,
     sentry_tunnel,
@@ -41,7 +42,7 @@ urlpatterns = [
     ),
     path(
         "units/<str:identifier>/pending-images/",
-        CheckInViewSet.as_view({"post": "pending_images"}),
+        PendingImageUploadView.as_view(),
         name="pending-images",
     ),
     path(

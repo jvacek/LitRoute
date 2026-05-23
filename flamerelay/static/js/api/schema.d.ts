@@ -273,21 +273,6 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /**
-         * @description Accept one image at a time, return `{ token, preview_url }`.
-         *
-         *     Tokens are later passed back in `pending_image_tokens` on the
-         *     check-in POST/PATCH. Splits the multi-photo upload across many
-         *     small requests so the user gets per-photo progress and so each
-         *     request stays well under nginx's 20 MB body cap.
-         *
-         *     Marked `non_atomic_requests` because anon callers need a Django
-         *     session row persisted *outside* a transaction that could roll
-         *     back — if the view's atomic block rolled back a fresh session
-         *     row, SessionMiddleware would raise SessionInterrupted on the
-         *     response-phase save. The view writes exactly one CheckInImage
-         *     row, so request-level atomicity isn't needed.
-         */
         post: operations["units_pending_images_create"];
         delete?: never;
         options?: never;
@@ -504,6 +489,16 @@ export interface components {
             name?: string;
             language?: string;
             readonly admin_url?: string | null;
+        };
+        PendingImageUploadRequest: {
+            /** Format: uri */
+            image: string;
+            turnstile_token?: string;
+        };
+        PendingImageUploadResponse: {
+            token: string;
+            /** Format: uri */
+            preview_url: string;
         };
         SocialAccountError: {
             detail: string;
@@ -1080,18 +1075,18 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CheckIn"];
-                "application/x-www-form-urlencoded": components["schemas"]["CheckIn"];
-                "multipart/form-data": components["schemas"]["CheckIn"];
+                "application/json": components["schemas"]["PendingImageUploadRequest"];
+                "application/x-www-form-urlencoded": components["schemas"]["PendingImageUploadRequest"];
+                "multipart/form-data": components["schemas"]["PendingImageUploadRequest"];
             };
         };
         responses: {
-            200: {
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["CheckIn"];
+                    "application/json": components["schemas"]["PendingImageUploadResponse"];
                 };
             };
         };

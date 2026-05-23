@@ -19,6 +19,7 @@ from unittest.mock import patch
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import transaction
 from django.urls import reverse
 from django.utils import timezone
 from PIL import Image
@@ -137,7 +138,14 @@ class TestPendingUploadHappyPath:
 
 class TestPendingUploadTurnstileGate:
     def test_anon_first_call_requires_token(self, client, unit):
-        with patch("backend.api.views._helpers._verify_turnstile", return_value=False):
+        # The view is now non-atomic (the pending-images endpoint must write
+        # the anon session row outside any ATOMIC_REQUESTS wrapper). When DRF
+        # turns the ValidationError into a 400, it calls
+        # `transaction.set_rollback(True)` on the *current* atomic — in
+        # production there is none; in tests pytest's outer atomic catches
+        # it. Wrap the call in a savepoint so the rollback signal is scoped
+        # to the request and the outer test transaction stays usable.
+        with transaction.atomic(), patch("backend.api.views._helpers._verify_turnstile", return_value=False):
             res = client.post(_pending_url(unit), {"image": _upload()}, format="multipart")
         assert res.status_code == status.HTTP_400_BAD_REQUEST
         assert "captcha" in res.json()
@@ -157,6 +165,40 @@ class TestPendingUploadTurnstileGate:
         with patch("backend.api.views._helpers._verify_turnstile", return_value=False) as mock_verify:
             res = auth_client.post(_pending_url(unit), {"image": _upload()}, format="multipart")
         assert res.status_code == status.HTTP_201_CREATED
+        mock_verify.assert_not_called()
+
+    @pytest.mark.django_db(transaction=True)
+    def test_session_state_survives_validation_failure(self, client, unit):
+        """Regression: anon user's first upload sets `pending_uploads_verified`
+        on the session AFTER Turnstile passes, but BEFORE the file-size check.
+        If the view ran inside ATOMIC_REQUESTS, a size-check ValidationError
+        would roll back the session-row INSERT, and SessionMiddleware would
+        crash on the response-phase save with SessionInterrupted. The
+        pending-images view is `non_atomic_requests` for exactly this reason.
+
+        `transaction=True` flushes the DB instead of wrapping the test in an
+        outer atomic, so DRF's `set_rollback()` on the 400 doesn't poison a
+        pytest-managed atomic — matching the real production transactional
+        shape where the view runs with no atomic context around it.
+        """
+        # First upload — captcha verifies via the autouse fixture, then the
+        # size check raises. Must surface as a clean 400, not a 500 from
+        # SessionInterrupted blowing up in middleware.
+        big = SimpleUploadedFile(
+            "huge.png",
+            b"x" * (CHECKIN_IMAGE_MAX_UPLOAD_BYTES + 1),
+            content_type="image/png",
+        )
+        first = client.post(_pending_url(unit), {"image": big}, format="multipart")
+        assert first.status_code == status.HTTP_400_BAD_REQUEST
+
+        # Second upload — Turnstile mocked to *fail*. Must still 201 because
+        # the cached `pending_uploads_verified` flag from request #1 survived
+        # the rollback. If it had been wiped, captcha would re-run, the mock
+        # would fail it, and we'd see 400.
+        with patch("backend.api.views._helpers._verify_turnstile", return_value=False) as mock_verify:
+            second = client.post(_pending_url(unit), {"image": _upload()}, format="multipart")
+        assert second.status_code == status.HTTP_201_CREATED
         mock_verify.assert_not_called()
 
 

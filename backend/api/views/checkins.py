@@ -1,4 +1,3 @@
-from django.db import transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -24,7 +23,6 @@ from ._checkin_helpers import (
     CheckinValidator,
     check_authenticated_owner,
     check_edit_token,
-    create_pending_upload,
     save_checkin_record,
 )
 
@@ -34,7 +32,7 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_permissions(self):
-        if self.action in ("create", "destroy", "partial_update", "pending_images"):
+        if self.action in ("create", "destroy", "partial_update"):
             return [AllowAny()]
         return super().get_permissions()
 
@@ -102,26 +100,3 @@ class CheckInViewSet(ListModelMixin, CreateModelMixin, UpdateModelMixin, Destroy
     def perform_destroy(self, instance):
         # Cache invalidation runs from the post_delete signal in models.py.
         super().perform_destroy(instance)
-
-    @transaction.non_atomic_requests
-    def pending_images(self, request, *args, **kwargs):
-        """Accept one image at a time, return `{ token, preview_url }`.
-
-        Tokens are later passed back in `pending_image_tokens` on the
-        check-in POST/PATCH. Splits the multi-photo upload across many
-        small requests so the user gets per-photo progress and so each
-        request stays well under nginx's 20 MB body cap.
-
-        Marked `non_atomic_requests` because anon callers need a Django
-        session row persisted *outside* a transaction that could roll
-        back — if the view's atomic block rolled back a fresh session
-        row, SessionMiddleware would raise SessionInterrupted on the
-        response-phase save. The view writes exactly one CheckInImage
-        row, so request-level atomicity isn't needed.
-        """
-        unit = get_object_or_404(Unit.objects.select_related("game"), identifier=self.kwargs["identifier"])
-        pending = create_pending_upload(unit, request)
-        return Response(
-            {"token": pending.attach_token, "preview_url": pending.image.url},
-            status=status.HTTP_201_CREATED,
-        )
