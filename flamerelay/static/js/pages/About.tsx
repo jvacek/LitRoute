@@ -1,4 +1,5 @@
 import { Trans, useTranslation } from 'react-i18next';
+import ConnectLinks from '../components/ConnectLinks';
 import FeedbackForm from '../components/FeedbackForm';
 import QA, { useLighterFaq } from '../components/QA';
 import SupportSection from '../components/SupportSection';
@@ -194,6 +195,17 @@ export default function About() {
                 <QA key={q} q={q} a={a} />
               ))}
             </div>
+          </section>
+        </div>
+      </div>
+
+      <div className="px-6 py-14">
+        <div className="mx-auto max-w-2xl">
+          <section>
+            <h2 className="font-heading mb-8 text-2xl font-bold text-char">
+              {t('about.connect.title')}
+            </h2>
+            <ConnectLinks />
           </section>
         </div>
       </div>

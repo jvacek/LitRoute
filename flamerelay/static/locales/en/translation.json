@@ -1,6 +1,16 @@
 {
   "about": {
     "aboutTitle": "About the project",
+    "connect": {
+      "discord": "Discord — r/litroute hangout",
+      "followLabel": "Follow along",
+      "githubBody": "Open source, MIT-licensed. Issues and PRs welcome — open an issue first so we can discuss.",
+      "githubCta": "View on GitHub",
+      "githubTitle": "Read the code",
+      "mastodon": "@jvacek@fosstodon.org",
+      "reddit": "r/litroute",
+      "title": "Find me online"
+    },
     "faqTitle": "FAQ",
     "header": "For people who leave things behind on purpose.",
     "qa": {

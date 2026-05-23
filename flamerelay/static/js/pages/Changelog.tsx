@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import ConnectLinks from '../components/ConnectLinks';
 import FeedbackForm from '../components/FeedbackForm';
 import { entries } from '../../../../CHANGELOG.md';
 
@@ -20,7 +21,8 @@ export default function Changelog() {
 
   return (
     <main>
-      <div className="px-6 py-12">
+      {/* Header + disclaimer — narrow */}
+      <div className="px-6 pb-8 pt-12">
         <div className="mx-auto max-w-xl">
           <header className="mb-8">
             <h1 className="font-heading mb-3 text-4xl font-bold leading-tight text-amber sm:text-5xl">
@@ -31,11 +33,23 @@ export default function Changelog() {
             </p>
           </header>
 
-          <section className="mb-10 rounded-card border border-amber/30 bg-amber/10 px-5 py-4 text-sm leading-relaxed text-char/80">
+          <section className="rounded-card border border-amber/30 bg-amber/10 px-5 py-4 text-sm leading-relaxed text-char/80">
             {t('changelog.disclaimer')}
           </section>
+        </div>
+      </div>
 
-          <section className="mb-12">
+      {/* Connect + Feedback — wider, escapes the narrow column */}
+      <div className="px-6 py-8">
+        <div className="mx-auto grid max-w-4xl grid-cols-1 gap-8 lg:grid-cols-2">
+          <section>
+            <h2 className="font-heading mb-4 text-2xl font-bold text-char">
+              {t('about.connect.title')}
+            </h2>
+            <ConnectLinks stacked />
+          </section>
+
+          <section>
             <h2 className="font-heading mb-3 text-2xl font-bold text-char">
               {t('changelog.feedbackHeading')}
             </h2>
@@ -44,7 +58,12 @@ export default function Changelog() {
             </p>
             <FeedbackForm />
           </section>
+        </div>
+      </div>
 
+      {/* History — narrow */}
+      <div className="px-6 pb-12 pt-4">
+        <div className="mx-auto max-w-xl">
           <section>
             <h2 className="font-heading mb-6 text-2xl font-bold text-char">
               {t('changelog.historyHeading')}
