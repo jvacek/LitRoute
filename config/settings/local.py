@@ -1,5 +1,5 @@
 from .base import *  # noqa: F403
-from .base import CONTENT_SECURITY_POLICY, INSTALLED_APPS, MIDDLEWARE, WEBPACK_LOADER, env
+from .base import CONTENT_SECURITY_POLICY, INSTALLED_APPS, LOGGING, MIDDLEWARE, WEBPACK_LOADER, env
 
 # GENERAL
 # ------------------------------------------------------------------------------
@@ -94,6 +94,18 @@ INSTALLED_APPS += [
     # "django_fastdev",
     "django_migrations_ruff_formatter.apps.RuffFormatter",
 ]
+
+# nplusone
+# ------------------------------------------------------------------------------
+# Flags N+1 query patterns by patching the ORM and logging when a queryset
+# triggers per-row additional SELECTs. Local-only — patching every ORM call
+# adds enough overhead that it would be a real prod hit.
+# https://github.com/jmcarp/nplusone
+INSTALLED_APPS += ["nplusone.ext.django"]
+MIDDLEWARE = ["nplusone.ext.django.NPlusOneMiddleware", *MIDDLEWARE]
+# Surface findings at WARNING so they show up in `just logs django` without
+# also dumping every INFO line nplusone emits during init.
+LOGGING["loggers"] = {**LOGGING.get("loggers", {}), "nplusone": {"handlers": ["console"], "level": "WARNING"}}
 # Celery
 # ------------------------------------------------------------------------------
 
