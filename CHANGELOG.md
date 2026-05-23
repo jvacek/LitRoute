@@ -1,3 +1,10 @@
+## 2026-05-23
+
+- Fix wrong message when getting your location about it being required (it probably wasn't unless you're in a game)
+- Android: the photo picker on the check-in form now offers the camera, so you can take a picture without leaving the page.
+
+Thanks for the QA, Romain!
+
 ## 2026-05-22
 
 - Added a beta banner across the top of every page that links here, and a public changelog with an embedded feedback form.
