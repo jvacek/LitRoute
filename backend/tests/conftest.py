@@ -14,6 +14,7 @@ from unittest.mock import patch
 import pytest
 from django.contrib.gis.geos import Point
 from django.core.cache import cache
+from django.db import transaction
 from django.utils import timezone
 from rest_framework.test import APIClient
 
@@ -51,11 +52,48 @@ def _pass_turnstile():
     """Default every API call to a successful captcha. The test settings carry
     a real-looking Turnstile secret, so without this the verify call would hit
     Cloudflare for real. Tests that exercise captcha behavior open their own
-    `with patch("backend.api.views._helpers._verify_turnstile", ...)`, which rebinds
+    `with patch("backend.api.views.turnstile.verify_turnstile", ...)`, which rebinds
     the attribute for the duration of the test body and shadows this fixture.
     """
-    with patch("backend.api.views._helpers._verify_turnstile", return_value=True) as mock:
+    with patch("backend.api.views.turnstile.verify_turnstile", return_value=True) as mock:
         yield mock
+
+
+@pytest.fixture
+def pending_uploads_request_atomic():
+    """Context-manager fixture that scopes DRF's `set_rollback` signal to a
+    savepoint so a 4xx response from `POST /api/units/<id>/pending-images/`
+    doesn't poison pytest's outer test transaction.
+
+    The pending-images view is `non_atomic_requests` (see
+    `PendingImageUploadView` for why anon callers need a session row that
+    survives validation failures). In production this means no enclosing
+    atomic exists, so DRF's `set_rollback()` after a ValidationError is a
+    no-op. In pytest-django the test runs inside an outer atomic that the
+    rollback signal would poison; subsequent queries would then raise
+    `TransactionManagementError("An error occurred in the current
+    transaction...")`. Wrap the failing request in this savepoint so DRF
+    flags the savepoint instead.
+
+    Caveat: this savepoint ALSO absorbs any session writes the view made,
+    which is the opposite of what `test_session_state_survives_validation_failure`
+    needs to assert. Tests that need session state to actually persist
+    across a validation rollback should use
+    `@pytest.mark.django_db(transaction=True)` instead.
+
+        def test_thing(self, client, unit, pending_uploads_request_atomic):
+            with pending_uploads_request_atomic():
+                res = client.post(_pending_url(unit), {...}, format="multipart")
+            assert res.status_code == 400
+            assert not CheckInImage.objects.exists()  # outer atomic still usable
+    """
+
+    @contextmanager
+    def _scope():
+        with transaction.atomic():
+            yield
+
+    return _scope
 
 
 @pytest.fixture

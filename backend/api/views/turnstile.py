@@ -1,6 +1,15 @@
+"""Cloudflare Turnstile siteverify call, isolated so the rest of the views
+package doesn't import urllib or know the endpoint URL.
+
+The view layer treats verification as a single bool. Tests patch
+`backend.api.views.turnstile.verify_turnstile`; the autouse
+`_pass_turnstile` fixture in `backend/tests/conftest.py` defaults every
+API call in the suite to True so individual tests only patch when they
+need to exercise a failure path.
+"""
+
 import json
 import logging
-import re
 import urllib.parse
 import urllib.request
 
@@ -8,12 +17,8 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-# Unicode letters or digits, mirroring the frontend's /[\p{L}\p{N}]/gu.
-# `[^\W_]` = word character that isn't underscore = letter or digit.
-_LETTER_OR_DIGIT_RE = re.compile(r"[^\W_]")
 
-
-def _verify_turnstile(token: str, remote_ip: str = "") -> bool:
+def verify_turnstile(token: str, remote_ip: str = "") -> bool:
     try:
         payload = urllib.parse.urlencode(
             {

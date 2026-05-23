@@ -19,7 +19,6 @@ from unittest.mock import patch
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.db import transaction
 from django.urls import reverse
 from django.utils import timezone
 from PIL import Image
@@ -137,15 +136,15 @@ class TestPendingUploadHappyPath:
 
 
 class TestPendingUploadTurnstileGate:
-    def test_anon_first_call_requires_token(self, client, unit):
-        # The view is now non-atomic (the pending-images endpoint must write
-        # the anon session row outside any ATOMIC_REQUESTS wrapper). When DRF
-        # turns the ValidationError into a 400, it calls
-        # `transaction.set_rollback(True)` on the *current* atomic — in
-        # production there is none; in tests pytest's outer atomic catches
-        # it. Wrap the call in a savepoint so the rollback signal is scoped
-        # to the request and the outer test transaction stays usable.
-        with transaction.atomic(), patch("backend.api.views._helpers._verify_turnstile", return_value=False):
+    def test_anon_first_call_requires_token(self, client, unit, pending_uploads_request_atomic):
+        # The pending-images view is non-atomic; without the savepoint
+        # fixture, DRF's `set_rollback()` on the 400 response would poison
+        # pytest's outer atomic and the post-request DB query below would
+        # raise TransactionManagementError. See the fixture docstring.
+        with (
+            pending_uploads_request_atomic(),
+            patch("backend.api.views.turnstile.verify_turnstile", return_value=False),
+        ):
             res = client.post(_pending_url(unit), {"image": _upload()}, format="multipart")
         assert res.status_code == status.HTTP_400_BAD_REQUEST
         assert "captcha" in res.json()
@@ -157,12 +156,12 @@ class TestPendingUploadTurnstileGate:
         # *fail*; we still expect 201 because the flag short-circuits.
         first = client.post(_pending_url(unit), {"image": _upload()}, format="multipart")
         assert first.status_code == status.HTTP_201_CREATED
-        with patch("backend.api.views._helpers._verify_turnstile", return_value=False):
+        with patch("backend.api.views.turnstile.verify_turnstile", return_value=False):
             second = client.post(_pending_url(unit), {"image": _upload(name="2.png")}, format="multipart")
         assert second.status_code == status.HTTP_201_CREATED
 
     def test_authed_user_never_needs_turnstile(self, auth_client, unit):
-        with patch("backend.api.views._helpers._verify_turnstile", return_value=False) as mock_verify:
+        with patch("backend.api.views.turnstile.verify_turnstile", return_value=False) as mock_verify:
             res = auth_client.post(_pending_url(unit), {"image": _upload()}, format="multipart")
         assert res.status_code == status.HTTP_201_CREATED
         mock_verify.assert_not_called()
@@ -196,7 +195,7 @@ class TestPendingUploadTurnstileGate:
         # the cached `pending_uploads_verified` flag from request #1 survived
         # the rollback. If it had been wiped, captcha would re-run, the mock
         # would fail it, and we'd see 400.
-        with patch("backend.api.views._helpers._verify_turnstile", return_value=False) as mock_verify:
+        with patch("backend.api.views.turnstile.verify_turnstile", return_value=False) as mock_verify:
             second = client.post(_pending_url(unit), {"image": _upload()}, format="multipart")
         assert second.status_code == status.HTTP_201_CREATED
         mock_verify.assert_not_called()

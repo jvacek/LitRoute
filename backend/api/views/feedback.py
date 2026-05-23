@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from backend.models import Feedback
 from config.constants import FEEDBACK_MESSAGE_MAX_LENGTH
 
-from . import _helpers
+from . import turnstile
 
 
 class FeedbackView(APIView):
@@ -45,7 +45,7 @@ class FeedbackView(APIView):
         else:
             turnstile_token = request.data.get("turnstile_token", "")
             remote_ip = request.headers.get("cf-connecting-ip") or request.META.get("REMOTE_ADDR", "")
-            if not _helpers._verify_turnstile(turnstile_token, remote_ip):  # noqa: SLF001
+            if not turnstile.verify_turnstile(turnstile_token, remote_ip):
                 return Response(
                     {"detail": "Captcha verification failed. Please try again."},
                     status=status.HTTP_400_BAD_REQUEST,

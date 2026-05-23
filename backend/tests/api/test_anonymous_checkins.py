@@ -62,7 +62,7 @@ class TestAnonCheckinCreate:
 
     def test_turnstile_failure_returns_400_with_captcha_error(self, client, unit, settings):
         settings.CLOUDFLARE_TURNSTILE_SECRET_KEY = "test-secret"  # noqa: S105
-        with patch("backend.api.views._helpers._verify_turnstile", return_value=False):
+        with patch("backend.api.views.turnstile.verify_turnstile", return_value=False):
             res = client.post(
                 f"/api/units/{unit.identifier}/checkins/",
                 {"location": LONDON_PAYLOAD, "turnstile_token": "bad-token"},

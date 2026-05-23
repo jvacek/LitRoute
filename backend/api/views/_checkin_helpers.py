@@ -3,6 +3,8 @@ lifecycle wiring while validation, image management, and auth gates live
 here as self-contained, independently testable units."""
 
 import json
+import logging
+import re
 import secrets
 import uuid
 from datetime import timedelta
@@ -24,8 +26,14 @@ from config.constants import (
     MIN_GAME_REQUIRED_WORD_CHARS,
 )
 
-from . import _helpers
-from ._helpers import _LETTER_OR_DIGIT_RE
+from . import turnstile
+
+logger = logging.getLogger(__name__)
+
+# Unicode letters or digits, mirroring the frontend's /[\p{L}\p{N}]/gu.
+# `[^\W_]` = word character that isn't underscore = letter or digit. Used
+# below by the game-name validators to reject things like "..." or "---".
+_LETTER_OR_DIGIT_RE = re.compile(r"[^\W_]")
 
 # ── Pending-upload helpers ──────────────────────────────────────────────────
 
@@ -76,7 +84,7 @@ def _verify_pending_upload_captcha(request) -> None:
         return
     turnstile_token = request.data.get("turnstile_token", "")
     remote_ip = request.headers.get("cf-connecting-ip") or request.META.get("REMOTE_ADDR", "")
-    if not _helpers._verify_turnstile(turnstile_token, remote_ip):  # noqa: SLF001
+    if not turnstile.verify_turnstile(turnstile_token, remote_ip):
         raise serializers.ValidationError({"captcha": ["Captcha verification failed. Please try again."]})
     request.session["pending_uploads_verified"] = True
 
@@ -161,13 +169,17 @@ class CheckinValidator:
           that was always going to be rejected.
         - captcha runs before GPS/previous-checkin so anon callers don't waste
           time on checks they'd never pass anyway.
-        - image_count is cheap; runs before drift/previous since those touch
-          the database via the `previous` row and `unit.game`.
+        - drift/previous touch the database via `previous` and `unit.game`,
+          so they go last.
+
+        (Image count is enforced upstream by the serializer's
+        `max_length=CHECKIN_MAX_IMAGES` on `pending_image_tokens`, so it
+        doesn't need a re-check here.)
         """
+        del pending_image_tokens  # consumed by the serializer-level cap
         self.verify_game_required_fields(validated_data)
         self.verify_can_check_in()
         self.check_anon_captcha()
-        self.verify_image_count(pending_image_tokens)
         self.verify_gps_drift(validated_data)
         self.verify_previous_checkin_constraints(validated_data)
 
@@ -222,15 +234,9 @@ class CheckinValidator:
         turnstile_token = self.request.data.get("turnstile_token", "")
         remote_ip = self.request.headers.get("cf-connecting-ip") or self.request.META.get("REMOTE_ADDR", "")
         # Look up via the module so test patches of
-        # `backend.api.views._helpers._verify_turnstile` take effect.
-        if not _helpers._verify_turnstile(turnstile_token, remote_ip):  # noqa: SLF001
+        # `backend.api.views.turnstile.verify_turnstile` take effect.
+        if not turnstile.verify_turnstile(turnstile_token, remote_ip):
             raise serializers.ValidationError({"captcha": ["Captcha verification failed. Please try again."]})
-
-    def verify_image_count(self, pending_image_tokens) -> None:
-        if len(pending_image_tokens) > CHECKIN_MAX_IMAGES:
-            raise serializers.ValidationError(
-                {"pending_image_tokens": [f"You can attach at most {CHECKIN_MAX_IMAGES} images."]}
-            )
 
     def verify_gps_drift(self, validated_data) -> None:
         """Game-mode units must submit a device-reported GPS coordinate plus
@@ -365,11 +371,17 @@ class CheckinImageManager:
 
     def _parse_id_list(self, field: str) -> list:
         """Tolerantly parse a JSON-encoded id list from form/JSON payloads.
-        Returns [] on any parse error — clients send these as best-effort hints."""
+        Returns [] on any parse error — clients send these as best-effort
+        hints, and a malformed payload silently drops the hint (e.g. a
+        reorder gets ignored). Log so a future drift between client and
+        server payload shape is visible, rather than disappearing into a
+        confusing "my reorder didn't save" report.
+        """
         raw = self.request.data.get(field, "[]")
         try:
             return json.loads(raw) if isinstance(raw, str) else list(raw)
-        except ValueError, TypeError:
+        except (ValueError, TypeError) as exc:
+            logger.warning("Could not parse id list field %r (raw=%r): %s", field, raw, exc)
             return []
 
     def _reorder(self, image_ids_order: list) -> None:
