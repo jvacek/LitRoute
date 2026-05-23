@@ -359,7 +359,7 @@ export default function Unit() {
             <div className="flex flex-1 flex-col justify-between p-6 sm:p-8">
               <div>
                 <h1 className="font-heading mb-1 text-3xl font-bold text-white sm:text-4xl">
-                  {identifier}
+                  {identifier.toUpperCase()}
                 </h1>
                 {currentCheckin ? (
                   <p className="text-sm font-medium text-amber">
