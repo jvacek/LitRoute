@@ -37,9 +37,24 @@ function itemKey(item: OrderedItem): string {
   return item.type === 'existing' ? `e-${item.id}` : `n-${item.key}`;
 }
 
-const reducedMotion =
-  typeof window !== 'undefined' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Module-level read of `prefers-reduced-motion` is captured once at import
+// and never refreshes — toggling the OS preference mid-session wouldn't
+// take effect. A hook with a `change` listener is barely more code and
+// stays correct.
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+  return reduced;
+}
 
 function isExternalFileDrag(e: React.DragEvent): boolean {
   return Array.from(e.dataTransfer.types).includes('Files');
@@ -306,15 +321,21 @@ function Thumbnail({
         </button>
       )}
 
-      {/* Click-to-toggle popup with the localized error + retry. Anchored
-          below the thumbnail so it doesn't cover the photo itself. */}
+      {/* Click-to-toggle popup with the localized error + retry.
+          Mobile (< sm): pinned to the bottom of the viewport with a
+          left/right margin, so it can't clip past the screen edge when
+          the failed photo is the 3rd/4th thumbnail in a row (208px
+          popup vs. ~360px viewport puts the right edge well off-screen
+          on a left-anchored dropdown). Desktop (sm+): the original
+          dropdown anchored below the thumbnail, where horizontal space
+          isn't a concern. */}
       {hasUploadError && errorPopupOpen && (
         <div
           role="dialog"
           data-error-popup
           aria-label={uploadFailedLabel}
           onClick={(e) => e.stopPropagation()}
-          className="absolute left-0 top-full z-20 mt-1 w-52 rounded-card border border-char/10 bg-white p-2.5 text-left text-xs text-char shadow-md"
+          className="fixed inset-x-4 bottom-4 z-30 rounded-card border border-char/10 bg-white p-3 text-left text-sm text-char shadow-lg sm:absolute sm:inset-x-auto sm:bottom-auto sm:left-0 sm:top-full sm:mt-1 sm:w-52 sm:p-2.5 sm:text-xs sm:shadow-md"
         >
           <p className="mb-2 leading-snug">{uploadErrorMessage}</p>
           {onRetryUpload && retryLabel && (
@@ -368,6 +389,7 @@ export default function PhotoUpload({
   error,
 }: PhotoUploadProps) {
   const { t } = useTranslation();
+  const reducedMotion = usePrefersReducedMotion();
   const [isDraggingZone, setIsDraggingZone] = useState(false);
   const [dragItemKey, setDragItemKey] = useState<string | null>(null);
   const [dropItemKey, setDropItemKey] = useState<string | null>(null);

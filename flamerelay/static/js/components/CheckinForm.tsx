@@ -176,7 +176,13 @@ export default function CheckinForm({
     mode === 'create' && !isAuthenticated && !!config.turnstileSiteKey;
   const showNameField = mode === 'create' && !isAuthenticated;
 
-  maptilerConfig.apiKey = maptilerKey;
+  // The maptiler client reads its API key off a module-level singleton, so
+  // assigning here would run on every render. The key is supplied by the
+  // root loader and effectively never changes mid-session, but stash the
+  // write in an effect so render stays pure.
+  useEffect(() => {
+    maptilerConfig.apiKey = maptilerKey;
+  }, [maptilerKey]);
 
   const pickedLatLng: [number, number] | null = location
     ? (location.split(',').map(Number) as [number, number])
@@ -1262,9 +1268,11 @@ export default function CheckinForm({
               ? isCreate
                 ? `${t('checkin.form.submit.creating')}…`
                 : `${t('common.saving')}…`
-              : isCreate
-                ? t('checkin.form.submit.create')
-                : t('checkin.form.submit.save')}
+              : hasPhotosInFlight
+                ? t('checkin.form.submit.preparingPhotos')
+                : isCreate
+                  ? t('checkin.form.submit.create')
+                  : t('checkin.form.submit.save')}
         </button>
         <a href={unitUrl} className={outlineBtnLg}>
           {t('common.cancel')}

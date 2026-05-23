@@ -409,15 +409,19 @@ describe('CheckinForm auto-upload after shrink', () => {
       );
     });
 
-    // Upload is now in flight (the mock hasn't resolved yet).
+    // Upload is now in flight (the mock hasn't resolved yet). The submit
+    // button is disabled and labelled with the "Preparing photos…" copy
+    // so the user knows the wait is intentional.
     await screen.findByRole('status', { name: /Uploading photo/i });
-    expect(screen.getByRole('button', { name: /^Check in$/i })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: /Preparing photos/i }),
+    ).toBeDisabled();
 
     await act(async () => {
       upload.resolve({ token: 'tok-1', previewUrl: '/media/x.webp' });
     });
 
-    // Upload settled → button re-enabled.
+    // Upload settled → button returns to the default "Check in" label.
     await waitFor(() =>
       expect(
         screen.getByRole('button', { name: /^Check in$/i }),
@@ -549,8 +553,11 @@ describe('CheckinForm multi-photo upload', () => {
         screen.getAllByRole('status', { name: /Uploading photo/i }),
       ).toHaveLength(3),
     );
-    // Submit blocks while uploads are in flight.
-    expect(screen.getByRole('button', { name: /^Check in$/i })).toBeDisabled();
+    // Submit blocks while uploads are in flight; label shifts to
+    // "Preparing photos…" so the disabled state isn't silent.
+    expect(
+      screen.getByRole('button', { name: /Preparing photos/i }),
+    ).toBeDisabled();
 
     // Resolve uploads in a different order than they were started; the
     // form must still emit tokens in the original photo order.

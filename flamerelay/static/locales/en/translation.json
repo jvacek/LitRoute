@@ -191,6 +191,7 @@
       "submit": {
         "create": "Check in",
         "creating": "Submitting",
+        "preparingPhotos": "Preparing photos…",
         "save": "Save changes",
         "uploading": "Uploading photo {{current}} of {{total}}…"
       },
