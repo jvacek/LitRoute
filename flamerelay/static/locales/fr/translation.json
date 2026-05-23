@@ -20,7 +20,6 @@
       "clickToMove": "Cliquez sur la carte pour déplacer le repère.",
       "dismiss": "Ignorer",
       "errors": {
-        "gpsRequired": "L'accès à la localisation est requis pour cette unité. Autorisez l'accès à la localisation dans votre navigateur et réessayez.",
         "locationRequired": "Cliquez sur la carte pour définir votre position.",
         "maxPhotos": "Maximum {{max}} photos par enregistrement.",
         "nameRequired": "Ajoutez un nom pour que votre enregistrement compte au classement.",

@@ -274,7 +274,7 @@ export default function CheckinForm({
       if (result.kind === 'no-fix') {
         setErrors((e) => ({
           ...e,
-          location: [t('checkin.form.errors.gpsRequired')],
+          location: [t('checkin.form.errors.gpsFixFailed')],
         }));
         setShowPrivacyHint(false);
         return;
@@ -510,7 +510,7 @@ export default function CheckinForm({
         return;
       }
       if (result.kind === 'no-fix') {
-        setErrors({ location: [t('checkin.form.errors.gpsRequired')] });
+        setErrors({ location: [t('checkin.form.errors.gpsFixFailedGame')] });
         return;
       }
       const { latitude, longitude, accuracyM } = result.position;
@@ -587,6 +587,10 @@ export default function CheckinForm({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Wipe any prior field/server errors so the user starts from a blank
+    // slate on every submit press. Validation and the server response below
+    // re-populate as needed; submit itself is never gated on `errors`.
+    setErrors({});
 
     if (isGpsEnforced) {
       // The submit button is disabled until confirmStep is set, so the only
@@ -615,7 +619,6 @@ export default function CheckinForm({
       }
 
       setSubmitting(true);
-      setErrors({});
 
       const tokens = await uploadMissingTokens();
       if (tokens === null) {
@@ -651,7 +654,6 @@ export default function CheckinForm({
       return;
     }
     setSubmitting(true);
-    setErrors({});
 
     const tokens = await uploadMissingTokens();
     if (tokens === null) {

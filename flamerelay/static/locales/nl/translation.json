@@ -20,7 +20,6 @@
       "clickToMove": "Klik op de kaart om de speld te verplaatsen.",
       "dismiss": "Sluiten",
       "errors": {
-        "gpsRequired": "Locatietoegang is vereist voor deze eenheid. Sta locatietoegang toe in je browser en probeer opnieuw.",
         "locationRequired": "Klik op de kaart om je locatie in te stellen.",
         "maxPhotos": "Maximaal {{max}} foto's per check-in.",
         "nameRequired": "Vul een naam van minstens 3 letters in zodat je check-in meetelt voor de ranglijst.",
