@@ -9,20 +9,20 @@ const DISCORD_URL = 'https://discord.gg/6sShax8UgF';
 const REDDIT_URL = 'https://reddit.com/r/litroute';
 const MASTODON_URL = 'https://fosstodon.org/@jvacek';
 
-// `stacked`: render the two cards in a single column (used on /changelog/
-// where this whole block is itself one column of a two-column layout).
-// Default is side-by-side from the `sm` breakpoint up.
+// Default layout matches About: single column on tiny screens, side-by-side
+// from `sm` up. Callers in different parent layouts (e.g. /changelog/, where
+// this block sits next to the feedback form on `lg+` and needs its own
+// breakpoints) can override via `gridClassName`.
+const DEFAULT_GRID = 'grid grid-cols-1 gap-5 sm:grid-cols-2';
+
 export default function ConnectLinks({
-  stacked = false,
+  gridClassName = DEFAULT_GRID,
 }: {
-  stacked?: boolean;
+  gridClassName?: string;
 }) {
   const { t } = useTranslation();
-  const gridClass = stacked
-    ? 'grid grid-cols-1 gap-5'
-    : 'grid grid-cols-1 gap-5 sm:grid-cols-2';
   return (
-    <div className={gridClass}>
+    <div className={gridClassName}>
       <div className="rounded-card border border-char/10 bg-white px-5 py-5">
         <h3 className="font-heading mb-4 text-xs font-bold uppercase tracking-wider text-char/50">
           {t('about.connect.followLabel')}

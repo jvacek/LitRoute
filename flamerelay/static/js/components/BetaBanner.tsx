@@ -1,3 +1,4 @@
+import { Fragment, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { entries as changelogEntries } from '../../../../CHANGELOG.md';
@@ -36,25 +37,52 @@ export default function BetaBanner({
       })
     : t('beta.seeChanges');
 
+  const messages = useMemo(
+    () => [
+      { key: 'wip', label: t('beta.message'), highlight: false },
+      { key: 'changes', label: changesLabel, highlight: true },
+      { key: 'will-break', label: t('beta.willBreak'), highlight: false },
+      { key: 'feedback', label: t('beta.feedback'), highlight: false },
+    ],
+    [t, changesLabel],
+  );
+
   return (
     <div className={`flex justify-center px-3 ${wrapperClassName}`}>
       <Link
         to="/changelog/"
-        className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-amber/60 bg-amber/30 px-3 py-1 text-[11px] font-medium text-char shadow-sm backdrop-blur-md transition-all hover:-translate-y-px hover:border-amber hover:bg-amber/40 hover:shadow"
+        className="ticker-pause-on-hover group inline-flex items-center gap-2 overflow-hidden rounded-full border border-amber/60 bg-amber/30 px-3 py-1 text-[11px] font-semibold text-char shadow-sm backdrop-blur-md transition-all hover:-translate-y-px hover:border-amber hover:bg-amber/40 hover:shadow"
       >
         <span className="rounded-full bg-amber px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-char">
           {t('beta.badge')}
         </span>
-        <span>{t('beta.message')}</span>
-        <span aria-hidden="true" className="text-amber/70">
-          |
-        </span>
-        <span>{t('beta.feedback')}</span>
-        <span aria-hidden="true" className="text-amber/70">
-          |
-        </span>
-        <span className="font-semibold underline decoration-amber decoration-2 underline-offset-2">
-          {changesLabel}
+        {/* Stock-ticker scroll. Two copies of the message list slide leftward
+            in lockstep; at -50% the second copy lands exactly where the first
+            started, so the loop is seamless. A `·` separator follows every
+            message (including the last of copy 1, which visually divides it
+            from the first of copy 2). CSS lives in project.css. */}
+        <span className="block w-[280px] overflow-hidden font-mono">
+          <span className="ticker-scroll inline-flex w-max items-center whitespace-nowrap">
+            {[0, 1].map((copy) =>
+              messages.map((m) => (
+                <Fragment key={`${copy}-${m.key}`}>
+                  <span
+                    aria-hidden={copy === 1 ? 'true' : undefined}
+                    className={
+                      m.highlight
+                        ? 'font-bold underline decoration-amber decoration-2 underline-offset-2'
+                        : ''
+                    }
+                  >
+                    {m.label}
+                  </span>
+                  <span aria-hidden="true" className="mx-1.5 text-char/50">
+                    |
+                  </span>
+                </Fragment>
+              )),
+            )}
+          </span>
         </span>
       </Link>
     </div>

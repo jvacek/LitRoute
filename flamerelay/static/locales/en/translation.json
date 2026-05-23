@@ -2,8 +2,8 @@
   "about": {
     "aboutTitle": "About the project",
     "connect": {
-      "discord": "Discord — r/litroute hangout",
-      "followLabel": "Follow along",
+      "discord": "Discord",
+      "followLabel": "Let's connect!",
       "githubBody": "Open source, MIT-licensed. Issues and PRs welcome — open an issue first so we can discuss.",
       "githubCta": "View on GitHub",
       "githubTitle": "Read the code",
@@ -116,7 +116,8 @@
     "message": "Still WIP!",
     "seeChanges": "See changes",
     "seeChangesFresh": "Updated {{ago}}",
-    "today": "today"
+    "today": "today",
+    "willBreak": "Things might break"
   },
   "changelog": {
     "disclaimer": "Heads up: this is a beta. Things will break, look weird, or behave in surprising ways. Lower your expectations a notch — and if you see something broken, please let me know.",

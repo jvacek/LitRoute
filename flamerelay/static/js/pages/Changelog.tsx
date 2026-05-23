@@ -46,7 +46,12 @@ export default function Changelog() {
             <h2 className="font-heading mb-4 text-2xl font-bold text-char">
               {t('about.connect.title')}
             </h2>
-            <ConnectLinks stacked />
+            {/* Phone (< sm): stacked vertically for readability on iPhone-sized
+                screens. Tablet/large-phone (sm to lg-1): side-by-side, since
+                the feedback form is below — there's room to spread out. lg+:
+                stacked again, because this is now one narrow column next to
+                the feedback form. */}
+            <ConnectLinks gridClassName="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-1" />
           </section>
 
           <section>
