@@ -660,6 +660,12 @@
         }
       }
     },
+    "notifications": {
+      "saved": "Saved.",
+      "sectionTitle": "Email notifications",
+      "thankYouHelp": "Stops the \"thanks for checking in\" confirmation email after you check in a lighter. You'll still get emails when someone else checks in a lighter you follow.",
+      "thankYouLabel": "Send me a thank-you email after I check in a lighter"
+    },
     "passkeys": {
       "addBtn": "Add a passkey",
       "added": "Added {{date}}",

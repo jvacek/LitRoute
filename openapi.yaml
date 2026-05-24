@@ -1031,6 +1031,8 @@ components:
         language:
           type: string
           maxLength: 10
+        receive_ty_emails:
+          type: boolean
         admin_url:
           type: string
           nullable: true
@@ -1183,6 +1185,8 @@ components:
         language:
           type: string
           maxLength: 10
+        receive_ty_emails:
+          type: boolean
         admin_url:
           type: string
           nullable: true

@@ -488,6 +488,7 @@ export interface components {
             /** Name of User */
             name?: string;
             language?: string;
+            receive_ty_emails?: boolean;
             readonly admin_url?: string | null;
         };
         PendingImageUploadRequest: {
@@ -547,6 +548,7 @@ export interface components {
             /** Name of User */
             name?: string;
             language?: string;
+            receive_ty_emails?: boolean;
             readonly admin_url: string | null;
         };
     };

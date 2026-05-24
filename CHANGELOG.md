@@ -1,3 +1,7 @@
+## 2026-05-24
+
+- You can disable the "thank you for checking in" emails now, handy if you check in often.
+
 ## 2026-05-23
 
 - Fix wrong message when getting your location about it being required (it probably wasn't unless you're in a game)

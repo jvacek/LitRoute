@@ -3,6 +3,7 @@ import SocialAccountManager from '../../components/SocialAccountManager';
 import DeleteAccountSection from './DeleteAccountSection';
 import EmailSection from './EmailSection';
 import MfaSection from './MfaSection';
+import NotificationsSection from './NotificationsSection';
 import PasskeySection from './PasskeySection';
 import ProfileSection from './ProfileSection';
 
@@ -36,6 +37,9 @@ export default function UserSettings() {
         </Section>
         <Section title={t('settings.email.sectionTitle')}>
           <EmailSection />
+        </Section>
+        <Section title={t('settings.notifications.sectionTitle')}>
+          <NotificationsSection />
         </Section>
         <Section title={t('common.twoFactorAuth')}>
           <MfaSection />

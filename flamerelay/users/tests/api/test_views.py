@@ -29,6 +29,7 @@ class TestAccountView:
             "username": user.username,
             "name": user.name,
             "language": user.language,
+            "receive_ty_emails": user.receive_ty_emails,
             "admin_url": None,
         }
 
@@ -50,6 +51,16 @@ class TestAccountView:
         client = APIClient()
         response = client.patch("/api/account/", {"name": "x"}, format="json")
         assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_patch_receive_ty_emails(self, user: User):
+        assert user.receive_ty_emails is True
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.patch("/api/account/", {"receive_ty_emails": False}, format="json")
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["receive_ty_emails"] is False
+        user.refresh_from_db()
+        assert user.receive_ty_emails is False
 
 
 @pytest.mark.django_db
