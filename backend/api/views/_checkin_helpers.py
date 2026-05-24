@@ -100,9 +100,7 @@ def _verify_pending_upload_captcha(request) -> None:
         return
     if _captcha_cache_is_fresh(request):
         return
-    turnstile_token = request.data.get("turnstile_token", "")
-    remote_ip = request.headers.get("cf-connecting-ip") or request.META.get("REMOTE_ADDR", "")
-    if not turnstile.verify_turnstile(turnstile_token, remote_ip):
+    if not turnstile.verify_request(request):
         raise serializers.ValidationError({"captcha": ["Captcha verification failed. Please try again."]})
     request.session[_CAPTCHA_SESSION_KEY] = time.time()
 
@@ -249,11 +247,10 @@ class CheckinValidator:
             return
         if _captcha_cache_is_fresh(self.request):
             return
-        turnstile_token = self.request.data.get("turnstile_token", "")
-        remote_ip = self.request.headers.get("cf-connecting-ip") or self.request.META.get("REMOTE_ADDR", "")
-        # Look up via the module so test patches of
-        # `backend.api.views.turnstile.verify_turnstile` take effect.
-        if not turnstile.verify_turnstile(turnstile_token, remote_ip):
+        # Routes through verify_turnstile via the module, so the test
+        # patch on `backend.api.views.turnstile.verify_turnstile` still takes
+        # effect.
+        if not turnstile.verify_request(self.request):
             raise serializers.ValidationError({"captcha": ["Captcha verification failed. Please try again."]})
 
     def verify_gps_drift(self, validated_data) -> None:

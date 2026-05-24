@@ -43,9 +43,7 @@ class FeedbackView(APIView):
             email = request.user.email or ""
             user = request.user
         else:
-            turnstile_token = request.data.get("turnstile_token", "")
-            remote_ip = request.headers.get("cf-connecting-ip") or request.META.get("REMOTE_ADDR", "")
-            if not turnstile.verify_turnstile(turnstile_token, remote_ip):
+            if not turnstile.verify_request(request):
                 return Response(
                     {"detail": "Captcha verification failed. Please try again."},
                     status=status.HTTP_400_BAD_REQUEST,

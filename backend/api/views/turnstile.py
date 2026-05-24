@@ -37,3 +37,14 @@ def verify_turnstile(token: str, remote_ip: str = "") -> bool:
     except Exception:
         logger.exception("Turnstile verification error")
         return False
+
+
+def verify_request(request) -> bool:
+    """Pull the `turnstile_token` field and the remote IP off the request
+    using the project's standard locations, then verify with Cloudflare.
+
+    Tests patch `backend.api.views.turnstile.verify_turnstile`; this wrapper
+    routes through it, so the same patch covers both call shapes."""
+    token = request.data.get("turnstile_token", "")
+    remote_ip = request.headers.get("cf-connecting-ip") or request.META.get("REMOTE_ADDR", "")
+    return verify_turnstile(token, remote_ip)

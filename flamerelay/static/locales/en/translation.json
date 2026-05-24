@@ -136,9 +136,7 @@
       "clickToMove": "Click the map to move the pin.",
       "dismiss": "Dismiss",
       "errors": {
-        "captchaFailed": "We couldn't verify you weren't a bot. Tap the button below to try again.",
         "captchaRequired": "Please pass the bot check before uploading photos.",
-        "captchaRetry": "Try the check again",
         "connectionFailed": "Couldn't reach the server. Your photos and message are still here — check your connection and try again.",
         "gpsFixFailed": "Couldn't get a GPS reading — this sometimes happens indoors or with a weak signal. Try again, or click the map to set your location.",
         "gpsFixFailedGame": "Couldn't get a GPS reading — this sometimes happens indoors or with a weak signal. Please try again.",
@@ -216,6 +214,11 @@
     "about": "About",
     "back": "Back",
     "cancel": "Cancel",
+    "captcha": {
+      "failed": "We couldn't verify you weren't a bot. Tap the button below to try again.",
+      "pending": "Please complete the captcha before submitting.",
+      "retry": "Try the check again"
+    },
     "confirm": "Confirm",
     "confirming": "Confirming",
     "connectedAccounts": "Connected accounts",
@@ -343,9 +346,6 @@
     }
   },
   "feedback": {
-    "captchaFailed": "We couldn't verify you weren't a bot. Tap the button below to try again.",
-    "captchaPending": "Please complete the captcha before submitting.",
-    "captchaRetry": "Try the check again",
     "emailHelpAnonymous": "Optional — if you leave this blank we won't be able to follow up with you.",
     "emailHelpAuthenticated": "Signed in as {{name}} — we'll send a confirmation to your account email.",
     "emailLabel": "Your email (optional)",

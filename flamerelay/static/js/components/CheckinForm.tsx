@@ -1,5 +1,4 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import {
   config as maptilerConfig,
   geocoding,
@@ -19,7 +18,7 @@ import {
   PendingUploadError,
   type PendingUploadResult,
 } from '../lib/uploadPendingImage';
-import { useConfig } from '../lib/useConfig';
+import { useTurnstileGate } from '../lib/useTurnstileGate';
 import { fieldErrorClass, outlineBtnLg, primaryBtnLg } from '../styles';
 
 import LocationDeniedModal from './LocationDeniedModal';
@@ -102,7 +101,6 @@ export default function CheckinForm({
 }: CheckinFormProps) {
   const { t } = useTranslation();
   const { isAuthenticated } = useAuth();
-  const config = useConfig();
   const [location, setLocation] = useState(initialData?.location ?? '');
   const [place, setPlace] = useState(initialData?.place ?? '');
   const [message, setMessage] = useState(initialData?.message ?? '');
@@ -154,9 +152,21 @@ export default function CheckinForm({
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [geolocating, setGeolocating] = useState(false);
   const [showPrivacyHint, setShowPrivacyHint] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState('');
-  const [turnstileError, setTurnstileError] = useState(false);
-  const turnstileRef = useRef<TurnstileInstance | null>(null);
+  const {
+    token: turnstileToken,
+    widget: turnstileWidget,
+    show: showTurnstile,
+  } = useTurnstileGate({
+    enabled: mode === 'create' && !isAuthenticated,
+    externalError: !!errors.captcha,
+    onRetry: () =>
+      setErrors((e) => {
+        if (!e.captcha) return e;
+        const next = { ...e };
+        delete next.captcha;
+        return next;
+      }),
+  });
   const [anonymousName, setAnonymousName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<GeocodingFeature[]>([]);
@@ -176,8 +186,6 @@ export default function CheckinForm({
   // with the picked feature's name, so the debounced effect below skips one
   // run instead of immediately re-querying and reopening the dropdown.
   const skipNextSearchRef = useRef(false);
-  const showTurnstile =
-    mode === 'create' && !isAuthenticated && !!config.turnstileSiteKey;
   const showNameField = mode === 'create' && !isAuthenticated;
 
   // The maptiler client reads its API key off a module-level singleton, so
@@ -1192,9 +1200,6 @@ export default function CheckinForm({
       {errors.non_field_errors && (
         <p className={fieldErrorClass}>{errors.non_field_errors.join(' ')}</p>
       )}
-      {errors.captcha && (
-        <p className={fieldErrorClass}>{errors.captcha.join(' ')}</p>
-      )}
 
       {isCreate && (
         <p className="text-xs italic text-smoke">
@@ -1202,50 +1207,7 @@ export default function CheckinForm({
         </p>
       )}
 
-      {showTurnstile && (
-        <div className="flex flex-col items-center gap-2">
-          <Turnstile
-            ref={turnstileRef}
-            siteKey={config.turnstileSiteKey}
-            onSuccess={(token) => {
-              setTurnstileToken(token);
-              setTurnstileError(false);
-            }}
-            onError={() => {
-              setTurnstileToken('');
-              setTurnstileError(true);
-            }}
-            onExpire={() => {
-              setTurnstileToken('');
-              turnstileRef.current?.reset();
-            }}
-            options={{ theme: 'light', appearance: 'interaction-only' }}
-          />
-          {(turnstileError || errors.captcha) && (
-            <div className="flex flex-col items-center gap-1">
-              <p className={fieldErrorClass}>
-                {t('checkin.form.errors.captchaFailed')}
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setTurnstileError(false);
-                  setErrors((e) => {
-                    if (!e.captcha) return e;
-                    const next = { ...e };
-                    delete next.captcha;
-                    return next;
-                  });
-                  turnstileRef.current?.reset();
-                }}
-                className="text-sm text-amber underline"
-              >
-                {t('checkin.form.errors.captchaRetry')}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+      {turnstileWidget}
 
       {/* Mobile users may have field errors scrolled out of view above the
           submit button. Nudge them to scroll up when any field-level error
