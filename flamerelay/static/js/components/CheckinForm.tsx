@@ -172,6 +172,10 @@ export default function CheckinForm({
   const snapRafRef = useRef<number>(0);
   const mapRef = useRef<MapRef>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+  // Set when `handleSelectResult` programmatically overwrites `searchQuery`
+  // with the picked feature's name, so the debounced effect below skips one
+  // run instead of immediately re-querying and reopening the dropdown.
+  const skipNextSearchRef = useRef(false);
   const showTurnstile =
     mode === 'create' && !isAuthenticated && !!config.turnstileSiteKey;
   const showNameField = mode === 'create' && !isAuthenticated;
@@ -194,6 +198,10 @@ export default function CheckinForm({
 
   // Debounced geocoding search
   useEffect(() => {
+    if (skipNextSearchRef.current) {
+      skipNextSearchRef.current = false;
+      return;
+    }
     if (!searchQuery.trim()) {
       setSearchResults([]);
       setSearchOpen(false);
@@ -262,6 +270,7 @@ export default function CheckinForm({
       ? `${feature.text}, ${country}`
       : (feature.text ?? '');
     setPlace(placeName);
+    skipNextSearchRef.current = true;
     setSearchQuery(feature.place_name ?? placeName);
     setSearchOpen(false);
     mapRef.current?.flyTo({ center: [lng, lat], zoom: 12, duration: 1000 });
@@ -810,7 +819,7 @@ export default function CheckinForm({
                     searchResults.length > 0 && setSearchOpen(true)
                   }
                   placeholder={t('checkin.form.searchPlaceholder')}
-                  className="flex-1 rounded-input border border-char/15 bg-white px-4 py-2.5 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
+                  className="min-w-0 flex-1 rounded-input border border-char/15 bg-white px-4 py-2.5 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
                   autoComplete="off"
                 />
                 <button
