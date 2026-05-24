@@ -1,3 +1,7 @@
+## 2026-05-25
+
+- Put a cap on message length
+
 ## 2026-05-24
 
 - You can disable the "thank you for checking in" emails now, handy if you check in often.

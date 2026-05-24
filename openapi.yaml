@@ -550,6 +550,7 @@ components:
           readOnly: true
         message:
           type: string
+          maxLength: 5000
         place:
           type: string
           maxLength: 200
@@ -979,6 +980,7 @@ components:
           readOnly: true
         message:
           type: string
+          maxLength: 5000
         place:
           type: string
           maxLength: 200

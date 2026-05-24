@@ -645,7 +645,7 @@ export default function Unit() {
                   <div className="flex flex-col gap-3 p-4 sm:flex-row sm:gap-4">
                     <div className="flex min-w-0 flex-1 flex-col">
                       {c.message && (
-                        <p className="mb-4 text-base text-char/80">
+                        <p className="mb-4 whitespace-pre-line text-base text-char/80">
                           {c.message}
                         </p>
                       )}

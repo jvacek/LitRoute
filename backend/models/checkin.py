@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.gis.db.models import PointField
 from django.db import models
+from django.db.models.functions import Length
 from django.utils import timezone
 from django_resized import ResizedImageField
 
@@ -9,11 +10,17 @@ from config.constants import (
     CHECKIN_ANONYMOUS_NAME_MAX_LENGTH,
     CHECKIN_EMAIL_DELAY_SECONDS,
     CHECKIN_IMAGE_MAX_EDGE_PX,
+    CHECKIN_MESSAGE_MAX_LENGTH,
 )
 from flamerelay.users.models import User
 
 from .unit import Unit
 from .validators import path_and_rename, validate_image_size, validate_no_urls
+
+# CheckIn.Meta's CheckConstraint uses `message__length__lte`; register the
+# Length transform on TextField at import time so the lookup resolves when
+# migrations build the constraint's SQL.
+models.TextField.register_lookup(Length)
 
 
 class CheckIn(models.Model):
@@ -22,12 +29,18 @@ class CheckIn(models.Model):
     created_by = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     edit_token = models.UUIDField(null=True, blank=True, unique=True)
     anonymous_name = models.CharField(max_length=CHECKIN_ANONYMOUS_NAME_MAX_LENGTH, blank=True, default="")
-    message = models.TextField(blank=True, validators=[validate_no_urls])
+    message = models.TextField(blank=True, max_length=CHECKIN_MESSAGE_MAX_LENGTH, validators=[validate_no_urls])
     place = models.CharField(max_length=200, blank=True)
     location = PointField(geography=True)
 
     class Meta:
         ordering = ["-date_created"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(message__length__lte=CHECKIN_MESSAGE_MAX_LENGTH),
+                name="checkin_message_max_length",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.unit!s} {self.date_created!s}"

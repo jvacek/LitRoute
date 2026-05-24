@@ -26,6 +26,7 @@ import LowPrecisionLocationModal from './LowPrecisionLocationModal';
 import PhotoUpload from './PhotoUpload';
 
 const MAX_IMAGES = 5;
+const MESSAGE_MAX_LENGTH = 5000;
 // Game-mode required fields must contain at least this many word characters
 // (Unicode letters or numbers) so the leaderboard isn't populated with junk
 // like "..." or "ab".
@@ -1147,11 +1148,15 @@ export default function CheckinForm({
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           rows={4}
+          maxLength={MESSAGE_MAX_LENGTH}
           placeholder={
             isCreate ? t('checkin.form.messagePlaceholder') : undefined
           }
           className="w-full rounded-input border border-char/15 bg-white px-4 py-3 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
         />
+        <p className="mt-1 text-right text-xs text-char/40">
+          {message.length}/{MESSAGE_MAX_LENGTH}
+        </p>
         {errors.message && (
           <p className={fieldErrorClass}>{errors.message.join(' ')}</p>
         )}
