@@ -157,11 +157,15 @@ def send_thank_you_email_task(checkin_id: int):
         logger.info("CheckIn %d no longer exists, skipping thank-you email", checkin_id)
         return
 
-    if checkin.created_by_id is None:
+    if checkin.created_by is None:
         return
 
     if not checkin.created_by.email:
         logger.info("CheckIn %d creator has no email, skipping thank-you email", checkin_id)
+        return
+
+    if not checkin.created_by.receive_ty_emails:
+        logger.info("CheckIn %d creator opted out of thank-you emails", checkin_id)
         return
 
     site = Site.objects.get_current()
