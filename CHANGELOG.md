@@ -1,6 +1,7 @@
 ## 2026-05-24
 
 - You can disable the "thank you for checking in" emails now, handy if you check in often.
+- Fix the checkin's location search drop-down from re-appearing
 
 ## 2026-05-23
 
