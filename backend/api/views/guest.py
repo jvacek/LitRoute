@@ -14,6 +14,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from backend.api.views import turnstile
 from backend.models import CheckIn, Unit
 from config.constants import GUEST_EMAIL_VERIFICATION_EXPIRY_SECONDS
 
@@ -27,6 +28,7 @@ class GuestFollowView(APIView):
             fields={
                 "email": serializers.EmailField(),
                 "checkin_id": serializers.IntegerField(),
+                "turnstile_token": serializers.CharField(required=False, allow_blank=True),
             },
         ),
         responses={
@@ -51,6 +53,14 @@ class GuestFollowView(APIView):
             return Response({"detail": "Enter a valid email address."}, status=status.HTTP_400_BAD_REQUEST)
         if not checkin_id:
             return Response({"detail": "checkin_id is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Guest-only endpoint — no auth bypass. Gate before ratelimit/mail
+        # so bots can't burn through the rate-limit slot with stale tokens.
+        if not turnstile.verify_request(request):
+            return Response(
+                {"detail": "Captcha verification failed. Please try again."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if not ratelimit.consume(request, action="guest_follow", key=email):
             return Response(

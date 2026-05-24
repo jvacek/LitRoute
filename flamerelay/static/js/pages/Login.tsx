@@ -18,6 +18,7 @@ import { apiFetch } from '../api';
 import { FieldErrors, NonFieldErrors } from '../components/AllauthErrors';
 import SocialProviders from '../components/SocialProviders';
 import { reportError } from '../lib/sentry';
+import { useTurnstileGate } from '../lib/useTurnstileGate';
 import { inputClass, labelClass, primaryBtn } from '../styles';
 import { useAuth } from '../AuthContext';
 
@@ -61,6 +62,12 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [mfaHasWebAuthn, setMfaHasWebAuthn] = useState(false);
   const conditionalPasskeyStarted = useRef(false);
+  const {
+    token: turnstileToken,
+    widget: turnstileWidget,
+    isReady: turnstileReady,
+    reset: resetTurnstile,
+  } = useTurnstileGate({ onRetry: () => setErrors([]) });
 
   const checkNameThenRedirect = useCallback(async () => {
     try {
@@ -202,13 +209,20 @@ export default function Login() {
       WebAuthnAbortService.cancelCeremony(),
     );
     setErrors([]);
+    if (!turnstileReady) {
+      setErrors([{ message: t('common.captcha.pending') }]);
+      return;
+    }
     setLoading(true);
     try {
-      const result = await requestLoginCode(email);
+      const result = await requestLoginCode(email, turnstileToken);
       if (result.ok) {
         setStep('code');
       } else {
         setErrors([{ message: result.detail ?? t('auth.errors.sendFailed') }]);
+        if (result.detail?.toLowerCase().includes('captcha')) {
+          resetTurnstile();
+        }
       }
     } finally {
       setLoading(false);
@@ -394,6 +408,7 @@ export default function Login() {
           />
           <FieldErrors param="email" errors={errors} />
         </div>
+        {turnstileWidget}
         <button type="submit" disabled={loading} className={primaryBtn}>
           {loading
             ? `${t('auth.email.submit.loading')}…`

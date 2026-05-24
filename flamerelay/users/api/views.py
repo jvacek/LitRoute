@@ -16,6 +16,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from backend.api.serializers import UnitSerializer
+from backend.api.views import turnstile
 from flamerelay.users.models import User
 from flamerelay.users.services import anonymize_user
 
@@ -111,7 +112,10 @@ class RequestCodeView(APIView):
     @extend_schema(
         request=inline_serializer(
             name="CodeRequest",
-            fields={"email": serializers.EmailField()},
+            fields={
+                "email": serializers.EmailField(),
+                "turnstile_token": serializers.CharField(required=False, allow_blank=True),
+            },
         ),
         responses={
             200: inline_serializer(name="CodeRequestSuccess", fields={"detail": serializers.CharField()}),
@@ -137,6 +141,15 @@ class RequestCodeView(APIView):
         except ValidationError:
             return Response(
                 {"detail": "Enter a valid email address."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Authed callers (reauthentication flow) already proved they're real.
+        # Anonymous sign-in / sign-up must clear Turnstile before we spend
+        # a rate-limit slot or send mail.
+        if not request.user.is_authenticated and not turnstile.verify_request(request):
+            return Response(
+                {"detail": "Captcha verification failed. Please try again."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

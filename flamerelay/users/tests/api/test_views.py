@@ -137,3 +137,33 @@ class TestDeleteAccount:
         client = APIClient()
         response = client.delete("/api/account/")
         assert response.status_code == status.HTTP_403_FORBIDDEN
+
+
+@pytest.mark.django_db
+class TestRequestCodeViewCaptcha:
+    """Sign-in code endpoint gates anonymous callers behind Turnstile.
+    Authed callers (the reauthentication flow) bypass — they already
+    proved they're a real session."""
+
+    URL = "/api/auth/code/request/"
+
+    def test_anon_with_failing_turnstile_returns_400(self):
+        client = APIClient()
+        with patch("backend.api.views.turnstile.verify_turnstile", return_value=False):
+            res = client.post(
+                self.URL,
+                {"email": "new@example.com", "turnstile_token": "bad"},
+                format="json",
+            )
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+        assert "captcha" in res.json()["detail"].lower()
+
+    def test_authed_caller_skips_turnstile(self, user: User):
+        client = APIClient()
+        client.force_authenticate(user=user)
+        # No turnstile_token; `verify_turnstile` should never be reached,
+        # so even a False patch doesn't block the authed reauth path.
+        with patch("backend.api.views.turnstile.verify_turnstile", return_value=False) as mock_verify:
+            res = client.post(self.URL, {"email": user.email}, format="json")
+        assert res.status_code == status.HTTP_200_OK
+        mock_verify.assert_not_called()

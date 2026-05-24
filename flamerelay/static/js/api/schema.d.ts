@@ -319,6 +319,7 @@ export interface components {
         CodeRequest: {
             /** Format: email */
             email: string;
+            turnstile_token?: string;
         };
         CodeRequestError: {
             detail: string;
@@ -388,6 +389,7 @@ export interface components {
             /** Format: email */
             email: string;
             checkin_id: number;
+            turnstile_token?: string;
         };
         GuestFollowSuccess: {
             detail: string;

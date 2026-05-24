@@ -247,6 +247,17 @@ class TestGuestFollow:
         )
         assert res.status_code == status.HTTP_403_FORBIDDEN
 
+    def test_turnstile_failure_returns_400(self, client, unit, make_checkin):
+        checkin = make_checkin(unit, anonymous=True)
+        with patch("backend.api.views.turnstile.verify_turnstile", return_value=False):
+            res = client.post(
+                f"/api/units/{unit.identifier}/guest-follow/",
+                {"email": "sub@example.com", "checkin_id": checkin.pk, "turnstile_token": "bad"},
+                format="json",
+            )
+        assert res.status_code == status.HTTP_400_BAD_REQUEST
+        assert "captcha" in res.json()["detail"].lower()
+
 
 # ── Guest verify (email magic-link) ────────────────────────────────────────────
 

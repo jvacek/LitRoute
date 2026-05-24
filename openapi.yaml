@@ -621,6 +621,8 @@ components:
         email:
           type: string
           format: email
+        turnstile_token:
+          type: string
       required:
       - email
     CodeRequestError:
@@ -781,6 +783,8 @@ components:
           format: email
         checkin_id:
           type: integer
+        turnstile_token:
+          type: string
       required:
       - checkin_id
       - email

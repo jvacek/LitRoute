@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../api';
+import { useTurnstileGate } from '../lib/useTurnstileGate';
 import { amberCharBtnLg } from '../styles';
 
 function LighterIllustration() {
@@ -29,22 +30,39 @@ export default function GuestEmailCapture({
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const {
+    token: turnstileToken,
+    widget: turnstileWidget,
+    isReady: turnstileReady,
+    reset: resetTurnstile,
+  } = useTurnstileGate({ onRetry: () => setError('') });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!turnstileReady) {
+      setError(t('common.captcha.pending'));
+      return;
+    }
     setLoading(true);
     setError('');
     try {
       const res = await apiFetch(`/api/units/${identifier}/guest-follow/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, checkin_id: checkinId }),
+        body: JSON.stringify({
+          email,
+          checkin_id: checkinId,
+          turnstile_token: turnstileToken,
+        }),
       });
       if (res.ok) {
         setSent(true);
       } else {
         const json = (await res.json()) as { detail?: string };
         setError(json.detail ?? t('common.unexpectedError'));
+        if (json.detail?.toLowerCase().includes('captcha')) {
+          resetTurnstile();
+        }
       }
     } catch {
       setError(t('common.unexpectedError'));
@@ -96,6 +114,7 @@ export default function GuestEmailCapture({
           inputMode="email"
           className="w-full rounded-input border border-char/15 bg-linen px-4 py-3 text-center text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
         />
+        {turnstileWidget}
         <button
           type="submit"
           disabled={loading}

@@ -74,8 +74,11 @@ export interface CodeRequestResult {
 }
 
 // Calls our own endpoint (not /_allauth/), so returns CodeRequestResult instead of AllauthResponse.
+// `turnstileToken` is empty for authenticated callers (reauthentication
+// flow); the server only checks the token when the request is anonymous.
 export async function requestLoginCode(
   email: string,
+  turnstileToken?: string,
 ): Promise<CodeRequestResult> {
   const resp = await fetch('/api/auth/code/request/', {
     method: 'POST',
@@ -83,7 +86,7 @@ export async function requestLoginCode(
       'Content-Type': 'application/json',
       'X-CSRFToken': getCsrfToken(),
     },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ email, turnstile_token: turnstileToken ?? '' }),
   });
   const data = (await resp.json()) as { detail?: string };
   return { ok: resp.ok, detail: data.detail };
