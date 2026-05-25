@@ -1,18 +1,10 @@
-import 'maplibre-gl/dist/maplibre-gl.css';
-import {
-  config as maptilerConfig,
-  geocoding,
-  type GeocodingFeature,
-} from '@maptiler/client';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { config as maptilerConfig } from '@maptiler/client';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import ReactMap, { Layer, Marker, Source } from 'react-map-gl/maplibre';
 import type { MapRef } from 'react-map-gl/maplibre';
 import { useAuth } from '../AuthContext';
 import { captureGpsLocation } from '../lib/captureGpsLocation';
-import { clampToCircle } from '../lib/haversine';
 import { convertToWebP } from '../lib/imageConversion';
-import { geodesicCirclePolygon, zoomForDriftRadius } from '../lib/maps';
 import { isNetworkError, reportError } from '../lib/sentry';
 import {
   PendingUploadError,
@@ -21,7 +13,10 @@ import {
 import { useTurnstileGate } from '../lib/useTurnstileGate';
 import { fieldErrorClass, outlineBtnLg, primaryBtnLg } from '../styles';
 
+import FreeformLocationMap from './FreeformLocationMap';
+import GpsConfirmMap, { type ConfirmStep } from './GpsConfirmMap';
 import LocationDeniedModal from './LocationDeniedModal';
+import LocationSearch from './LocationSearch';
 import LowPrecisionLocationModal from './LowPrecisionLocationModal';
 import PhotoUpload from './PhotoUpload';
 
@@ -50,14 +45,6 @@ export interface CheckinSubmitPayload {
 function countWordChars(s: string): number {
   return (s.match(/[\p{L}\p{N}]/gu) ?? []).length;
 }
-
-type ConfirmStep = {
-  gpsLat: number;
-  gpsLng: number;
-  pinLat: number;
-  pinLng: number;
-  accuracyM: number;
-} | null;
 
 export interface ExistingImage {
   id: number;
@@ -169,24 +156,10 @@ export default function CheckinForm({
       }),
   });
   const [anonymousName, setAnonymousName] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<GeocodingFeature[]>([]);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [confirmStep, setConfirmStep] = useState<ConfirmStep>(null);
   const [showLocationDeniedModal, setShowLocationDeniedModal] = useState(false);
   const [showLowPrecisionModal, setShowLowPrecisionModal] = useState(false);
-  // Animated pin position used only during the snap-to-edge animation.
-  // null = no animation running; Marker renders from confirmStep directly.
-  const [snapAnim, setSnapAnim] = useState<{ lat: number; lng: number } | null>(
-    null,
-  );
-  const snapRafRef = useRef<number>(0);
   const mapRef = useRef<MapRef>(null);
-  const searchRef = useRef<HTMLDivElement>(null);
-  // Set when `handleSelectResult` programmatically overwrites `searchQuery`
-  // with the picked feature's name, so the debounced effect below skips one
-  // run instead of immediately re-querying and reopening the dropdown.
-  const skipNextSearchRef = useRef(false);
   const showNameField = mode === 'create' && !isAuthenticated;
 
   // The maptiler client reads its API key off a module-level singleton, so
@@ -205,83 +178,9 @@ export default function CheckinForm({
     (img) => !removedImageIds.includes(img.id),
   );
 
-  // Debounced geocoding search
-  useEffect(() => {
-    if (skipNextSearchRef.current) {
-      skipNextSearchRef.current = false;
-      return;
-    }
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      setSearchOpen(false);
-      return;
-    }
-    const timer = setTimeout(async () => {
-      try {
-        const res = await geocoding.forward(searchQuery, { limit: 5 });
-        setSearchResults(res.features);
-        setSearchOpen(res.features.length > 0);
-      } catch {
-        // silent — map pin-click still works
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    function handler(e: MouseEvent) {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
-        setSearchOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  useEffect(() => () => cancelAnimationFrame(snapRafRef.current), []);
-
-  function runSnapAnim(
-    fromLat: number,
-    fromLng: number,
-    toLat: number,
-    toLng: number,
-  ) {
-    cancelAnimationFrame(snapRafRef.current);
-    // Show the drop position on the first frame so the user sees the pin
-    // "try" to land outside before it bounces back to the edge.
-    setSnapAnim({ lat: fromLat, lng: fromLng });
-    const t0 = performance.now();
-    const DURATION = 350;
-    function tick(now: number) {
-      const p = Math.min((now - t0) / DURATION, 1);
-      const ease = 1 - (1 - p) ** 3; // ease-out cubic
-      setSnapAnim({
-        lat: fromLat + (toLat - fromLat) * ease,
-        lng: fromLng + (toLng - fromLng) * ease,
-      });
-      if (p < 1) {
-        snapRafRef.current = requestAnimationFrame(tick);
-      } else {
-        setSnapAnim(null);
-      }
-    }
-    snapRafRef.current = requestAnimationFrame(tick);
-  }
-
-  function handleSelectResult(feature: GeocodingFeature) {
-    const [lng, lat] = feature.center as [number, number];
+  function handleLocationSelect(lat: number, lng: number, placeName: string) {
     setLocation(`${lat},${lng}`);
-    const country = feature.context?.find((c: { id: string }) =>
-      c.id.startsWith('country.'),
-    )?.text;
-    const placeName = country
-      ? `${feature.text}, ${country}`
-      : (feature.text ?? '');
     setPlace(placeName);
-    skipNextSearchRef.current = true;
-    setSearchQuery(feature.place_name ?? placeName);
-    setSearchOpen(false);
     mapRef.current?.flyTo({ center: [lng, lat], zoom: 12, duration: 1000 });
   }
 
@@ -711,44 +610,6 @@ export default function CheckinForm({
 
   const isCreate = mode === 'create';
 
-  const pinGeoJSON = useMemo(() => {
-    if (!location) return { type: 'FeatureCollection' as const, features: [] };
-    const [lat, lng] = location.split(',').map(Number);
-    return {
-      type: 'FeatureCollection' as const,
-      features: [
-        {
-          type: 'Feature' as const,
-          geometry: { type: 'Point' as const, coordinates: [lng, lat] },
-          properties: {},
-        },
-      ],
-    };
-  }, [location]);
-
-  // Mirrors the server-side rule `max(game.gps_drift_floor, gps_accuracy_m)`
-  // so a user with a coarse fix can nudge their pin anywhere inside their
-  // accuracy circle (and the drawn circle reflects what the server will
-  // actually accept). Falls back to the floor while there's no fix yet.
-  const effectiveDriftM = confirmStep
-    ? Math.max(gpsDriftFloorM, confirmStep.accuracyM)
-    : gpsDriftFloorM;
-
-  const confirmCircleGeoJSON = useMemo(() => {
-    if (!confirmStep)
-      return { type: 'FeatureCollection' as const, features: [] };
-    return {
-      type: 'FeatureCollection' as const,
-      features: [
-        geodesicCirclePolygon(
-          confirmStep.gpsLat,
-          confirmStep.gpsLng,
-          effectiveDriftM,
-        ),
-      ],
-    };
-  }, [confirmStep, effectiveDriftM]);
-
   const newImages = imageKeys.map((key, i) => ({
     key,
     preview: imagePreviews[i] ?? '',
@@ -775,33 +636,11 @@ export default function CheckinForm({
           <label className="mb-2 block text-sm font-medium text-char">
             {t('checkin.form.locationLabel')}
           </label>
-          <div className="overflow-hidden rounded-card border border-char/10">
-            <ReactMap
-              mapStyle={`https://api.maptiler.com/maps/dataviz/style.json?key=${maptilerKey}`}
-              initialViewState={{
-                longitude: pickedLatLng[1],
-                latitude: pickedLatLng[0],
-                zoom: 12,
-              }}
-              style={{ height: '240px', width: '100%' }}
-              interactive={false}
-              attributionControl={false}
-            >
-              <Source id="pin" type="geojson" data={pinGeoJSON}>
-                <Layer
-                  id="pin-circle"
-                  type="circle"
-                  paint={{
-                    'circle-radius': 10,
-                    'circle-color': '#e8a030',
-                    'circle-opacity': 0.9,
-                    'circle-stroke-width': 2,
-                    'circle-stroke-color': '#ffffff',
-                  }}
-                />
-              </Source>
-            </ReactMap>
-          </div>
+          <FreeformLocationMap
+            maptilerKey={maptilerKey}
+            pickedLatLng={pickedLatLng}
+            interactive={false}
+          />
           <p className="mt-1.5 text-xs text-smoke">
             {t('checkin.form.locationLockedOnEdit')}
           </p>
@@ -817,57 +656,11 @@ export default function CheckinForm({
           </label>
 
           <>
-            {/* Search bar + Use my location button */}
-            <div ref={searchRef} className="relative mb-2">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onFocus={() =>
-                    searchResults.length > 0 && setSearchOpen(true)
-                  }
-                  placeholder={t('checkin.form.searchPlaceholder')}
-                  className="min-w-0 flex-1 rounded-input border border-char/15 bg-white px-4 py-2.5 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
-                  autoComplete="off"
-                />
-                <button
-                  type="button"
-                  onClick={handleGeolocate}
-                  disabled={geolocating}
-                  className="shrink-0 rounded-btn bg-amber px-4 py-2.5 text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
-                >
-                  {geolocating
-                    ? `${t('checkin.form.useMyLocation.loading')}…`
-                    : t('checkin.form.useMyLocation.default')}
-                </button>
-              </div>
-
-              {/* Autocomplete dropdown */}
-              {searchOpen && searchResults.length > 0 && (
-                <ul className="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden rounded-card border border-char/10 bg-white shadow-md">
-                  {searchResults.map((feature) => (
-                    <li key={feature.id as string}>
-                      <button
-                        type="button"
-                        className="w-full px-4 py-2.5 text-left text-sm text-char hover:bg-linen focus:bg-linen focus:outline-none"
-                        onClick={() => handleSelectResult(feature)}
-                      >
-                        <span className="font-medium">{feature.text}</span>
-                        {feature.place_name &&
-                          feature.place_name !== feature.text && (
-                            <span className="ml-1 text-smoke">
-                              {feature.place_name.slice(
-                                (feature.text?.length ?? 0) + 2,
-                              )}
-                            </span>
-                          )}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+            <LocationSearch
+              geolocating={geolocating}
+              onGeolocate={handleGeolocate}
+              onSelect={handleLocationSelect}
+            />
 
             <p className="mb-2 text-xs text-smoke">
               {isCreate
@@ -875,38 +668,13 @@ export default function CheckinForm({
                 : t('checkin.form.clickToMove')}
             </p>
 
-            {/* Map */}
-            <div className="overflow-hidden rounded-card border border-char/10">
-              <ReactMap
-                ref={mapRef}
-                mapStyle={`https://api.maptiler.com/maps/dataviz/style.json?key=${maptilerKey}`}
-                initialViewState={{
-                  longitude: pickedLatLng ? pickedLatLng[1] : 6,
-                  latitude: pickedLatLng ? pickedLatLng[0] : 41,
-                  zoom: pickedLatLng ? 8 : 3,
-                }}
-                style={{ height: '320px', width: '100%' }}
-                cursor="crosshair"
-                onClick={(e) => {
-                  const { lng, lat } = e.lngLat;
-                  setLocation(`${lat},${lng}`);
-                }}
-              >
-                <Source id="pin" type="geojson" data={pinGeoJSON}>
-                  <Layer
-                    id="pin-circle"
-                    type="circle"
-                    paint={{
-                      'circle-radius': 10,
-                      'circle-color': '#e8a030',
-                      'circle-opacity': 0.9,
-                      'circle-stroke-width': 2,
-                      'circle-stroke-color': '#ffffff',
-                    }}
-                  />
-                </Source>
-              </ReactMap>
-            </div>
+            <FreeformLocationMap
+              maptilerKey={maptilerKey}
+              pickedLatLng={pickedLatLng}
+              interactive
+              mapRef={mapRef}
+              onPinSet={(lat, lng) => setLocation(`${lat},${lng}`)}
+            />
 
             {location && (
               <p className="mt-1.5 text-xs font-medium text-amber">
@@ -953,149 +721,17 @@ export default function CheckinForm({
             {isCreate && <span className="text-ember"> *</span>}
           </label>
 
-          <div className="overflow-hidden rounded-card border border-char/10">
-            {confirmStep ? (
-              <ReactMap
-                mapStyle={`https://api.maptiler.com/maps/dataviz/style.json?key=${maptilerKey}`}
-                initialViewState={{
-                  longitude: confirmStep.gpsLng,
-                  latitude: confirmStep.gpsLat,
-                  zoom: zoomForDriftRadius(effectiveDriftM, confirmStep.gpsLat),
-                }}
-                style={{ height: '240px', width: '100%' }}
-                onClick={(e) => {
-                  const { lng, lat } = e.lngLat;
-                  const [clampedLat, clampedLng] = clampToCircle(
-                    confirmStep.gpsLat,
-                    confirmStep.gpsLng,
-                    effectiveDriftM,
-                    lat,
-                    lng,
-                  );
-                  setConfirmStep(
-                    (s) =>
-                      s && { ...s, pinLat: clampedLat, pinLng: clampedLng },
-                  );
-                  if (clampedLat !== lat || clampedLng !== lng) {
-                    runSnapAnim(lat, lng, clampedLat, clampedLng);
-                  }
-                }}
-              >
-                <Source
-                  id="confirm-circle"
-                  type="geojson"
-                  data={confirmCircleGeoJSON}
-                >
-                  <Layer
-                    id="confirm-circle-fill"
-                    type="fill"
-                    paint={{ 'fill-color': '#e8a030', 'fill-opacity': 0.15 }}
-                  />
-                  <Layer
-                    id="confirm-circle-line"
-                    type="line"
-                    paint={{ 'line-color': '#e8a030', 'line-width': 2 }}
-                  />
-                </Source>
-                <Marker
-                  longitude={confirmStep.gpsLng}
-                  latitude={confirmStep.gpsLat}
-                >
-                  <div
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      background: '#3b82f6',
-                      border: '2px solid #fff',
-                      pointerEvents: 'none',
-                    }}
-                  />
-                </Marker>
-                <Marker
-                  longitude={snapAnim?.lng ?? confirmStep.pinLng}
-                  latitude={snapAnim?.lat ?? confirmStep.pinLat}
-                  draggable
-                  onDragStart={() => {
-                    cancelAnimationFrame(snapRafRef.current);
-                    setSnapAnim(null);
-                  }}
-                  onDragEnd={(e) => {
-                    const { lng, lat } = e.lngLat;
-                    const [clampedLat, clampedLng] = clampToCircle(
-                      confirmStep.gpsLat,
-                      confirmStep.gpsLng,
-                      effectiveDriftM,
-                      lat,
-                      lng,
-                    );
-                    setConfirmStep(
-                      (s) =>
-                        s && { ...s, pinLat: clampedLat, pinLng: clampedLng },
-                    );
-                    if (clampedLat !== lat || clampedLng !== lng) {
-                      runSnapAnim(lat, lng, clampedLat, clampedLng);
-                    }
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 20,
-                      height: 20,
-                      borderRadius: '50%',
-                      background: '#e8a030',
-                      border: '2px solid #fff',
-                      cursor: 'grab',
-                    }}
-                  />
-                </Marker>
-              </ReactMap>
-            ) : (
-              <div className="relative" style={{ height: '240px' }}>
-                {/* Non-interactive map at a wide view so the placeholder
-                    visually reads as "map" before GPS capture. */}
-                <ReactMap
-                  mapStyle={`https://api.maptiler.com/maps/dataviz/style.json?key=${maptilerKey}`}
-                  initialViewState={{ longitude: 6, latitude: 41, zoom: 3 }}
-                  style={{ height: '240px', width: '100%' }}
-                  interactive={false}
-                  attributionControl={false}
-                />
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6">
-                  <div className="pointer-events-auto flex max-w-sm flex-col items-center gap-3 rounded-card bg-white/95 px-5 py-4 text-center shadow-md">
-                    <p className="text-sm text-char">
-                      {t('checkin.form.gpsNotice')}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={handleGpsCapture}
-                      disabled={submitting}
-                      className={primaryBtnLg}
-                    >
-                      {submitting
-                        ? `${t('checkin.form.useMyLocation.loading')}…`
-                        : t('checkin.form.useMyLocation.default')}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {confirmStep && (
-            <div className="mt-2 flex items-center justify-between gap-3">
-              <p className="text-xs text-smoke">
-                {t('checkin.form.gpsNudgeHint')}
-              </p>
-              <button
-                type="button"
-                onClick={() => setConfirmStep(null)}
-                className="shrink-0 text-xs text-smoke underline hover:text-char"
-              >
-                {t('checkin.form.useMyLocation.default')}
-              </button>
-            </div>
-          )}
+          <GpsConfirmMap
+            maptilerKey={maptilerKey}
+            gpsDriftFloorM={gpsDriftFloorM}
+            confirmStep={confirmStep}
+            capturing={submitting}
+            onCapture={handleGpsCapture}
+            onSelectPin={(pinLat, pinLng) =>
+              setConfirmStep((s) => s && { ...s, pinLat, pinLng })
+            }
+            onReset={() => setConfirmStep(null)}
+          />
 
           {errors.location && (
             <p className={fieldErrorClass}>{errors.location.join(' ')}</p>
