@@ -1,4 +1,6 @@
 #!/bin/bash
+set -o xtrace
+
 pushd ~/Git/FlameRelay || exit 1
 git fetch
 git reset --hard origin/main
