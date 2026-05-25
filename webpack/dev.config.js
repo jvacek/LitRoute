@@ -10,7 +10,10 @@ module.exports = merge(commonConfig, {
       '**/node_modules/**',
       '**/webpack_bundles/**',
       '**/.webpack_cache/**',
-      '**/webpack-stats.json',
+      // Both `webpack-stats.json` (default) and `webpack-stats.e2e.json`
+      // (the e2e overlay's WEBPACK_STATS_FILE) — without the wildcard the
+      // parallel e2e stack's stats writes feed back into this watcher.
+      '**/webpack-stats*.json',
       '**/.git/**',
       '**/__pycache__/**',
       '**/staticfiles/**',
