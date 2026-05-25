@@ -80,15 +80,21 @@ jobs:
             node.cache-from=type=gha,scope=node-cached-e2e
             node.cache-to=type=gha,scope=node-cached-e2e,mode=max
 
-      - name: Bring up the e2e stack
-        run: docker compose -f docker-compose.local.yml -f docker-compose.e2e.yml up -d django node
-        env:
-          COMPOSE_PROJECT_NAME: flamerelay_e2e
-
+      # Migrate + seed in a one-shot BEFORE bringing up the long-running
+      # django container. The /start script on the django service also runs
+      # migrate, so doing both concurrently races on `CREATE EXTENSION IF
+      # NOT EXISTS postgis` (that statement is not concurrency-safe) and
+      # one side fails with a unique-violation. `run --rm django` auto-starts
+      # postgres/redis/mailpit via depends_on, so they're up for the seed.
       - name: Migrate and seed e2e fixtures
         run: |
           docker compose -f docker-compose.local.yml -f docker-compose.e2e.yml run --rm django \
             sh -c "python manage.py migrate && python manage.py seed_e2e_units"
+        env:
+          COMPOSE_PROJECT_NAME: flamerelay_e2e
+
+      - name: Bring up the e2e stack
+        run: docker compose -f docker-compose.local.yml -f docker-compose.e2e.yml up -d django node
         env:
           COMPOSE_PROJECT_NAME: flamerelay_e2e
 

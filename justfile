@@ -60,11 +60,14 @@ test *args:
 #             (flamerelay_e2e). Brings up its own django/node/postgres/redis on
 #             ports 8010/3010, leaving your `just up` dev stack untouched. First
 #             time: `npm i && npx playwright install chromium`.
+#             Migrate + seed run BEFORE `up -d django` so they don't race with
+#             the /start script's own migrate (which would conflict on
+#             `CREATE EXTENSION IF NOT EXISTS postgis`).
 e2e *args:
     @COMPOSE_PROJECT_NAME=flamerelay_e2e COMPOSE_FILE="docker-compose.local.yml:docker-compose.e2e.yml" \
-        docker compose up -d django node
-    @COMPOSE_PROJECT_NAME=flamerelay_e2e COMPOSE_FILE="docker-compose.local.yml:docker-compose.e2e.yml" \
         docker compose run --rm django sh -c "python manage.py migrate && python manage.py seed_e2e_units"
+    @COMPOSE_PROJECT_NAME=flamerelay_e2e COMPOSE_FILE="docker-compose.local.yml:docker-compose.e2e.yml" \
+        docker compose up -d django node
     @E2E_BASE_URL=http://localhost:3010 npx playwright test {{args}}
 
 # e2e-down: Stop and remove the isolated e2e stack and its volumes (DB, redis cache).
