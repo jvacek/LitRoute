@@ -347,18 +347,22 @@ export default function Login() {
               ? `${t('common.signingIn')}…`
               : t('auth.code.submit.default')}
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setStep('email');
-              setCode('');
-              setErrors([]);
-            }}
-            className="w-full text-sm text-char/50 hover:text-char"
-          >
-            ← {t('auth.code.differentEmail')}
-          </button>
         </form>
+        {/* Sibling of <form>, not inside it: keeps React from reusing this
+            DOM node as the email step's submit <button> via position-based
+            reconciliation, which would silently flip type="button" →
+            type="submit" mid-click and trigger an unwanted form submit. */}
+        <button
+          type="button"
+          onClick={() => {
+            setStep('email');
+            setCode('');
+            setErrors([]);
+          }}
+          className="mt-5 w-full text-sm text-char/50 hover:text-char"
+        >
+          ← {t('auth.code.differentEmail')}
+        </button>
       </main>
     );
   }

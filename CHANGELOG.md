@@ -2,6 +2,7 @@
 
 - Put a cap on message length
 - Changed the passkey log-in flow, use your browser's autofill/dropdown instead.
+- Fix the "use different email" loop on the login
 
 ## 2026-05-24
 
