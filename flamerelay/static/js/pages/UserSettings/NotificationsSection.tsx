@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../../api';
+import type { components } from '../../api/schema';
 import { reportError } from '../../lib/sentry';
+
+type Account = components['schemas']['User'];
 
 export default function NotificationsSection() {
   const { t } = useTranslation();
@@ -14,9 +17,12 @@ export default function NotificationsSection() {
 
   useEffect(() => {
     apiFetch('/api/account/')
-      .then((r) => r.json())
-      .then((data: { receive_ty_emails?: boolean }) =>
-        setReceiveTyEmails(data.receive_ty_emails ?? true),
+      .then((r) => (r.ok ? (r.json() as Promise<Account>) : null))
+      .then((data) => {
+        if (data) setReceiveTyEmails(data.receive_ty_emails ?? true);
+      })
+      .catch((err: unknown) =>
+        reportError(err, { where: 'NotificationsSection.fetchAccount' }),
       )
       .finally(() => setLoading(false));
   }, []);

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 
+import { apiFetch } from '../../api';
 import scribbleUpSrc from '../../assets/arrows/scribble-up.svg';
 import BetaBanner from '../../components/BetaBanner';
 import LighterInput from './LighterInput';
@@ -101,7 +102,7 @@ export function Hero() {
           setNotFoundId(null);
           setChecking(true);
           try {
-            const r = await fetch(`/api/units/${id}/`);
+            const r = await apiFetch(`/api/units/${id}/`);
             if (r.status === 404) {
               setNotFoundId(id);
               setErrorKey((k) => k + 1);

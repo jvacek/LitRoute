@@ -8,13 +8,9 @@ import {
 } from 'react';
 import i18n from './i18n';
 import { apiFetch } from './api';
+import type { components } from './api/schema';
 
-interface AuthUser {
-  username: string;
-  name: string;
-  language: string;
-  admin_url: string | null;
-}
+type Account = components['schemas']['User'];
 
 interface AuthContextValue {
   isAuthenticated: boolean;
@@ -35,14 +31,14 @@ const AuthContext = createContext<AuthContextValue>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<Account | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     try {
       const resp = await apiFetch('/api/account/');
       if (resp.ok) {
-        const me = (await resp.json()) as AuthUser;
+        const me = (await resp.json()) as Account;
         setUser(me);
         Sentry.setUser({ username: me.username });
         if (me.language && me.language !== i18n.resolvedLanguage) {

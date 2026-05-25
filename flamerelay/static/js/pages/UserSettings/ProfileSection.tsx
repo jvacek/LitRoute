@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { apiFetch } from '../../api';
+import type { components } from '../../api/schema';
 import { reportError } from '../../lib/sentry';
 import { inputClass, primaryBtnMd } from '../../styles';
+
+type Account = components['schemas']['User'];
 
 export default function ProfileSection() {
   const { t } = useTranslation();
@@ -14,8 +17,13 @@ export default function ProfileSection() {
 
   useEffect(() => {
     apiFetch('/api/account/')
-      .then((r) => r.json())
-      .then((data: { name: string }) => setName(data.name ?? ''))
+      .then((r) => (r.ok ? (r.json() as Promise<Account>) : null))
+      .then((data) => {
+        if (data) setName(data.name ?? '');
+      })
+      .catch((err: unknown) =>
+        reportError(err, { where: 'ProfileSection.fetchAccount' }),
+      )
       .finally(() => setLoading(false));
   }, []);
 

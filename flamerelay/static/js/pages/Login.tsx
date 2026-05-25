@@ -15,6 +15,7 @@ import {
   type AllauthResponse,
 } from '../lib/allauthApi';
 import { apiFetch } from '../api';
+import type { components } from '../api/schema';
 import { FieldErrors, NonFieldErrors } from '../components/AllauthErrors';
 import SocialProviders from '../components/SocialProviders';
 import { reportError } from '../lib/sentry';
@@ -24,10 +25,7 @@ import { useAuth } from '../AuthContext';
 
 type Step = 'email' | 'code' | 'mfa';
 
-interface MeData {
-  username: string;
-  name: string;
-}
+type Account = components['schemas']['User'];
 
 // @simplewebauthn/browser ships ~20KB gzipped of credential plumbing. The
 // vast majority of /accounts/login/ visitors never touch a passkey, so we
@@ -67,7 +65,7 @@ export default function Login() {
     try {
       const resp = await apiFetch('/api/account/');
       if (resp.ok) {
-        const me = (await resp.json()) as MeData;
+        const me = (await resp.json()) as Account;
         if (!me.name) {
           const next =
             destination !== '/'

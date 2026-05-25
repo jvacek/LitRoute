@@ -3,12 +3,15 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { apiFetch } from '../api';
+import type { components } from '../api/schema';
 import brusselsImg from '../assets/journey/brussels.webp';
 import { FieldErrors, NonFieldErrors } from '../components/AllauthErrors';
 import { useAuth } from '../AuthContext';
 import { getSession, type AllauthError } from '../lib/allauthApi';
 import { reportError } from '../lib/sentry';
 import { inputClass, labelClass, primaryBtn } from '../styles';
+
+type Account = components['schemas']['User'];
 
 export default function Signup() {
   const { t, i18n } = useTranslation();
@@ -29,8 +32,11 @@ export default function Signup() {
         if (!mounted) return;
         if (resp.meta?.is_authenticated) {
           apiFetch('/api/account/')
-            .then((r) => r.json())
-            .then((me: { name: string }) => {
+            .then((r) => {
+              if (!r.ok) throw new Error(`HTTP ${r.status}`);
+              return r.json() as Promise<Account>;
+            })
+            .then((me) => {
               if (!mounted) return;
               setName(me.name ?? '');
               setReady(true);
