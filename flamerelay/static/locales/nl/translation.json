@@ -2,9 +2,6 @@
   "auth": {
     "email": {
       "emailLabel": "E-mailadres",
-      "passkey": {
-        "default": "Aanmelden met een passkey"
-      },
       "submit": {
         "default": "Doorgaan met e-mail",
         "loading": "Code versturen"

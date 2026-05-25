@@ -69,9 +69,7 @@
     "email": {
       "description": "Enter your email and we'll send you a one-time code — no password needed.",
       "emailLabel": "Email",
-      "passkey": {
-        "default": "Sign in with a passkey"
-      },
+      "passkeyHint": "Have a passkey for this site? Tap the email field and pick it from your browser's autofill.",
       "submit": {
         "default": "Continue with email",
         "loading": "Sending code"
@@ -79,7 +77,6 @@
       "title": "Sign in or sign up"
     },
     "errors": {
-      "passkeyFailed": "Passkey sign-in was cancelled or failed. Try signing in with your email instead.",
       "passkeyMfaFailed": "Passkey authentication failed. Try your authenticator code instead.",
       "sendFailed": "Failed to send code. Try again.",
       "socialLoginFailed": "Sign-in with that provider didn't complete. Please try again.",

@@ -2,9 +2,6 @@
   "auth": {
     "email": {
       "emailLabel": "Adresse e-mail",
-      "passkey": {
-        "default": "Se connecter avec une clé d'accès"
-      },
       "submit": {
         "default": "Envoyer le code",
         "loading": "Envoi"

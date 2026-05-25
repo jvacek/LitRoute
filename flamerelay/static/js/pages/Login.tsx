@@ -32,13 +32,6 @@ interface MeData {
 // @simplewebauthn/browser ships ~20KB gzipped of credential plumbing. The
 // vast majority of /accounts/login/ visitors never touch a passkey, so we
 // load it on demand instead of pulling it into the Login chunk.
-function browserSupportsWebAuthn() {
-  return (
-    typeof window !== 'undefined' &&
-    typeof window.PublicKeyCredential === 'function'
-  );
-}
-
 type WebAuthnModule = typeof import('@simplewebauthn/browser');
 let webAuthnModulePromise: Promise<WebAuthnModule> | null = null;
 function loadWebAuthn(): Promise<WebAuthnModule> {
@@ -61,6 +54,7 @@ export default function Login() {
   const [errors, setErrors] = useState<AllauthError[]>([]);
   const [loading, setLoading] = useState(false);
   const [mfaHasWebAuthn, setMfaHasWebAuthn] = useState(false);
+  const [passkeyHintVisible, setPasskeyHintVisible] = useState(false);
   const conditionalPasskeyStarted = useRef(false);
   const {
     token: turnstileToken,
@@ -163,6 +157,7 @@ export default function Login() {
         !(await window.PublicKeyCredential.isConditionalMediationAvailable())
       )
         return;
+      setPasskeyHintVisible(true);
       try {
         const { startAuthentication } = await loadWebAuthn();
         const options = await getPasskeyLoginOptions();
@@ -185,23 +180,6 @@ export default function Login() {
       );
     };
   }, [handleAuthResponse]);
-
-  async function signInWithPasskey() {
-    setErrors([]);
-    setLoading(true);
-    try {
-      const { startAuthentication, WebAuthnAbortService } =
-        await loadWebAuthn();
-      WebAuthnAbortService.cancelCeremony();
-      const options = await getPasskeyLoginOptions();
-      const credential = await startAuthentication({ optionsJSON: options });
-      handleAuthResponse(await passkeyLogin(credential));
-    } catch {
-      setErrors([{ message: t('auth.errors.passkeyFailed') }]);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   async function sendCode(e: React.FormEvent) {
     e.preventDefault();
@@ -407,6 +385,11 @@ export default function Login() {
             className={inputClass}
           />
           <FieldErrors param="email" errors={errors} />
+          {passkeyHintVisible && (
+            <p className="mt-1.5 text-xs text-char/50">
+              {t('auth.email.passkeyHint')}
+            </p>
+          )}
         </div>
         {turnstileWidget}
         <button type="submit" disabled={loading} className={primaryBtn}>
@@ -415,30 +398,6 @@ export default function Login() {
             : t('auth.email.submit.default')}
         </button>
       </form>
-      {browserSupportsWebAuthn() && (
-        <>
-          <div className="relative my-5">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-char/10" />
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="bg-white px-2 text-char/40">
-                {t('common.or')}
-              </span>
-            </div>
-          </div>
-          <button
-            type="button"
-            disabled={loading}
-            onClick={() => void signInWithPasskey()}
-            className={primaryBtn}
-          >
-            {loading
-              ? `${t('common.signingIn')}…`
-              : t('auth.email.passkey.default')}
-          </button>
-        </>
-      )}
       <SocialProviders callbackUrl="/accounts/login/" />
     </main>
   );
