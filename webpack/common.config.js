@@ -95,7 +95,10 @@ module.exports = {
   plugins: [
     new BundleTracker({
       path: path.resolve(path.join(__dirname, '../')),
-      filename: 'webpack-stats.json',
+      // WEBPACK_STATS_FILE lets parallel stacks (e.g. the e2e overlay sharing
+      // the host bind mount) write to independent stats files so they don't
+      // overwrite each other's bundle hashes.
+      filename: process.env.WEBPACK_STATS_FILE || 'webpack-stats.json',
     }),
     new MiniCssExtractPlugin({ filename: 'css/[name].[contenthash].css' }),
     new webpack.DefinePlugin({

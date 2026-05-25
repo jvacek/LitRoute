@@ -441,7 +441,11 @@ SPECTACULAR_SETTINGS = {
 WEBPACK_LOADER = {
     "DEFAULT": {
         "CACHE": not DEBUG,
-        "STATS_FILE": BASE_DIR / "webpack-stats.json",
+        # Mirrors WEBPACK_STATS_FILE in webpack/common.config.js — parallel
+        # stacks (e.g. the e2e overlay sharing the host bind mount) point
+        # at independent stats files so they don't trample each other's
+        # bundle hashes.
+        "STATS_FILE": BASE_DIR / env("WEBPACK_STATS_FILE", default="webpack-stats.json"),
         "POLL_INTERVAL": 0.1,
         "IGNORE": [r".+\.hot-update.js", r".+\.map"],
     },

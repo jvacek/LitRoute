@@ -277,6 +277,7 @@ flamerelay/media/
 .ipython/
 flamerelay/static/webpack_bundles/
 webpack-stats.json
+webpack-stats.e2e.json
 .env
 .envs/*
 !.envs/.local

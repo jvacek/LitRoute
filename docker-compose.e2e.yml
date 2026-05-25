@@ -20,6 +20,10 @@ services:
     container_name: flamerelay_e2e_django
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.e2e
+      # Keep the e2e bundle stats independent of the user's local stack —
+      # both stacks share /app via the host bind mount, so without this
+      # they'd race over webpack-stats.json and serve mismatched hashes.
+      WEBPACK_STATS_FILE: webpack-stats.e2e.json
     ports: !override
       - '8010:8000'
 
@@ -36,6 +40,10 @@ services:
 
   node:
     container_name: flamerelay_e2e_node
+    environment:
+      # Mirror of the django service — keep e2e webpack stats separate
+      # from the local stack's so the two don't trample each other.
+      WEBPACK_STATS_FILE: webpack-stats.e2e.json
     ports: !override
       - '3010:3000'
 
