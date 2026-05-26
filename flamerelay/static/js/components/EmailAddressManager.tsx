@@ -9,7 +9,7 @@ import {
   type AllauthError,
 } from '../lib/allauthApi';
 import { NonFieldErrors } from './AllauthErrors';
-import { inputClassFlex, secondaryBtn } from '../styles';
+import { inputClassFlex, primaryBtnMd, secondaryBtn } from '../styles';
 
 interface EmailAddressManagerProps {
   onUnauthorized?: () => void;
@@ -168,7 +168,7 @@ export default function EmailAddressManager({
         <button
           type="submit"
           disabled={actionLoading !== null}
-          className="rounded-btn bg-amber px-[18px] py-[9px] text-sm font-semibold tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50"
+          className={primaryBtnMd}
         >
           {actionLoading === 'add' ? 'Adding\u2026' : 'Add'}
         </button>

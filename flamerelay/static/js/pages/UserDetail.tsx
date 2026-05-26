@@ -2,6 +2,12 @@ import { useTranslation } from 'react-i18next';
 import { Link, useLoaderData, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { logout } from '../lib/allauthApi';
+import {
+  actionAmberBtnMd,
+  actionCharBtnMd,
+  actionEmberBtnMd,
+  actionMutedBtnMd,
+} from '../styles';
 import type { UserDetailLoaderData } from './UserDetail.loader';
 
 function initials(name: string): string {
@@ -45,32 +51,23 @@ export default function UserDetail() {
         <div className="flex flex-wrap gap-3">
           {adminUrl && (
             <>
-              <a
-                href={adminUrl}
-                className="rounded-btn bg-char px-[18px] py-[7px] text-sm font-medium tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0"
-              >
+              <a href={adminUrl} className={actionCharBtnMd}>
                 {t('userDetail.admin')}
               </a>
-              <Link
-                to="/contribute/"
-                className="rounded-btn bg-char/20 px-[18px] py-[7px] text-sm font-medium tracking-wide text-char transition-transform hover:-translate-y-px active:translate-y-0"
-              >
+              <Link to="/contribute/" className={actionMutedBtnMd}>
                 {t('userDetail.contributorGuide')}
               </Link>
             </>
           )}
         </div>
         <div className="flex flex-wrap gap-3">
-          <Link
-            to="/profile/settings/"
-            className="rounded-btn bg-amber px-[18px] py-[7px] text-sm font-medium tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0"
-          >
+          <Link to="/profile/settings/" className={actionAmberBtnMd}>
             {t('common.settings')}
           </Link>
           <button
             type="button"
             onClick={handleLogout}
-            className="rounded-btn bg-ember px-[18px] py-[7px] text-sm font-medium tracking-wide text-white transition-transform hover:-translate-y-px active:translate-y-0"
+            className={actionEmberBtnMd}
           >
             {t('userDetail.signOut')}
           </button>

@@ -22,6 +22,15 @@ export const outlineOnDarkBtnMd = `${btnBase} border border-white/20 bg-white/15
 // Ember (destructive/warning) buttons
 export const emberBtnMd = `${btnBase} bg-ember px-[18px] py-[7px] text-sm font-semibold text-white`;
 
+// In-content "action" buttons — same Md size but `font-medium` instead of
+// `font-semibold`, so they read as secondary actions next to page-primary CTAs.
+// Used for follow/unfollow rows, profile-page header actions, etc.
+const actionMdBase = `${btnBase} px-[18px] py-[7px] text-sm font-medium`;
+export const actionAmberBtnMd = `${actionMdBase} bg-amber text-white`;
+export const actionEmberBtnMd = `${actionMdBase} bg-ember text-white`;
+export const actionCharBtnMd = `${actionMdBase} bg-char text-white`;
+export const actionMutedBtnMd = `${actionMdBase} bg-char/20 text-char`;
+
 // Outline / secondary buttons
 export const outlineBtnLg =
   'rounded-btn border border-char/15 px-[22px] py-[9px] text-sm font-medium text-char transition-colors hover:bg-linen';

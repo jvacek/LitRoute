@@ -16,7 +16,12 @@ import GuestEmailCapture from '../components/GuestEmailCapture';
 import ImageCarousel from '../components/ImageCarousel';
 import TeamBadge from '../components/TeamBadge';
 import type UnitMapComponent from '../components/UnitMap';
-import { amberCharBtnMd, fieldErrorClass, outlineOnDarkBtnMd } from '../styles';
+import {
+  actionEmberBtnMd,
+  amberCharBtnMd,
+  fieldErrorClass,
+  outlineOnDarkBtnMd,
+} from '../styles';
 import { getEditToken } from '../lib/editTokens';
 import { getGameConfig } from '../lib/gameConfig';
 import { haversineKm } from '../lib/haversine';
@@ -442,11 +447,9 @@ export default function Unit() {
                 <button
                   onClick={handleFollow}
                   disabled={followLoading}
-                  className={`rounded-btn px-[18px] py-[7px] text-sm font-medium tracking-wide transition-transform hover:-translate-y-px active:translate-y-0 disabled:pointer-events-none disabled:opacity-50 ${
-                    unit.is_following
-                      ? 'bg-ember text-white'
-                      : 'border border-white/20 bg-white/15 text-white'
-                  }`}
+                  className={
+                    unit.is_following ? actionEmberBtnMd : outlineOnDarkBtnMd
+                  }
                 >
                   {unit.is_following ? t('unit.unfollow') : t('unit.follow')}
                 </button>
