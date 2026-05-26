@@ -4,7 +4,7 @@ import { Link, useLoaderData, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { useAuth } from '../AuthContext';
 import { reportError } from '../lib/sentry';
-import { outlineBtnLg, primaryBtnLg } from '../styles';
+import { inputClassLg, outlineBtnLg, primaryBtnLg } from '../styles';
 import type { UserFormLoaderData } from './UserForm.loader';
 
 export default function UserForm() {
@@ -65,7 +65,7 @@ export default function UserForm() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder={t('common.namePlaceholder')}
-            className="w-full rounded-input border border-char/15 bg-white px-4 py-3 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
+            className={inputClassLg}
           />
           {errors.name && (
             <p className="mt-1 text-xs text-ember">{errors.name.join(' ')}</p>

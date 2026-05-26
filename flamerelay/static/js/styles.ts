@@ -30,9 +30,18 @@ export const outlineBtnMd =
 export const outlineBtnSm =
   'rounded-btn border border-char/15 px-3 py-[5px] text-sm font-medium text-char transition-colors hover:bg-linen';
 
-// Inputs and labels
-export const inputClass =
-  'w-full rounded-input border border-char/20 bg-white px-3 py-2.5 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20';
+// Inputs and labels.
+// `inputClass` is the default for auth/settings forms: compact (py-2.5),
+// full-width, darker char/20 border.
+// `inputClassLg` is the larger form-page variant used on check-in / signup-style
+// pages: char/15 border, more padding (px-4 py-3).
+// `inputClassFlex` is for inputs sitting inside flex rows (e.g. inline add-email).
+const inputBase =
+  'rounded-input border border-char/20 bg-white px-3 py-2.5 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20';
+export const inputClass = `w-full ${inputBase}`;
+export const inputClassFlex = `flex-1 ${inputBase}`;
+export const inputClassLg =
+  'w-full rounded-input border border-char/15 bg-white px-4 py-3 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20';
 export const labelClass = 'mb-1 block text-sm font-medium text-char/70';
 
 // Compact inline action button used in email/social management rows.

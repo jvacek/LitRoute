@@ -11,7 +11,12 @@ import {
   type PendingUploadResult,
 } from '../lib/uploadPendingImage';
 import { useTurnstileGate } from '../lib/useTurnstileGate';
-import { fieldErrorClass, outlineBtnLg, primaryBtnLg } from '../styles';
+import {
+  fieldErrorClass,
+  inputClassLg,
+  outlineBtnLg,
+  primaryBtnLg,
+} from '../styles';
 
 import FreeformLocationMap from './FreeformLocationMap';
 import GpsConfirmMap, { type ConfirmStep } from './GpsConfirmMap';
@@ -764,7 +769,7 @@ export default function CheckinForm({
           value={place}
           onChange={(e) => setPlace(e.target.value)}
           placeholder={t('checkin.form.placePlaceholder')}
-          className="w-full rounded-input border border-char/15 bg-white px-4 py-3 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
+          className={inputClassLg}
         />
         {errors.place && (
           <p className={fieldErrorClass}>{errors.place.join(' ')}</p>
@@ -788,7 +793,7 @@ export default function CheckinForm({
           placeholder={
             isCreate ? t('checkin.form.messagePlaceholder') : undefined
           }
-          className="w-full rounded-input border border-char/15 bg-white px-4 py-3 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
+          className={inputClassLg}
         />
         <p className="mt-1 text-right text-xs text-char/40">
           {message.length}/{MESSAGE_MAX_LENGTH}
@@ -817,7 +822,7 @@ export default function CheckinForm({
             onChange={(e) => setAnonymousName(e.target.value)}
             placeholder={t('checkin.form.namePlaceholder')}
             maxLength={100}
-            className="w-full rounded-input border border-char/15 bg-white px-4 py-3 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
+            className={inputClassLg}
           />
           {errors.anonymous_name && (
             <p className={fieldErrorClass}>{errors.anonymous_name.join(' ')}</p>

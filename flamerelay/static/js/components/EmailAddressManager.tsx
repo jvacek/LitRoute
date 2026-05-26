@@ -9,7 +9,7 @@ import {
   type AllauthError,
 } from '../lib/allauthApi';
 import { NonFieldErrors } from './AllauthErrors';
-import { secondaryBtn } from '../styles';
+import { inputClassFlex, secondaryBtn } from '../styles';
 
 interface EmailAddressManagerProps {
   onUnauthorized?: () => void;
@@ -163,7 +163,7 @@ export default function EmailAddressManager({
           onChange={(e) => setNewEmail(e.target.value)}
           placeholder="new@example.com"
           required
-          className="flex-1 rounded-input border border-char/20 bg-white px-3 py-2.5 text-sm text-char placeholder-smoke/60 focus:border-amber focus:outline-none focus:ring-2 focus:ring-amber/20"
+          className={inputClassFlex}
         />
         <button
           type="submit"
