@@ -3,6 +3,7 @@ import type { RefObject } from 'react';
 import { useMemo } from 'react';
 import ReactMap, { Layer, Source } from 'react-map-gl/maplibre';
 import type { MapRef } from 'react-map-gl/maplibre';
+import { brandColors } from '../lib/brandColors';
 
 interface FreeformLocationMapProps {
   maptilerKey: string;
@@ -64,10 +65,10 @@ export default function FreeformLocationMap({
             type="circle"
             paint={{
               'circle-radius': 10,
-              'circle-color': '#e8a030',
+              'circle-color': brandColors.amber,
               'circle-opacity': 0.9,
               'circle-stroke-width': 2,
-              'circle-stroke-color': '#ffffff',
+              'circle-stroke-color': brandColors.white,
             }}
           />
         </Source>

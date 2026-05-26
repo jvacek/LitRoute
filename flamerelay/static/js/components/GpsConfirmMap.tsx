@@ -2,6 +2,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactMap, { Layer, Marker, Source } from 'react-map-gl/maplibre';
+import { brandColors } from '../lib/brandColors';
 import { clampToCircle } from '../lib/haversine';
 import { geodesicCirclePolygon, zoomForDriftRadius } from '../lib/maps';
 import { primaryBtnLg } from '../styles';
@@ -131,12 +132,15 @@ export default function GpsConfirmMap({
               <Layer
                 id="confirm-circle-fill"
                 type="fill"
-                paint={{ 'fill-color': '#e8a030', 'fill-opacity': 0.15 }}
+                paint={{
+                  'fill-color': brandColors.amber,
+                  'fill-opacity': 0.15,
+                }}
               />
               <Layer
                 id="confirm-circle-line"
                 type="line"
-                paint={{ 'line-color': '#e8a030', 'line-width': 2 }}
+                paint={{ 'line-color': brandColors.amber, 'line-width': 2 }}
               />
             </Source>
             <Marker
@@ -148,8 +152,8 @@ export default function GpsConfirmMap({
                   width: 8,
                   height: 8,
                   borderRadius: '50%',
-                  background: '#3b82f6',
-                  border: '2px solid #fff',
+                  background: brandColors.smoke,
+                  border: `2px solid ${brandColors.white}`,
                   pointerEvents: 'none',
                 }}
               />
@@ -169,8 +173,8 @@ export default function GpsConfirmMap({
                   width: 20,
                   height: 20,
                   borderRadius: '50%',
-                  background: '#e8a030',
-                  border: '2px solid #fff',
+                  background: brandColors.amber,
+                  border: `2px solid ${brandColors.white}`,
                   cursor: 'grab',
                 }}
               />

@@ -24,7 +24,7 @@ export function NonFieldErrors({ errors }: { errors: AllauthError[] }) {
   const msgs = errors.filter((e) => !e.param);
   if (!msgs.length) return null;
   return (
-    <ul className="mb-4 space-y-1 rounded-card border border-ember/30 bg-red-50 px-4 py-3">
+    <ul className="mb-4 space-y-1 rounded-card border border-ember/30 bg-ember/10 px-4 py-3">
       {msgs.map((e, i) => (
         <li key={i} className="text-sm text-ember">
           {e.message}

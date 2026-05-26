@@ -7,6 +7,7 @@ import ReactMap, {
 } from 'react-map-gl/maplibre';
 import type { MapRef } from 'react-map-gl/maplibre';
 import type { components } from '../api/schema';
+import { brandColors } from '../lib/brandColors';
 
 type CheckInData = components['schemas']['CheckIn'];
 
@@ -144,7 +145,11 @@ export default function UnitMap({
       features: ordered.slice(0, visibleCount).map((checkin, i) => {
         const isFirst = i === 0;
         const isLast = i === ordered.length - 1;
-        const color = isFirst ? '#e8a030' : isLast ? '#c94c35' : '#7b8fa1';
+        const color = isFirst
+          ? brandColors.amber
+          : isLast
+            ? brandColors.ember
+            : brandColors.smoke;
         return {
           type: 'Feature' as const,
           // Narrow the openapi-typed location (which widens `type` and
@@ -192,7 +197,7 @@ export default function UnitMap({
           id="route-line"
           type="line"
           paint={{
-            'line-color': '#7b8fa1',
+            'line-color': brandColors.smoke,
             'line-width': 2,
             'line-opacity': 0.7,
           }}
@@ -207,7 +212,7 @@ export default function UnitMap({
             'circle-color': ['get', 'color'],
             'circle-opacity': 0.85,
             'circle-stroke-width': 1.5,
-            'circle-stroke-color': '#ffffff',
+            'circle-stroke-color': brandColors.white,
           }}
         />
       </Source>

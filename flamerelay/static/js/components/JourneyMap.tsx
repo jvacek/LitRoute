@@ -7,6 +7,7 @@ import ReactMap, {
   Source,
 } from 'react-map-gl/maplibre';
 import type { MapRef } from 'react-map-gl/maplibre';
+import { brandColors } from '../lib/brandColors';
 
 interface JourneyPoint {
   lng: number;
@@ -47,12 +48,12 @@ interface JourneyMapProps {
 // Fallback colours for units that have no team. Picked to be distinguishable
 // from each other and to read well on the dataviz basemap.
 const FALLBACK_PALETTE = [
-  '#e8a030',
-  '#3b6ea5',
-  '#7b8fa1',
-  '#c94c35',
-  '#5a7a3a',
-  '#8a4f8a',
+  brandColors.amber,
+  '#3b6ea5', // off-brand blue
+  brandColors.smoke,
+  brandColors.ember,
+  '#5a7a3a', // off-brand olive
+  '#8a4f8a', // off-brand plum
 ];
 
 function colourFor(entry: JourneyEntry): string {
@@ -308,7 +309,7 @@ export default function JourneyMap({ entries, maptilerKey }: JourneyMapProps) {
                 'circle-color': ['get', 'color'],
                 'circle-opacity': ['case', ['get', 'after_end'], 0.55, 0.9],
                 'circle-stroke-width': 1,
-                'circle-stroke-color': '#ffffff',
+                'circle-stroke-color': brandColors.white,
               }}
             />
           </Source>

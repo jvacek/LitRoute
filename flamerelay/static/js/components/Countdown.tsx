@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
+import { brandColors } from '../lib/brandColors';
 
 interface Props {
   endTime: string; // ISO datetime
@@ -27,7 +28,13 @@ function diff(targetMs: number): Parts {
   return { expired: false, days, hours, minutes, seconds };
 }
 
-const CONFETTI_COLORS = ['#e8a030', '#c94c35', '#3f8a4a', '#3b6ea5', '#d4a017'];
+const CONFETTI_COLORS = [
+  brandColors.amber,
+  brandColors.ember,
+  brandColors.moss,
+  brandColors.smoke,
+  brandColors.blueprint,
+];
 const PARTICLES_PER_EMITTER = 14;
 
 interface Particle {

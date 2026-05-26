@@ -1,6 +1,4 @@
-// Brand tokens — must mirror @theme in project.css.
-const CHAR = '#1c1a15';
-const WHITE = '#ffffff';
+import { brandColors } from '../lib/brandColors';
 
 function srgbToLinear(channel: number): number {
   const c = channel / 255;
@@ -27,9 +25,10 @@ function contrastRatio(a: string, b: string): number {
 }
 
 export function readableTextColor(bgHex: string): string {
-  return contrastRatio(bgHex, CHAR) >= contrastRatio(bgHex, WHITE)
-    ? CHAR
-    : WHITE;
+  return contrastRatio(bgHex, brandColors.char) >=
+    contrastRatio(bgHex, brandColors.white)
+    ? brandColors.char
+    : brandColors.white;
 }
 
 interface Props {
@@ -39,7 +38,7 @@ interface Props {
   color?: string;
 }
 
-const FALLBACK_COLOR = '#7a7773';
+const FALLBACK_COLOR = brandColors.smoke;
 
 export default function TeamBadge({ name, color }: Props) {
   const bg = color || FALLBACK_COLOR;
