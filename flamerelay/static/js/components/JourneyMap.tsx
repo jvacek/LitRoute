@@ -45,8 +45,22 @@ interface JourneyMapProps {
   maptilerKey: string;
 }
 
+type JourneyFeature =
+  | {
+      type: 'Feature';
+      geometry: { type: 'LineString'; coordinates: [number, number][] };
+      properties: { color: string; after_end: boolean };
+    }
+  | {
+      type: 'Feature';
+      geometry: { type: 'Point'; coordinates: [number, number] };
+      properties: { color: string; after_end: boolean; date: string };
+    };
+
 // Fallback colours for units that have no team. Picked to be distinguishable
-// from each other and to read well on the dataviz basemap.
+// from each other and to read well on the dataviz basemap. The three brand
+// hues here use the canonical tokens; the others have no brand equivalent
+// and exist purely for visual distinction across many ranks.
 const FALLBACK_PALETTE = [
   brandColors.amber,
   '#3b6ea5', // off-brand blue
@@ -170,19 +184,7 @@ export default function JourneyMap({ entries, maptilerKey }: JourneyMapProps) {
   // three layers — scales to thousands of points without per-feature React work.
   // During replay, each unit's journey is sliced to points dated ≤ cursor.
   const featureCollection = useMemo(() => {
-    type Feature =
-      | {
-          type: 'Feature';
-          geometry: { type: 'LineString'; coordinates: [number, number][] };
-          properties: { color: string; after_end: boolean };
-        }
-      | {
-          type: 'Feature';
-          geometry: { type: 'Point'; coordinates: [number, number] };
-          properties: { color: string; after_end: boolean; date: string };
-        };
-
-    const features: Feature[] = [];
+    const features: JourneyFeature[] = [];
     const cursor = replayCursor ?? Infinity;
 
     for (const entry of indexedEntries) {
