@@ -45,7 +45,7 @@ export default function Navbar() {
 
         {/* Mobile toggle */}
         <button
-          className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-md md:hidden"
+          className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-btn md:hidden"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
           aria-label={t('nav.toggleNav')}
@@ -143,7 +143,7 @@ function MobileNavLinks({
 }) {
   const { t } = useTranslation();
   const linkClass =
-    'block rounded-md px-2 py-2.5 text-sm font-medium text-char/80 transition-colors hover:bg-linen hover:text-char';
+    'block rounded-btn px-2 py-2.5 text-sm font-medium text-char/80 transition-colors hover:bg-linen hover:text-char';
 
   return (
     <>

@@ -39,7 +39,7 @@ function TotpQrCode({ url }: { url: string }) {
     }
   }, [url]);
 
-  return <canvas ref={canvasRef} className="rounded-lg" />;
+  return <canvas ref={canvasRef} className="rounded-card" />;
 }
 
 type MfaView =
@@ -358,7 +358,7 @@ export default function MfaSection() {
         <p className="text-sm text-char/70">
           {t('settings.mfa.recoveryCodes.eachOnce')}
         </p>
-        <div className="grid grid-cols-2 gap-2 rounded-lg border border-char/15 bg-linen/50 p-4">
+        <div className="grid grid-cols-2 gap-2 rounded-card border border-char/15 bg-linen/50 p-4">
           {codes.map((c) => (
             <kbd key={c} className="font-mono text-sm text-char">
               {c}

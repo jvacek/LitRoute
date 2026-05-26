@@ -68,7 +68,7 @@ export default function FeedbackForm() {
 
   if (sent) {
     return (
-      <div className="rounded-2xl bg-white px-8 py-12 text-center shadow-sm">
+      <div className="rounded-card bg-white px-8 py-12 text-center shadow-sm">
         <h3 className="font-heading mb-3 text-3xl font-bold text-amber">
           {t('feedback.successTitle')}
         </h3>
@@ -82,7 +82,7 @@ export default function FeedbackForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-2xl bg-white px-6 py-8 shadow-sm sm:px-8"
+      className="rounded-card bg-white px-6 py-8 shadow-sm sm:px-8"
     >
       <div className="mb-5">
         <label htmlFor="feedback-message" className={labelClass}>

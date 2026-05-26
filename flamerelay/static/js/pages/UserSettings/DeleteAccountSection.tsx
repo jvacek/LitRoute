@@ -47,7 +47,7 @@ export default function DeleteAccountSection() {
   }
 
   return (
-    <div className="space-y-4 rounded-lg border border-ember/20 bg-ember/5 p-4">
+    <div className="space-y-4 rounded-card border border-ember/20 bg-ember/5 p-4">
       {error && <p className="text-sm text-ember">{error}</p>}
       <div className="space-y-2 text-sm text-char">
         <p className="font-semibold">
@@ -76,7 +76,7 @@ export default function DeleteAccountSection() {
         onChange={(e) => setConfirmation(e.target.value)}
         placeholder={t('settings.deleteAccount.confirmation.placeholder')}
         autoComplete="off"
-        className="w-full rounded-lg border border-char/20 px-3 py-2.5 text-sm text-char placeholder-smoke/60 focus:border-ember focus:outline-none focus:ring-2 focus:ring-ember/20"
+        className="w-full rounded-input border border-char/20 px-3 py-2.5 text-sm text-char placeholder-smoke/60 focus:border-ember focus:outline-none focus:ring-2 focus:ring-ember/20"
       />
       <div className="flex items-center gap-3">
         <button

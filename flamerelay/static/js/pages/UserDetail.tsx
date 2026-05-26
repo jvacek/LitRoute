@@ -89,7 +89,7 @@ export default function UserDetail() {
               <li key={unit.identifier}>
                 <Link
                   to={`/unit/${unit.identifier}/`}
-                  className="flex items-center justify-between rounded-lg border border-smoke/20 bg-white px-4 py-3 hover:border-amber/60 hover:shadow-sm"
+                  className="flex items-center justify-between rounded-card border border-smoke/20 bg-white px-4 py-3 hover:border-amber/60 hover:shadow-sm"
                 >
                   <span className="font-heading font-semibold text-char">
                     {unit.identifier}

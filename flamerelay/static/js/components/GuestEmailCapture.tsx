@@ -73,7 +73,7 @@ export default function GuestEmailCapture({
 
   if (sent) {
     return (
-      <div className="mx-auto max-w-sm rounded-2xl bg-white px-8 py-10 text-center shadow-sm">
+      <div className="mx-auto max-w-sm rounded-card bg-white px-8 py-10 text-center shadow-sm">
         <LighterIllustration />
         <h1 className="font-heading mb-3 text-3xl font-bold text-char">
           {t('checkin.guestEmailSentTitle')}
@@ -91,7 +91,7 @@ export default function GuestEmailCapture({
   }
 
   return (
-    <div className="mx-auto max-w-sm rounded-2xl bg-white px-8 py-10 text-center shadow-sm">
+    <div className="mx-auto max-w-sm rounded-card bg-white px-8 py-10 text-center shadow-sm">
       <LighterIllustration />
       <h1 className="font-heading mb-3 text-3xl font-bold text-char">
         {t('checkin.guestEmailTitle')}

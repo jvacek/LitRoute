@@ -112,7 +112,7 @@ export default function ContributorGuide() {
               {steps.map(({ n, q, a, tip }) => (
                 <div
                   key={n}
-                  className="flex gap-5 rounded-xl bg-white px-6 py-5 shadow-sm"
+                  className="flex gap-5 rounded-card bg-white px-6 py-5 shadow-sm"
                 >
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber text-sm font-bold text-white">
                     {n}
@@ -120,7 +120,7 @@ export default function ContributorGuide() {
                   <div className="pt-0.5 w-full">
                     <QA q={q} a={a} />
                     {tip && (
-                      <p className="mt-3 rounded-lg bg-amber/10 px-4 py-3 text-sm leading-relaxed text-char/70 [&_em]:not-italic [&_em]:font-medium [&_strong]:text-char">
+                      <p className="mt-3 rounded-card bg-amber/10 px-4 py-3 text-sm leading-relaxed text-char/70 [&_em]:not-italic [&_em]:font-medium [&_strong]:text-char">
                         <span className="mr-1.5 text-amber">✦</span>
                         {tip}
                       </p>
