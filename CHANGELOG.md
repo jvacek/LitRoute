@@ -1,3 +1,7 @@
+## 2026-05-29
+
+- Close edge-cases to prevent your image metadata from making it into storage
+
 ## 2026-05-25
 
 - Put a cap on message length

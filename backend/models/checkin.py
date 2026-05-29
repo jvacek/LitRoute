@@ -3,7 +3,6 @@ from django.contrib.gis.db.models import PointField
 from django.db import models
 from django.db.models.functions import Length
 from django.utils import timezone
-from django_resized import ResizedImageField
 
 from backend.services import send_email_to_followers_task, send_thank_you_email_task
 from config.constants import (
@@ -14,6 +13,7 @@ from config.constants import (
 )
 from flamerelay.users.models import User
 
+from .fields import StrippedResizedImageField
 from .unit import Unit
 from .validators import path_and_rename, validate_image_size, validate_no_urls
 
@@ -61,7 +61,7 @@ class CheckInImage(models.Model):
     # happens atomically via a single conditional UPDATE in
     # CheckinImageManager.attach_pending().
     checkin = models.ForeignKey(CheckIn, null=True, blank=True, on_delete=models.CASCADE, related_name="images")
-    image = ResizedImageField(
+    image = StrippedResizedImageField(
         upload_to=path_and_rename,
         size=[CHECKIN_IMAGE_MAX_EDGE_PX, CHECKIN_IMAGE_MAX_EDGE_PX],
         force_format="WEBP",

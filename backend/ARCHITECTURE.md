@@ -36,7 +36,7 @@ CORS is restricted to `/api/*` paths only.
 
 ## CheckInImage and storage cleanup
 
-`CheckIn` has **no direct image field**. Images live in `CheckInImage` (FK `checkin`, `related_name="images"`, ordered by `order`). Image files are stored via `ResizedImageField` (max 1024×1024, forced WEBP, quality 85).
+`CheckIn` has **no direct image field**. Images live in `CheckInImage` (FK `checkin`, `related_name="images"`, ordered by `order`). Image files are stored via `StrippedResizedImageField` (`backend/models/fields.py`) — a `django_resized.ResizedImageField` subclass that re-encodes every upload to WEBP (max `CHECKIN_IMAGE_MAX_EDGE_PX` per edge, quality 85). It exists because django-resized' `keep_meta=False` only pops the `exif` key and still forwards `xmp`/`icc_profile` to the encoder; the subclass clears **all** of `img.info` (after baking EXIF orientation into the pixels) so no metadata — EXIF GPS, XMP location/author, ICC — survives. The frontend canvas re-encode strips metadata too, but falls back to the raw original on conversion failure, so the server is the guarantee. Covered by `backend/tests/test_image_metadata.py`.
 
 A `post_delete` signal on `CheckInImage` calls `default_storage.delete()` so files are cleaned up whenever a row is removed — whether from the API, admin, or `anonymize_user`. The signal pattern is in `backend/models.py` alongside the other `@receiver` functions.
 
