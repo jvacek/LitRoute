@@ -72,6 +72,17 @@ updates:
     directory: '/'
     schedule:
       interval: 'daily'
+    # Block eslint major bumps until eslint-plugin-react supports eslint 10.
+    # The plugin pins `peer eslint@"...|| ^9.7"`, so bumping eslint to 10 makes
+    # `npm ci` fail with ERESOLVE — and because dependabot groups all dev deps
+    # into one PR (npm-dev below), that single conflict blocks every other dev
+    # update too. npm peer deps are enforced at install time, not during
+    # dependabot's resolution, so we have to express the ceiling here.
+    # Remove once this lands: https://github.com/jsx-eslint/eslint-plugin-react/issues/3977
+    ignore:
+      - dependency-name: 'eslint'
+        update-types:
+          - 'version-update:semver-major'
     groups:
       npm-prod:
         dependency-type: 'production'
