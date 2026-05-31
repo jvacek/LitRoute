@@ -350,6 +350,17 @@ export interface components {
         FeedbackSuccess: {
             detail: string;
         };
+        FollowedUnit: {
+            /** @description Unique identifier for the unit, e.g. 'alpha-01'. Must start with at least three characters and end with two digits, separated by a dash. */
+            identifier: string;
+            readonly checkin_count: number;
+            /** Format: date-time */
+            readonly last_checkin_date: string | null;
+            readonly last_checkin_place: string | null;
+            readonly last_checkin_by: string | null;
+            readonly team: components["schemas"]["Team"] | null;
+            readonly game: components["schemas"]["Game"] | null;
+        };
         Game: {
             readonly id: number;
             /** @description Display name shown on the leaderboard and intro modal. */
@@ -636,7 +647,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Unit"][];
+                    "application/json": components["schemas"]["FollowedUnit"][];
                 };
             };
         };

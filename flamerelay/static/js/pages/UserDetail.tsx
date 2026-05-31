@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Link, useLoaderData, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
+import TeamBadge from '../components/TeamBadge';
 import { logout } from '../lib/allauthApi';
 import {
   actionAmberBtnMd,
@@ -8,7 +9,7 @@ import {
   actionEmberBtnMd,
   actionMutedBtnMd,
 } from '../styles';
-import type { UserDetailLoaderData } from './UserDetail.loader';
+import type { FollowedUnit, UserDetailLoaderData } from './UserDetail.loader';
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -17,13 +18,97 @@ function initials(name: string): string {
   return name.slice(0, 2).toUpperCase();
 }
 
+// Rolling time buckets relative to page load: a fixed key for recent
+// check-ins, the check-in's calendar year for anything older than ~30 days,
+// and 'never' for units with no check-in. The followed-units list arrives
+// sorted by last check-in (most recent first, never-checked-in last), so a Map
+// keyed in insertion order yields the right group order without a separate
+// sort: today → this week → this month → descending years → never. The
+// thresholds are display-only, not business constants.
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+type UnitGroup = { key: string; year: number | null; units: FollowedUnit[] };
+
+function bucketFor(
+  unit: FollowedUnit,
+  now: number,
+): { key: string; year: number | null } {
+  if (!unit.last_checkin_date) return { key: 'never', year: null };
+  const date = new Date(unit.last_checkin_date);
+  const age = now - date.getTime();
+  if (age < DAY_MS) return { key: 'lastDay', year: null };
+  if (age < 7 * DAY_MS) return { key: 'lastWeek', year: null };
+  if (age < 30 * DAY_MS) return { key: 'lastMonth', year: null };
+  const year = date.getFullYear();
+  return { key: `year-${year}`, year };
+}
+
+function groupUnits(units: FollowedUnit[]): UnitGroup[] {
+  const now = Date.now();
+  const groups = new Map<string, UnitGroup>();
+  for (const unit of units) {
+    const { key, year } = bucketFor(unit, now);
+    let group = groups.get(key);
+    if (!group) {
+      group = { key, year, units: [] };
+      groups.set(key, group);
+    }
+    group.units.push(unit);
+  }
+  return [...groups.values()];
+}
+
 export default function UserDetail() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { username, name, adminUrl, refresh } = useAuth();
   const navigate = useNavigate();
   const { followedUnits } = useLoaderData() as UserDetailLoaderData;
 
   const displayName = name || username;
+  const groups = groupUnits(followedUnits);
+
+  function renderUnit(unit: FollowedUnit) {
+    // Name before place: place is the longest part and the most likely to be
+    // truncated, so it sits last and the who/date stay readable.
+    const meta = unit.last_checkin_date
+      ? [
+          unit.last_checkin_by || t('userDetail.anonymous'),
+          new Date(unit.last_checkin_date).toLocaleDateString(
+            i18n.resolvedLanguage,
+            { day: 'numeric', month: 'short', year: 'numeric' },
+          ),
+          unit.last_checkin_place || t('userDetail.unknownPlace'),
+        ].join(' · ')
+      : t('userDetail.noCheckinsYet');
+    return (
+      <li key={unit.identifier}>
+        <Link
+          to={`/unit/${unit.identifier}/`}
+          className="flex flex-col gap-1 rounded-card border border-smoke/20 bg-white px-4 py-3 hover:border-amber/60 hover:shadow-sm"
+        >
+          <span className="flex items-center justify-between gap-2">
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="font-heading font-semibold text-char">
+                {unit.identifier}
+              </span>
+              {unit.game && (
+                <span className="truncate text-sm text-smoke">
+                  ({unit.game.name})
+                </span>
+              )}
+              {unit.team && (
+                <TeamBadge name={unit.team.name} color={unit.team.color} />
+              )}
+            </span>
+            <span className="shrink-0 text-sm text-smoke">
+              {t('userDetail.checkins', { count: unit.checkin_count })}
+            </span>
+          </span>
+          <span className="truncate text-sm text-smoke">{meta}</span>
+        </Link>
+      </li>
+    );
+  }
 
   async function handleLogout() {
     try {
@@ -81,23 +166,18 @@ export default function UserDetail() {
         {followedUnits.length === 0 ? (
           <p className="text-smoke">{t('userDetail.noFollows')}</p>
         ) : (
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {followedUnits.map((unit) => (
-              <li key={unit.identifier}>
-                <Link
-                  to={`/unit/${unit.identifier}/`}
-                  className="flex items-center justify-between rounded-card border border-smoke/20 bg-white px-4 py-3 hover:border-amber/60 hover:shadow-sm"
-                >
-                  <span className="font-heading font-semibold text-char">
-                    {unit.identifier}
-                  </span>
-                  <span className="text-sm text-smoke">
-                    {t('userDetail.checkins', { count: unit.checkin_count })}
-                  </span>
-                </Link>
-              </li>
+          <div className="space-y-8">
+            {groups.map(({ key, year, units }) => (
+              <div key={key}>
+                <h3 className="font-heading mb-3 text-sm font-semibold tracking-wide text-smoke uppercase">
+                  {year != null ? year : t(`userDetail.groups.${key}`)}
+                </h3>
+                <ul className="grid gap-3 sm:grid-cols-2">
+                  {units.map(renderUnit)}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
         )}
       </section>
     </main>

@@ -1,8 +1,10 @@
 import { apiClient } from '../api/client';
 import type { components } from '../api/schema';
 
+export type FollowedUnit = components['schemas']['FollowedUnit'];
+
 export type UserDetailLoaderData = {
-  followedUnits: components['schemas']['Unit'][];
+  followedUnits: FollowedUnit[];
 };
 
 // PrivateRoute redirects anon users to /accounts/login/ when this route

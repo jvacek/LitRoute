@@ -788,12 +788,21 @@
   },
   "userDetail": {
     "admin": "Admin",
+    "anonymous": "Anonymous",
     "checkins_one": "{{count}} check-in",
     "checkins_other": "{{count}} check-ins",
     "contributorGuide": "Contributor guide",
     "followedUnits": "Lighters You Follow",
+    "groups": {
+      "lastDay": "Today",
+      "lastMonth": "This month",
+      "lastWeek": "This week",
+      "never": "Never checked in"
+    },
+    "noCheckinsYet": "No check-ins yet",
     "noFollows": "You're not following any lighters yet.",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "unknownPlace": "Unknown location"
   },
   "userForm": {
     "submit": {
