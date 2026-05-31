@@ -12,8 +12,10 @@ const MAX_EDGE_PX = 2560;
 // Upper bound on the encoded upload, mirroring the backend's
 // CHECKIN_IMAGE_MAX_UPLOAD_BYTES (config/constants.py). A 2560px JPEG never
 // realistically approaches this; the guard exists so a pathological image
-// surfaces a real client-side error instead of a server 400.
-const MAX_OUTPUT_BYTES = 10 * 1024 * 1024;
+// surfaces a real client-side error instead of a server 400. Exported so the
+// caller can tell apart "couldn't downscale but the original is small enough
+// to let the backend try" from "original is also too big to bother uploading".
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
 // We encode to JPEG, not WebP. The canvas API has no HEIF encoder on any
 // browser (incl. Safari), so a downscaled HEIF can't be produced client-side;
@@ -41,11 +43,17 @@ function encodeJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Blob> {
  * to WebP and strips metadata, so this is only a transport-size optimisation.
  *
  * Rejects if decoding fails (e.g. HEIC on a non-WebKit browser) or if the
- * encoded output stays above MAX_OUTPUT_BYTES even after a lower-quality retry;
+ * encoded output stays above MAX_UPLOAD_BYTES even after a lower-quality retry;
  * the caller falls back to uploading the original on rejection.
  */
 export async function downscaleImage(file: File): Promise<File> {
-  const bitmap = await createImageBitmap(file);
+  // `imageOrientation: 'from-image'` bakes EXIF orientation into the decoded
+  // pixels. Modern browsers default to this, but canvas output carries no EXIF
+  // for the backend to correct from, so we ask for it explicitly to guarantee
+  // portrait shots aren't stored sideways across older WebView versions.
+  const bitmap = await createImageBitmap(file, {
+    imageOrientation: 'from-image',
+  });
   const scale = Math.min(
     1,
     MAX_EDGE_PX / Math.max(bitmap.width, bitmap.height),
@@ -60,10 +68,10 @@ export async function downscaleImage(file: File): Promise<File> {
   bitmap.close();
 
   let blob = await encodeJpeg(canvas, JPEG_QUALITY);
-  if (blob.size > MAX_OUTPUT_BYTES) {
+  if (blob.size > MAX_UPLOAD_BYTES) {
     blob = await encodeJpeg(canvas, JPEG_QUALITY_FALLBACK);
   }
-  if (blob.size > MAX_OUTPUT_BYTES) {
+  if (blob.size > MAX_UPLOAD_BYTES) {
     throw new Error('Image too large after downscaling');
   }
   const name = file.name.replace(/\.[^.]+$/, '.jpg');

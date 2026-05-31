@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { MapRef } from 'react-map-gl/maplibre';
 import { useAuth } from '../AuthContext';
 import { captureGpsLocation } from '../lib/captureGpsLocation';
-import { downscaleImage } from '../lib/imageConversion';
+import { downscaleImage, MAX_UPLOAD_BYTES } from '../lib/imageConversion';
 import { isNetworkError, reportError } from '../lib/sentry';
 import {
   PendingUploadError,
@@ -312,6 +312,18 @@ export default function CheckinForm({
             return next;
           });
           if (imageKeysRef.current.indexOf(key) === -1) return;
+          // Downscaling failed — either the format can't be decoded in this
+          // browser (e.g. HEIC on Android Chrome, or a RAW/DNG) or the result
+          // stayed over the cap. If the untouched original is also over the
+          // upload cap, sending it would just 400 after a slow mobile upload;
+          // surface a clear message instead. Otherwise the backend can still
+          // handle it (e.g. HEIC, which it now decodes), so upload the original.
+          if (original.size > MAX_UPLOAD_BYTES) {
+            setUploadErrors((prev) =>
+              new Map(prev).set(key, 'checkin.form.errors.imageUnsupported'),
+            );
+            return;
+          }
           startBackgroundUpload(key, original);
         },
       );
