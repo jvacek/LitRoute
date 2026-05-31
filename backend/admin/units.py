@@ -1,10 +1,13 @@
 from django import forms
 from django.contrib import admin, messages
+from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.db.models import Count
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils.html import format_html_join
 
 from backend.models import CheckIn, Game, Unit
+from flamerelay.users.models import User
 
 
 class AssignGameForm(forms.Form):
@@ -12,6 +15,14 @@ class AssignGameForm(forms.Form):
         queryset=Game.objects.order_by("name"),
         label="Game",
         empty_label="— select a game —",
+    )
+
+
+class ManageFollowersForm(forms.Form):
+    followers = forms.ModelMultipleChoiceField(
+        queryset=User.objects.order_by("name"),
+        widget=FilteredSelectMultiple("users", is_stacked=False),
+        label="Followers",
     )
 
 
@@ -47,7 +58,7 @@ class UnitAdmin(admin.ModelAdmin):
     list_select_related = ("team", "created_by", "game")
     filter_horizontal = ["followers"]
     inlines = [CheckInInline]
-    actions = ["unassign_game", "assign_game"]
+    actions = ["unassign_game", "assign_game", "add_followers", "remove_followers"]
 
     @admin.action(description="Un-assign game from selected lighters")
     def unassign_game(self, request, queryset):
@@ -80,6 +91,49 @@ class UnitAdmin(admin.ModelAdmin):
         }
         return render(request, "admin/backend/unit/assign_game.html", context)
 
+    @admin.action(description="Add followers to selected lighters…")
+    def add_followers(self, request, queryset):
+        return self._manage_followers(request, queryset, add=True)
+
+    @admin.action(description="Remove followers from selected lighters…")
+    def remove_followers(self, request, queryset):
+        return self._manage_followers(request, queryset, add=False)
+
+    def _manage_followers(self, request, queryset, *, add):
+        action_name = "add_followers" if add else "remove_followers"
+        if "apply" in request.POST:
+            form = ManageFollowersForm(request.POST)
+            if form.is_valid():
+                users = form.cleaned_data["followers"]
+                for unit in queryset:
+                    (unit.followers.add if add else unit.followers.remove)(*users)
+                verb = "Added" if add else "Removed"
+                preposition = "to" if add else "from"
+                self.message_user(
+                    request,
+                    f"{verb} {len(users)} follower(s) {preposition} {queryset.count()} lighter(s).",
+                    level=messages.SUCCESS,
+                )
+                return None
+        else:
+            form = ManageFollowersForm()
+        units = list(queryset)
+        preposition = "to" if add else "from"
+        context = {
+            **self.admin_site.each_context(request),
+            "title": "Add followers" if add else "Remove followers",
+            "opts": self.opts,
+            "changelist_url": reverse("admin:backend_unit_changelist"),
+            "intro": f"Pick users to {'add as' if add else 'remove as'} followers "
+            f"{preposition} these {len(units)} lighter(s):",
+            "object_labels": [unit.identifier for unit in units],
+            "form": form,
+            "action_name": action_name,
+            "action_checkbox_name": admin.helpers.ACTION_CHECKBOX_NAME,
+            "selected_ids": [unit.pk for unit in units],
+        }
+        return render(request, "admin/action_confirm_form.html", context)
+
     @admin.display(description="Followers", ordering="follower_count")
     def follower_count(self, obj):
         return obj.follower_count
@@ -109,6 +163,13 @@ class UnitAdmin(admin.ModelAdmin):
         if self._is_contributor(request):
             return ["followers"]
         return super().get_exclude(request, obj)
+
+    def get_actions(self, request):
+        actions = super().get_actions(request)
+        if self._is_contributor(request):
+            actions.pop("add_followers", None)
+            actions.pop("remove_followers", None)
+        return actions
 
     def get_list_filter(self, request):
         if self._is_contributor(request):
