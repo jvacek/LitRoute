@@ -1,6 +1,7 @@
 ## 2026-05-31
 
 - Fix issue with pictures taken on iPhones being increased in size before sending to server
+- Group followed units by last checkin on profile view
 
 ## 2026-05-29
 
