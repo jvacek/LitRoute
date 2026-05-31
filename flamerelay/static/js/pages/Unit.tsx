@@ -25,6 +25,7 @@ import {
 import { getEditToken } from '../lib/editTokens';
 import { getGameConfig } from '../lib/gameConfig';
 import { haversineKm } from '../lib/haversine';
+import { setLeaderboardFrom } from '../lib/leaderboardFrom';
 import { formatKm, formatNumber } from '../lib/numbers';
 import i18n from '../i18n';
 import { reportError } from '../lib/sentry';
@@ -463,7 +464,10 @@ export default function Unit() {
                   <div className="ml-auto flex flex-wrap items-center gap-3">
                     {getGameConfig(unit.game.mode)?.hasLeaderboard && (
                       <Link
-                        to={`/game/${unit.game.id}/leaderboard/?from=${encodeURIComponent(unit.identifier)}`}
+                        to={`/game/${unit.game.id}/leaderboard/`}
+                        onClick={() =>
+                          setLeaderboardFrom(unit.game!.id, unit.identifier)
+                        }
                         className={amberCharBtnMd}
                       >
                         {t('unit.game.leaderboardLink')}
@@ -482,7 +486,10 @@ export default function Unit() {
 
               {unit.game && getGameConfig(unit.game.mode)?.hasLeaderboard && (
                 <Link
-                  to={`/game/${unit.game.id}/leaderboard/?from=${encodeURIComponent(unit.identifier)}`}
+                  to={`/game/${unit.game.id}/leaderboard/`}
+                  onClick={() =>
+                    setLeaderboardFrom(unit.game!.id, unit.identifier)
+                  }
                   className="mt-4 inline-block text-sm font-medium text-amber hover:text-white"
                 >
                   {t('unit.game.leaderboardLink')}

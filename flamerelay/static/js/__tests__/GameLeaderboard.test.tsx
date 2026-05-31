@@ -9,7 +9,6 @@ let mockLoaderData: GameLeaderboardLoaderData;
 jest.mock('../lib/useConfig');
 jest.mock('react-router-dom', () => ({
   useParams: () => ({ gameId: '1' }),
-  useSearchParams: () => [new URLSearchParams(), jest.fn()],
   useLoaderData: () => mockLoaderData,
 }));
 // JourneyMap uses WebGL which isn't available in jsdom
@@ -55,6 +54,7 @@ function setLoaderData(
   mockLoaderData = {
     leaderboard: leaderboardData,
     journeys: { game_id: 1, journeys: [] },
+    from: null,
   };
 }
 

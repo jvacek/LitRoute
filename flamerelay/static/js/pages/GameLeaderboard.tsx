@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useLoaderData, useSearchParams } from 'react-router-dom';
+import { useLoaderData } from 'react-router-dom';
 import Countdown from '../components/Countdown';
 import JourneyMap from '../components/JourneyMap';
 import TeamBadge from '../components/TeamBadge';
@@ -19,11 +19,12 @@ const dataCell = 'px-4 py-3 text-sm';
 
 export default function GameLeaderboard() {
   const { t } = useTranslation();
-  const [searchParams] = useSearchParams();
-  const fromIdentifier = searchParams.get('from');
   const { maptilerKey } = useConfig();
-  const { leaderboard: data, journeys: journeysPayload } =
-    useLoaderData() as GameLeaderboardLoaderData;
+  const {
+    leaderboard: data,
+    journeys: journeysPayload,
+    from: fromIdentifier,
+  } = useLoaderData() as GameLeaderboardLoaderData;
   const journeys = journeysPayload.journeys;
 
   const config = getGameConfig(data.game.mode ?? '');

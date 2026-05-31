@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { components } from '../api/schema';
 import { humanizeHours } from '../lib/duration';
 import { getGameConfig } from '../lib/gameConfig';
+import { setLeaderboardFrom } from '../lib/leaderboardFrom';
 import { outlineBtnMd, primaryBtnMd } from '../styles';
 
 interface Props {
@@ -55,10 +56,10 @@ export default function GameIntroModal({
               className={outlineBtnMd}
               onClick={() => {
                 onDismiss();
-                const target = fromIdentifier
-                  ? `/game/${game.id}/leaderboard/?from=${encodeURIComponent(fromIdentifier)}`
-                  : `/game/${game.id}/leaderboard/`;
-                navigate(target);
+                if (fromIdentifier) {
+                  setLeaderboardFrom(game.id, fromIdentifier);
+                }
+                navigate(`/game/${game.id}/leaderboard/`);
               }}
             >
               {t('game.modal.viewLeaderboard')} →

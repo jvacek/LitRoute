@@ -2,6 +2,7 @@
 
 - Fix issue with pictures taken on iPhones being increased in size before sending to server
 - Group followed units by last checkin on profile view
+- Leaderboard URL no longer contains the name of the lighter it came from (so you can't accidentally share it)
 
 ## 2026-05-29
 
