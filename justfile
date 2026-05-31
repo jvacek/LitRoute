@@ -59,7 +59,7 @@ test *args:
 # e2e [args]: Run the Playwright e2e suite in an isolated compose project
 #             (flamerelay_e2e). Brings up its own django/node/postgres/redis on
 #             ports 8010/3010, leaving your `just up` dev stack untouched. First
-#             time: `npm i && npx playwright install chromium`.
+#             time: `npm i && npx playwright install chromium webkit`.
 #             Migrate + seed run BEFORE `up -d django` so they don't race with
 #             the /start script's own migrate (which would conflict on
 #             `CREATE EXTENSION IF NOT EXISTS postgis`).

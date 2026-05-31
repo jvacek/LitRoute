@@ -26,6 +26,16 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      // WebKit-only specs (HEIF + the Safari encode path) run under `webkit`.
+      testIgnore: /.*\.webkit\.spec\.ts/,
+    },
+    {
+      // Safari's engine — the only one that reproduces the toBlob('image/webp')
+      // → PNG fallback that broke iPhone HEIF uploads. Needs `npx playwright
+      // install webkit` (the justfile/CI install both browsers).
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+      testMatch: /.*\.webkit\.spec\.ts/,
     },
   ],
 });
