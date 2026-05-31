@@ -1,5 +1,6 @@
 const tsPlugin = require('@typescript-eslint/eslint-plugin');
 const tsParser = require('@typescript-eslint/parser');
+const compatPlugin = require('eslint-plugin-compat');
 const reactPlugin = require('eslint-plugin-react');
 const reactHooksPlugin = require('eslint-plugin-react-hooks');
 
@@ -14,6 +15,11 @@ module.exports = [
     ...config,
     files,
   })),
+  // Browser-API compatibility lint — flags Web APIs unsupported by the
+  // `browserslist` targets in package.json (existence-level, via MDN compat
+  // data). Note: it checks whether an API *exists* in the targets, not
+  // argument values — it would NOT catch e.g. `toBlob(cb, 'image/webp')`.
+  { ...compatPlugin.configs['flat/recommended'], files },
   // React plugins + rules
   {
     files,
