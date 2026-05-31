@@ -1,9 +1,9 @@
 /**
- * Covers the state-machine plumbing that connects `convertToWebP` to the
+ * Covers the state-machine plumbing that connects `downscaleImage` to the
  * UI flags `PhotoUpload` reads. The visual rendering of those flags is
  * covered in `PhotoUpload.test.tsx`; here we drive a controllable mock of
- * `convertToWebP` and assert which `File` the form hands to `onUploadImage`
- * — i.e., whether the converted (resized webp) file or the original
+ * `downscaleImage` and assert which `File` the form hands to `onUploadImage`
+ * — i.e., whether the downscaled (resized JPEG) file or the original
  * (untouched) file survives a happy path, a rejection, and a remove-
  * mid-conversion race.
  */
@@ -55,7 +55,7 @@ jest.mock('../lib/captureGpsLocation', () => ({
 
 jest.mock('../lib/imageConversion', () => ({
   __esModule: true,
-  convertToWebP: jest.fn(),
+  downscaleImage: jest.fn(),
 }));
 
 jest.mock('../lib/sentry', () => ({
@@ -122,11 +122,11 @@ beforeAll(() => {
 });
 
 import CheckinForm from '../components/CheckinForm';
-import { convertToWebP } from '../lib/imageConversion';
+import { downscaleImage } from '../lib/imageConversion';
 import { PendingUploadError } from '../lib/uploadPendingImage';
 import { useAuth } from '../AuthContext';
 
-const convertMock = jest.mocked(convertToWebP);
+const convertMock = jest.mocked(downscaleImage);
 const mockUseAuth = jest.mocked(useAuth);
 
 function deferredFile() {
@@ -201,7 +201,7 @@ describe('CheckinForm shrinking state machine', () => {
     await pickLocationLondon();
     addFile(new File(['orig'], 'photo.heic', { type: 'image/heic' }));
 
-    // Spinner is visible while convertToWebP is pending.
+    // Spinner is visible while downscaleImage is pending.
     await screen.findByRole('status', { name: /Shrinking image/i });
 
     await act(async () => {
@@ -689,7 +689,7 @@ describe('CheckinForm edit-mode payload', () => {
     fireEvent.click(removeButtons[0]);
 
     // Add one new photo. Auto-upload kicks off as soon as the mocked
-    // convertToWebP resolves (the default mock above resolves immediately).
+    // downscaleImage resolves (the default mock above resolves immediately).
     addFile(new File(['orig'], 'new.heic', { type: 'image/heic' }));
     await waitFor(() =>
       expect(screen.getByLabelText(/Uploaded/i)).toBeInTheDocument(),

@@ -49,7 +49,7 @@ jest.mock('../lib/captureGpsLocation', () => ({
 
 jest.mock('../lib/imageConversion', () => ({
   __esModule: true,
-  convertToWebP: async (f: File) => f,
+  downscaleImage: async (f: File) => f,
 }));
 
 jest.mock('../lib/sentry', () => ({

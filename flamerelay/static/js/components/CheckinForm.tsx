@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { MapRef } from 'react-map-gl/maplibre';
 import { useAuth } from '../AuthContext';
 import { captureGpsLocation } from '../lib/captureGpsLocation';
-import { convertToWebP } from '../lib/imageConversion';
+import { downscaleImage } from '../lib/imageConversion';
 import { isNetworkError, reportError } from '../lib/sentry';
 import {
   PendingUploadError,
@@ -280,7 +280,7 @@ export default function CheckinForm({
 
     allowed.forEach((original, i) => {
       const key = newKeys[i];
-      convertToWebP(original).then(
+      downscaleImage(original).then(
         (converted) => {
           setShrinkingKeys((prev) => {
             if (!prev.has(key)) return prev;
