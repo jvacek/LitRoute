@@ -553,6 +553,14 @@
     "title": "Privacy Policy"
   },
   "privateRoute": {},
+  "savePhotos": {
+    "body": "Photos taken with the camera here aren't saved to your device. Save them before you post so you keep a copy.",
+    "dismiss": "Dismiss",
+    "save_one": "Save photo to your device",
+    "save_other": "Save {{count}} photos to your device",
+    "title_one": "Save your photo?",
+    "title_other": "Save your photos?"
+  },
   "settings": {
     "connectedAccounts": {
       "disconnect": {

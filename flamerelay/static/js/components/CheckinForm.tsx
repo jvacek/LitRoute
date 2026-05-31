@@ -1,9 +1,10 @@
 import { config as maptilerConfig } from '@maptiler/client';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { MapRef } from 'react-map-gl/maplibre';
 import { useAuth } from '../AuthContext';
 import { captureGpsLocation } from '../lib/captureGpsLocation';
+import { isFreshCapture } from '../lib/freshCapture';
 import { downscaleImage, MAX_UPLOAD_BYTES } from '../lib/imageConversion';
 import { reportUnsupportedImage } from '../lib/reportUnsupportedImage';
 import { isNetworkError, reportError } from '../lib/sentry';
@@ -25,6 +26,7 @@ import LocationDeniedModal from './LocationDeniedModal';
 import LocationSearch from './LocationSearch';
 import LowPrecisionLocationModal from './LowPrecisionLocationModal';
 import PhotoUpload from './PhotoUpload';
+import SavePhotosPrompt from './SavePhotosPrompt';
 
 const MAX_IMAGES = 5;
 const MESSAGE_MAX_LENGTH = 5000;
@@ -100,6 +102,15 @@ export default function CheckinForm({
   const [message, setMessage] = useState(initialData?.message ?? '');
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [imageKeys, setImageKeys] = useState<string[]>([]);
+  // Untouched originals of photos shot with the in-page camera this session,
+  // keyed by imageKey. `imageFiles` is overwritten in place with the
+  // downscaled JPEG once shrinking finishes, so this is the only place the
+  // full-resolution capture survives — we offer to save these back to the
+  // user's device before they post (on iOS a web-camera shot never lands in
+  // the camera roll). Library picks are not retained; they're already saved.
+  const [freshOriginals, setFreshOriginals] = useState<Map<string, File>>(
+    new Map(),
+  );
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [shrinkingKeys, setShrinkingKeys] = useState<Set<string>>(new Set());
   const [shrinkFailedKeys, setShrinkFailedKeys] = useState<Set<string>>(
@@ -260,6 +271,15 @@ export default function CheckinForm({
     // swaps in over its placeholder as conversion completes.
     setImageFiles((prev) => [...prev, ...allowed]);
     setImageKeys((prev) => [...prev, ...newKeys]);
+    // Stash the originals of just-captured photos before downscaling swaps
+    // them out, so we can offer to save the full-res shot to the device.
+    setFreshOriginals((prev) => {
+      const next = new Map(prev);
+      allowed.forEach((file, i) => {
+        if (isFreshCapture(file)) next.set(newKeys[i], file);
+      });
+      return next;
+    });
     setShrinkingKeys((prev) => {
       const next = new Set(prev);
       newKeys.forEach((k) => next.add(k));
@@ -399,6 +419,12 @@ export default function CheckinForm({
       return idx === -1 ? prev : prev.filter((_, i) => i !== idx);
     });
     setImageKeys((prev) => prev.filter((k) => k !== key));
+    setFreshOriginals((prev) => {
+      if (!prev.has(key)) return prev;
+      const next = new Map(prev);
+      next.delete(key);
+      return next;
+    });
     setShrinkingKeys((prev) => {
       if (!prev.has(key)) return prev;
       const next = new Set(prev);
@@ -647,6 +673,17 @@ export default function CheckinForm({
   // path in `uploadMissingTokens`.
   const hasPhotosInFlight = shrinkingKeys.size > 0 || uploadingKeys.size > 0;
 
+  // Fresh-capture originals still attached to the form, in display order.
+  // Memoised so SavePhotosPrompt's object-URL effect only re-runs when the
+  // set of captures changes — not on every keystroke in the message field.
+  const freshOriginalFiles = useMemo(
+    () =>
+      imageKeys
+        .map((k) => freshOriginals.get(k))
+        .filter((f): f is File => f !== undefined),
+    [imageKeys, freshOriginals],
+  );
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Edit mode: location is read-only after creation, so render a
@@ -858,6 +895,8 @@ export default function CheckinForm({
         onRetryUpload={retryBackgroundUpload}
         error={errors.images?.join(' ')}
       />
+
+      <SavePhotosPrompt files={freshOriginalFiles} />
 
       {errors.non_field_errors && (
         <p className={fieldErrorClass}>{errors.non_field_errors.join(' ')}</p>
