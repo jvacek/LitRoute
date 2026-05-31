@@ -5,6 +5,7 @@ import type { MapRef } from 'react-map-gl/maplibre';
 import { useAuth } from '../AuthContext';
 import { captureGpsLocation } from '../lib/captureGpsLocation';
 import { downscaleImage, MAX_UPLOAD_BYTES } from '../lib/imageConversion';
+import { reportUnsupportedImage } from '../lib/reportUnsupportedImage';
 import { isNetworkError, reportError } from '../lib/sentry';
 import {
   PendingUploadError,
@@ -298,7 +299,7 @@ export default function CheckinForm({
           });
           startBackgroundUpload(key, converted);
         },
-        () => {
+        (err) => {
           setShrinkingKeys((prev) => {
             if (!prev.has(key)) return prev;
             const next = new Set(prev);
@@ -322,6 +323,9 @@ export default function CheckinForm({
             setUploadErrors((prev) =>
               new Map(prev).set(key, 'checkin.form.errors.imageUnsupported'),
             );
+            // Fire-and-forget: log format/device forensics to Sentry so we can
+            // see which photos can't be prepared and plan future support.
+            void reportUnsupportedImage(original, err);
             return;
           }
           startBackgroundUpload(key, original);
