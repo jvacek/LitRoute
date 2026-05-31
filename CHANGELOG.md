@@ -1,3 +1,7 @@
+## 2026-05-31
+
+- Fix issue with pictures taken on iPhones being increased in size before sending to server
+
 ## 2026-05-29
 
 - Close edge-cases to prevent your image metadata from making it into storage
