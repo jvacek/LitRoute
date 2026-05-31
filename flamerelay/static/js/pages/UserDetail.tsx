@@ -18,6 +18,27 @@ function initials(name: string): string {
   return name.slice(0, 2).toUpperCase();
 }
 
+// A check-in is a location ping, so the count uses a map-pin glyph. Inline SVG
+// (currentColor) to match the project's icon convention — no icon library.
+function MapPinIcon() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  );
+}
+
 // Rolling time buckets relative to page load: a fixed key for recent
 // check-ins, the check-in's calendar year for anything older than ~30 days,
 // and 'never' for units with no check-in. The followed-units list arrives
@@ -68,15 +89,17 @@ export default function UserDetail() {
   const groups = groupUnits(followedUnits);
 
   function renderUnit(unit: FollowedUnit) {
-    // Name before place: place is the longest part and the most likely to be
-    // truncated, so it sits last and the who/date stay readable.
+    // Date lives on the identifier row; line 2 carries who + place (place last,
+    // since it's the longest and the first to truncate).
+    const date = unit.last_checkin_date
+      ? new Date(unit.last_checkin_date).toLocaleDateString(
+          i18n.resolvedLanguage,
+          { day: 'numeric', month: 'short', year: 'numeric' },
+        )
+      : null;
     const meta = unit.last_checkin_date
       ? [
           unit.last_checkin_by || t('userDetail.anonymous'),
-          new Date(unit.last_checkin_date).toLocaleDateString(
-            i18n.resolvedLanguage,
-            { day: 'numeric', month: 'short', year: 'numeric' },
-          ),
           unit.last_checkin_place || t('userDetail.unknownPlace'),
         ].join(' · ')
       : t('userDetail.noCheckinsYet');
@@ -87,24 +110,33 @@ export default function UserDetail() {
           className="flex flex-col gap-1 rounded-card border border-smoke/20 bg-white px-4 py-3 hover:border-amber/60 hover:shadow-sm"
         >
           <span className="flex items-center justify-between gap-2">
-            <span className="flex min-w-0 items-center gap-2">
-              <span className="font-heading font-semibold text-char">
-                {unit.identifier}
-              </span>
-              {unit.game && (
-                <span className="truncate text-sm text-smoke">
-                  ({unit.game.name})
+            <span className="font-heading min-w-0 truncate font-semibold text-char">
+              {unit.identifier}
+            </span>
+            <span className="flex shrink-0 items-center gap-2 text-sm text-smoke">
+              {unit.checkin_count > 0 && (
+                <span
+                  className="flex items-center gap-1"
+                  title={t('userDetail.checkins', {
+                    count: unit.checkin_count,
+                  })}
+                >
+                  {unit.checkin_count}
+                  <MapPinIcon />
                 </span>
               )}
-              {unit.team && (
-                <TeamBadge name={unit.team.name} color={unit.team.color} />
-              )}
-            </span>
-            <span className="shrink-0 text-sm text-smoke">
-              {t('userDetail.checkins', { count: unit.checkin_count })}
+              {date && <span>{date}</span>}
             </span>
           </span>
           <span className="truncate text-sm text-smoke">{meta}</span>
+          {(unit.team || unit.game) && (
+            <span className="flex min-w-0 items-center gap-2 text-sm text-smoke">
+              {unit.team && (
+                <TeamBadge name={unit.team.name} color={unit.team.color} />
+              )}
+              {unit.game && <span className="truncate">{unit.game.name}</span>}
+            </span>
+          )}
         </Link>
       </li>
     );
