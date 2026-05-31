@@ -216,3 +216,34 @@ class UnitSerializer(serializers.ModelSerializer):
 
     def get_is_gps_enforced(self, obj: Unit) -> bool:
         return obj.is_gps_enforced
+
+
+class FollowedUnitSerializer(serializers.ModelSerializer):
+    # Lean serializer for /api/account/follows/ — only the fields the profile
+    # page renders. Deliberately NOT a subclass of UnitSerializer: that would
+    # drag in per-unit method fields (distance_traveled_km, is_following,
+    # can_check_in) that each hit the cache or DB, an N+1 across the follow
+    # list. Every value here is supplied by a queryset annotation (see
+    # AccountFollowsView), so there is no per-row work. The three last_checkin_*
+    # fields are null for units with no check-ins.
+    checkin_count = serializers.IntegerField(read_only=True)
+    last_checkin_date = serializers.DateTimeField(read_only=True, allow_null=True)
+    last_checkin_place = serializers.CharField(read_only=True, allow_null=True)
+    last_checkin_by = serializers.CharField(read_only=True, allow_null=True)
+    # Reuse the shared nested serializers (same as UnitSerializer). Their fields
+    # are plain model attributes, so there's no per-row query — AccountFollowsView
+    # select_related("game", "team")s the FKs to avoid N+1.
+    team = TeamSerializer(read_only=True, allow_null=True)
+    game = GameSerializer(read_only=True, allow_null=True)
+
+    class Meta:
+        model = Unit
+        fields = [
+            "identifier",
+            "checkin_count",
+            "last_checkin_date",
+            "last_checkin_place",
+            "last_checkin_by",
+            "team",
+            "game",
+        ]

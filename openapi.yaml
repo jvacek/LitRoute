@@ -59,7 +59,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Unit'
+                  $ref: '#/components/schemas/FollowedUnit'
           description: ''
   /api/account/social-accounts/:
     delete:
@@ -694,6 +694,50 @@ components:
           type: string
       required:
       - detail
+    FollowedUnit:
+      type: object
+      properties:
+        identifier:
+          type: string
+          description: Unique identifier for the unit, e.g. 'alpha-01'. Must start
+            with at least three characters and end with two digits, separated by a
+            dash.
+          pattern: ^\w{3,}
+          maxLength: 200
+        checkin_count:
+          type: integer
+          readOnly: true
+        last_checkin_date:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        last_checkin_place:
+          type: string
+          readOnly: true
+          nullable: true
+        last_checkin_by:
+          type: string
+          readOnly: true
+          nullable: true
+        team:
+          allOf:
+          - $ref: '#/components/schemas/Team'
+          readOnly: true
+          nullable: true
+        game:
+          allOf:
+          - $ref: '#/components/schemas/Game'
+          readOnly: true
+          nullable: true
+      required:
+      - checkin_count
+      - game
+      - identifier
+      - last_checkin_by
+      - last_checkin_date
+      - last_checkin_place
+      - team
     Game:
       type: object
       properties:

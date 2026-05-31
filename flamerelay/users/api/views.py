@@ -7,7 +7,8 @@ from allauth.socialaccount.models import SocialAccount
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, F, OuterRef, Subquery, Value
+from django.db.models.functions import Coalesce, NullIf
 from drf_spectacular.utils import extend_schema, inline_serializer
 from rest_framework import generics, serializers, status
 from rest_framework.parsers import JSONParser
@@ -15,8 +16,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from backend.api.serializers import UnitSerializer
+from backend.api.serializers import FollowedUnitSerializer
 from backend.api.views import turnstile
+from backend.models import CheckIn
 from flamerelay.users.models import User
 from flamerelay.users.services import anonymize_user
 
@@ -37,13 +39,27 @@ class AccountView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class AccountFollowsView(generics.ListAPIView):
-    serializer_class = UnitSerializer
+    serializer_class = FollowedUnitSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return self.request.user.followed_units.annotate(
-            checkin_count=Count("checkin", distinct=True),
-            follower_count=Count("followers", distinct=True),
+        # Latest check-in per unit via correlated subqueries (no N+1). `who`
+        # mirrors CheckInSerializer.get_created_by_name: created_by.name, else
+        # anonymous_name, else null — NullIf turns the blank default into NULL.
+        latest = CheckIn.objects.filter(unit=OuterRef("pk")).order_by("-date_created")
+        return (
+            self.request.user.followed_units.select_related("game", "team")
+            .annotate(
+                checkin_count=Count("checkin", distinct=True),
+                last_checkin_date=Subquery(latest.values("date_created")[:1]),
+                last_checkin_place=Subquery(latest.values("place")[:1]),
+                last_checkin_by=Subquery(
+                    latest.annotate(who=Coalesce(F("created_by__name"), NullIf("anonymous_name", Value("")))).values(
+                        "who"
+                    )[:1]
+                ),
+            )
+            .order_by(F("last_checkin_date").desc(nulls_last=True), "identifier")
         )
 
 
