@@ -45,6 +45,13 @@ def _upload(name: str = "test.png", *, width: int = 64, height: int = 64) -> Sim
     return SimpleUploadedFile(name, _png(width, height), content_type="image/png")
 
 
+def _heif(width: int = 64, height: int = 64) -> bytes:
+    # Relies on pillow-heif's opener being registered in BackendConfig.ready().
+    buf = BytesIO()
+    Image.new("RGB", (width, height), color=(200, 100, 50)).save(buf, format="HEIF")
+    return buf.getvalue()
+
+
 def _pending_url(unit) -> str:
     return reverse("api:pending-images", kwargs={"identifier": unit.identifier})
 
@@ -91,6 +98,16 @@ class TestPendingUploadHappyPath:
         assert pending.checkin_id == res.json()["id"]
         assert pending.attach_token is None
         assert pending.order == 0
+
+    def test_heif_upload_accepted_and_stored_as_webp(self, auth_client, unit):
+        # iPhone photos arrive as HEIF. When the client downscale is skipped
+        # (its failure fallback uploads the original, or a non-WebKit browser
+        # can't decode HEIC), the field must still decode HEIF and store the
+        # canonical WebP. Regression guard for the missing Pillow HEIF plugin.
+        heif = SimpleUploadedFile("photo.heic", _heif(), content_type="image/heic")
+        res = auth_client.post(_pending_url(unit), {"image": heif}, format="multipart")
+        assert res.status_code == status.HTTP_201_CREATED
+        assert res.json()["preview_url"].endswith(".webp")
 
     def test_anon_uploads_then_attaches(self, client, unit, mute_emails):
         res = client.post(

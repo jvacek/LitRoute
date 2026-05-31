@@ -12,6 +12,13 @@ class BackendConfig(AppConfig):
     def ready(self):
         import sentry_sdk  # noqa: PLC0415
         from django.conf import settings  # noqa: PLC0415
+        from pillow_heif import register_heif_opener  # noqa: PLC0415
+
+        # Teach Pillow to decode HEIF/HEIC. iPhone photos arrive as HEIF, and
+        # any upload path that reaches the server unconverted (the client
+        # downscale's failure fallback, or a non-WebKit browser that can't
+        # decode HEIC) must still be openable by StrippedResizedImageField.
+        register_heif_opener()
 
         # Wipe the cache on every autoreloader-triggered restart in local dev so
         # code changes don't get masked by stale cached values. Django's StatReloader
