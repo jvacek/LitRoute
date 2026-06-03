@@ -136,7 +136,7 @@
     "@fontsource/dm-sans": "^5.2.8",
     "@maptiler/client": "^3.0.2",
     "@marsidev/react-turnstile": "^1.1.0",
-    "@sentry/react": "^10.55.0",
+    "@sentry/react": "^10.56.0",
     "@simplewebauthn/browser": "^13.3.0",
     "cobe": "^2.0.1",
     "exifr": "^7.1.3",
