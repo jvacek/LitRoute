@@ -51,16 +51,16 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-  "coverage==7.13.5",
+  "coverage==7.14.1",
   "django-coverage-plugin==3.2.2",
   "django-debug-toolbar==6.3.0",
   "django-extensions==4.1",
   "django-fastdev>=1.13.0",
   "django-migrations-ruff-formatter>=0.1.0",
-  "django-stubs>=6.0.3",
+  "django-stubs>=6.0.5",
   "django-template-lsp>=1.2.2",
-  "djangorestframework-stubs==3.16.9",
-  "djlint==1.36.4",
+  "djangorestframework-stubs==3.17.0",
+  "djlint==1.38.0",
   "factory-boy==3.3.3",
   "ipdb==0.13.13",
   # "mypy==1.20.0",
@@ -71,8 +71,8 @@ dev = [
   "pytest==9.0.3",
   "pytest-django==4.12.0",
   "pytest-sugar==1.1.1",
-  "ruff~=0.15.12",
-  "watchfiles==1.1.1",
+  "ruff~=0.15.16",
+  "watchfiles==1.2.0",
   "werkzeug[watchdog]==3.1.8",
 ]
 
