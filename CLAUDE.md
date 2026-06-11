@@ -115,8 +115,12 @@ TODOs/              # task trackers
 
 **Read the relevant doc before exploring code or planning changes** — not after, not "if needed". These files exist precisely so you don't have to rediscover conventions by grepping. If your task touches an area below, the corresponding doc is a prerequisite, not optional reading. Do not duplicate this content here — link, don't copy.
 
-- **Touching anything in `flamerelay/static/js/` or `flamerelay/templates/`** (React, SPA routing, auth UX, brand tokens, mobile rules, WebAuthn, i18n usage)
-  → **read `flamerelay/templates/FRONTEND.md` first.**
+- **Touching React UI, SPA routing, loaders, brand tokens, mobile rules, performance hints**
+  → **read `flamerelay/templates/FRONTEND.md` first.** Has an index at the top — descend into a sibling doc if your task is auth- or i18n-specific.
+- **Auth UX — login, signup, social, WebAuthn / passkeys, MFA**
+  → **read `flamerelay/static/js/AUTH.md` first.**
+- **i18n strings, locales, translation conventions**
+  → **read `flamerelay/static/js/I18N.md` first.** Translation tooling (lint hook, coverage, lookup) lives in `scripts/README.md`.
 - **Touching `backend/models.py`, signals, auth, permissions, or storage cleanup**
   → **read `backend/ARCHITECTURE.md` first.**
 - **Adding, modifying, or testing any `/api/` endpoint**

@@ -16,7 +16,7 @@ No public user profiles. `/profile/` shows the authenticated user's own profile 
 2. Social OAuth (Google, etc.)
 3. Registered WebAuthn passkey
 
-All paths land at `/accounts/login/`. The passkey flow uses `@simplewebauthn/browser` on the frontend and `allauth.mfa.webauthn` / `webauthn>=2.0` (py-webauthn) on the backend. See `flamerelay/templates/FRONTEND.md → WebAuthn / Passkeys API paths` for endpoint shapes.
+All paths land at `/accounts/login/`. The passkey flow uses `@simplewebauthn/browser` on the frontend and `allauth.mfa.webauthn` / `webauthn>=2.0` (py-webauthn) on the backend. See `flamerelay/static/js/AUTH.md → WebAuthn / Passkeys API paths` for endpoint shapes.
 
 `/accounts/signup/` renders only for **authenticated** users confirming or updating their display name. Unauthenticated visitors are redirected to login. New social users are sent here by `checkNameThenRedirect()` in `Login.tsx` when `me.name` is blank after OAuth.
 
