@@ -1,12 +1,6 @@
-# Config for Dependabot updates. See Documentation here:
-# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
-#
-# Strategy: version-update PRs for prod runtime deps, bundled version-update PRs
-# for dev tooling, and security-update PRs always individual for everything.
-# Note: `allow` in dependabot.yml filters BOTH version and security updates, so
-# we omit it on `uv` and `npm` to keep dev-dep CVEs flowing. The `groups` block
-# rolls dev-dep version updates into a single bundled PR per cycle to manage
-# noise without sacrificing CVE coverage.
+# Security updates only — version update PRs are disabled via open-pull-requests-limit: 0.
+# A GitHub Actions workflow (.github/workflows/dependabot-severity-filter.yml) further
+# narrows security PRs to critical severity (CVSS >= 9.0).
 
 version: 2
 updates:
@@ -14,10 +8,7 @@ updates:
     directory: '/'
     schedule:
       interval: 'daily'
-    groups:
-      github-actions:
-        patterns:
-          - '*'
+    open-pull-requests-limit: 0
 
   - package-ecosystem: 'docker'
     directories:
@@ -25,16 +16,7 @@ updates:
       - 'compose/production/django/'
     schedule:
       interval: 'daily'
-    # Ignore minor version updates (3.10 -> 3.11) but update patch versions
-    ignore:
-      - dependency-name: '*'
-        update-types:
-          - 'version-update:semver-major'
-          - 'version-update:semver-minor'
-    groups:
-      docker-python:
-        patterns:
-          - '*'
+    open-pull-requests-limit: 0
 
   - package-ecosystem: 'docker'
     directories:
@@ -42,49 +24,23 @@ updates:
       - 'compose/production/postgres/'
     schedule:
       interval: 'daily'
-    # Node uses even/odd LTS model — odd versions (25, 27…) are non-LTS dev releases.
-    # Block major bumps so we only track patch updates within the current LTS line.
-    ignore:
-      - dependency-name: 'node'
-        update-types:
-          - 'version-update:semver-major'
+    open-pull-requests-limit: 0
 
   - package-ecosystem: 'docker-compose'
     directories:
       - '/'
     schedule:
       interval: 'daily'
+    open-pull-requests-limit: 0
 
   - package-ecosystem: 'uv'
     directory: '/'
     schedule:
       interval: 'daily'
-    groups:
-      uv-prod:
-        dependency-type: 'production'
-        update-types:
-          - 'minor'
-          - 'patch'
-      uv-dev:
-        dependency-type: 'development'
+    open-pull-requests-limit: 0
 
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
       interval: 'daily'
-    # Block eslint major bumps until eslint-plugin-react supports eslint 10.
-    # The plugin pins `peer eslint@"...|| ^9.7"`, so bumping eslint to 10 makes
-    # `npm ci` fail with ERESOLVE — and because dependabot groups all dev deps
-    # into one PR (npm-dev below), that single conflict blocks every other dev
-    # update too. npm peer deps are enforced at install time, not during
-    # dependabot's resolution, so we have to express the ceiling here.
-    # Remove once this lands: https://github.com/jsx-eslint/eslint-plugin-react/issues/3977
-    ignore:
-      - dependency-name: 'eslint'
-        update-types:
-          - 'version-update:semver-major'
-    groups:
-      npm-prod:
-        dependency-type: 'production'
-      npm-dev:
-        dependency-type: 'development'
+    open-pull-requests-limit: 0
