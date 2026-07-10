@@ -39,7 +39,7 @@ services:
       - ./.envs/.production/.postgres
 
   redis:
-    image: docker.io/redis:8.6
+    image: docker.io/redis:8.8
 
     volumes:
       - production_redis_data:/data
