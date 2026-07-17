@@ -66,8 +66,7 @@ export async function reportUnsupportedImage(
     // DNG). Picking non-PII tags only; GPS is never read.
     const { parse } = await import('exifr');
     const meta = (await parse(file, { pick: EXIF_PICK })) as
-      | Record<string, unknown>
-      | undefined;
+      Record<string, unknown> | undefined;
     if (meta) {
       context.make = meta.Make;
       context.model = meta.Model;

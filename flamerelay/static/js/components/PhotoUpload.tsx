@@ -30,8 +30,7 @@ export interface PhotoUploadProps {
 }
 
 type OrderedItem =
-  | { type: 'existing'; id: number }
-  | { type: 'new'; key: string };
+  { type: 'existing'; id: number } | { type: 'new'; key: string };
 
 function itemKey(item: OrderedItem): string {
   return item.type === 'existing' ? `e-${item.id}` : `n-${item.key}`;

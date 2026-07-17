@@ -65,8 +65,7 @@ export function useReauthentication({
 
   function fromResponse(resp: AllauthResponse) {
     const data = resp.data as
-      | { user?: { email?: string; has_usable_password?: boolean } }
-      | undefined;
+      { user?: { email?: string; has_usable_password?: boolean } } | undefined;
     setEmail(data?.user?.email ?? '');
     setHasPassword(data?.user?.has_usable_password === true);
     resetInputs();
