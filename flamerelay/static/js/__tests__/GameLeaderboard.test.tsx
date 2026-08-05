@@ -7,7 +7,7 @@ import { useConfig } from '../lib/useConfig';
 let mockLoaderData: GameLeaderboardLoaderData;
 
 jest.mock('../lib/useConfig');
-jest.mock('react-router-dom', () => ({
+jest.mock('react-router', () => ({
   useParams: () => ({ gameId: '1' }),
   useLoaderData: () => mockLoaderData,
 }));

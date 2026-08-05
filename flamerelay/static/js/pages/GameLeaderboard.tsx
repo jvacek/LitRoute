@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useLoaderData } from 'react-router-dom';
+import { useLoaderData } from 'react-router';
 import Countdown from '../components/Countdown';
 import JourneyMap from '../components/JourneyMap';
 import TeamBadge from '../components/TeamBadge';

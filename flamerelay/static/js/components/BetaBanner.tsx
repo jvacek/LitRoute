@@ -1,6 +1,6 @@
 import { Fragment, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { entries as changelogEntries } from '../../../../CHANGELOG.md';
 
 const FRESH_CHANGE_MAX_DAYS = 14;

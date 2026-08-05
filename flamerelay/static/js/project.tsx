@@ -10,7 +10,7 @@ import {
   matchRoutes,
   useLocation,
   useNavigationType,
-} from 'react-router-dom';
+} from 'react-router';
 import App from './App';
 import { GIT_COMMIT, SENTRY_DSN, SENTRY_ENVIRONMENT } from './env';
 

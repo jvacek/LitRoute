@@ -158,7 +158,7 @@ export async function unitLoader({
 ### Consuming loader data in the page
 
 ```ts
-import { useLoaderData } from 'react-router-dom';
+import { useLoaderData } from 'react-router';
 import type { UnitLoaderData } from './Unit.loader';
 
 const { unit, checkins } = useLoaderData() as UnitLoaderData;

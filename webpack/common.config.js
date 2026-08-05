@@ -57,7 +57,7 @@ module.exports = {
           priority: 30,
         },
         react: {
-          test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/,
+          test: /[\\/]node_modules[\\/](react|react-dom|react-router|scheduler)[\\/]/,
           name: 'vendor-react',
           chunks: 'initial',
           priority: 30,

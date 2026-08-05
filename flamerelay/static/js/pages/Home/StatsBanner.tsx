@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 import type { components } from '../../api/schema';
 

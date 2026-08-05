@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLoaderData, useNavigate, useParams } from 'react-router-dom';
+import { useLoaderData, useNavigate, useParams } from 'react-router';
 import { apiFetch } from '../api';
 import { useAuth } from '../AuthContext';
 import { getEditToken } from '../lib/editTokens';

@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Link, useLoaderData, useNavigate } from 'react-router-dom';
+import { Link, useLoaderData, useNavigate } from 'react-router';
 import { useAuth } from '../AuthContext';
 import TeamBadge from '../components/TeamBadge';
 import { logout } from '../lib/allauthApi';

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router';
 
 import { apiFetch } from '../../api';
 import scribbleUpSrc from '../../assets/arrows/scribble-up.svg';

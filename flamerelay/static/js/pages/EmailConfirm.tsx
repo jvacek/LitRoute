@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router';
 
 import {
   getEmailVerification,
