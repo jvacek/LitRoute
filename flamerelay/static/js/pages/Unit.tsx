@@ -7,7 +7,7 @@ import {
   useNavigate,
   useParams,
   useSearchParams,
-} from 'react-router-dom';
+} from 'react-router';
 import { useAuth } from '../AuthContext';
 import { apiFetch } from '../api';
 import type { components } from '../api/schema';

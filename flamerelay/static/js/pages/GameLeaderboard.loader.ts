@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs } from 'react-router-dom';
+import type { LoaderFunctionArgs } from 'react-router';
 import { apiClient } from '../api/client';
 import type { components } from '../api/schema';
 import { getLeaderboardFrom } from '../lib/leaderboardFrom';

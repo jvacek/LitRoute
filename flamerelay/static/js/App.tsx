@@ -2,11 +2,11 @@ import { Component, Suspense, lazy, useEffect } from 'react';
 import {
   Outlet,
   Route,
-  RouterProvider,
   createBrowserRouter,
   createRoutesFromElements,
   useLocation,
-} from 'react-router-dom';
+} from 'react-router';
+import { RouterProvider } from 'react-router/dom';
 import { AuthProvider } from './AuthContext';
 import PrivateRoute from './PrivateRoute';
 import BetaBanner from './components/BetaBanner';

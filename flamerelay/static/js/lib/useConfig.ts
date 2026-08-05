@@ -1,4 +1,4 @@
-import { useRouteLoaderData } from 'react-router-dom';
+import { useRouteLoaderData } from 'react-router';
 import type { Config, RootLoaderData } from '../pages/root.loader';
 
 export type { Config } from '../pages/root.loader';

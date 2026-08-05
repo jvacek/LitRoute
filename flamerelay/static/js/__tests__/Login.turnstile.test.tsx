@@ -14,7 +14,7 @@ import {
 import React from 'react';
 
 const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
+jest.mock('react-router', () => ({
   __esModule: true,
   useNavigate: () => mockNavigate,
   useSearchParams: () => [new URLSearchParams(), jest.fn()],

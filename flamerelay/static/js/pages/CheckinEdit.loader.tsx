@@ -4,7 +4,7 @@ import {
   isRouteErrorResponse,
   useRouteError,
   type LoaderFunctionArgs,
-} from 'react-router-dom';
+} from 'react-router';
 import { apiClient } from '../api/client';
 import type { components } from '../api/schema';
 import { amberCharBtnLg } from '../styles';

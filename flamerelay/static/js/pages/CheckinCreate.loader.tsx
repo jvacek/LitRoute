@@ -1,5 +1,5 @@
-import { isRouteErrorResponse, useRouteError } from 'react-router-dom';
-import type { LoaderFunctionArgs } from 'react-router-dom';
+import { isRouteErrorResponse, useRouteError } from 'react-router';
+import type { LoaderFunctionArgs } from 'react-router';
 import { apiClient } from '../api/client';
 import type { components } from '../api/schema';
 import { UnitErrorElement } from './Unit.loader';

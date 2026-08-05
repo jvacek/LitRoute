@@ -35,8 +35,8 @@
     "openapi-typescript": "^7.13.0",
     "postcss": "^8.5.13",
     "postcss-loader": "^8.0.0",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "sharp": "^0.34.5",
     "size-limit": "^12.1.0",
     "tailwindcss": "^4.2.2",
@@ -147,6 +147,6 @@
     "qrcode": "^1.5.4",
     "react-i18next": "^17.0.8",
     "react-map-gl": "^8.0.4",
-    "react-router-dom": "^7.16.0"
+    "react-router": "^8.2.0"
   }
 }

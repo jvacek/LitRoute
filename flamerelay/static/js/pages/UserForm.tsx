@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useLoaderData, useNavigate } from 'react-router-dom';
+import { Link, useLoaderData, useNavigate } from 'react-router';
 import { apiFetch } from '../api';
 import { useAuth } from '../AuthContext';
 import { reportError } from '../lib/sentry';
