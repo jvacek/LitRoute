@@ -76,6 +76,8 @@ prek run --all-files                   # full sweep
 
 The hook chain covers: Ruff (Python, 120-char), Prettier (JS/CSS/JSON), ESLint + `tsc --noEmit`, djLint, django-upgrade, pyproject-fmt, `lint-translations`, `uv-lock`. Templates are excluded from Prettier.
 
+`prek install` wires up both shims (`default_install_hook_types`). The pre-push stage runs the unit suites — `just test` (pytest in Docker, needs the daemon) and `npm test` (Jest) — and nothing else. Bypass with `git push --no-verify`.
+
 **JSX text never uses bare apostrophes or quotes.** ESLint's `react/no-unescaped-entities` rejects them and Prettier won't fix it. Use `&apos;` for `'` and `&quot;` for `"`.
 
 **Translation JSON values use real characters, not HTML entities.** The JSX rule above does NOT apply to `flamerelay/static/locales/*/translation.json` — those values are inserted into the DOM as raw strings via `t()`, so `&apos;` would render literally as `&apos;`. Write `lighter's` not `lighter&apos;s` in JSON.
