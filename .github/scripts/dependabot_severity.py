@@ -32,12 +32,15 @@ from pathlib import Path
 OSV_QUERY_URL = "https://api.osv.dev/v1/query"
 OSV_VULN_URL = "https://osv.dev/vulnerability/"
 
-# Dependabot package-ecosystem -> OSV ecosystem
+# Dependabot package-ecosystem -> OSV ecosystem (fetch-metadata reports the
+# underscore form, e.g. "npm_and_yarn", "github_actions")
 OSV_ECOSYSTEMS = {
     "uv": "PyPI",
     "pip": "PyPI",
     "npm": "npm",
+    "npm_and_yarn": "npm",
     "github-actions": "GitHub Actions",
+    "github_actions": "GitHub Actions",
 }
 
 SEVERITIES = ("CRITICAL", "HIGH", "MODERATE", "LOW")
@@ -143,7 +146,8 @@ def input_problem(ecosystem: str, names: list[str], previous: str, new: str) -> 
     """Return a human-readable reason when the metadata cannot be evaluated."""
     if ecosystem not in OSV_ECOSYSTEMS:
         return (
-            f"no OSV ecosystem mapping for `{ecosystem or 'unknown'}` (Docker-based updates have no advisory coverage)"
+            f"no OSV ecosystem mapping for `{ecosystem or 'unknown'}` "
+            "(ecosystems without OSV advisory coverage, e.g. Docker, cannot be classified)"
         )
     if len(names) != 1 or not previous or not new:
         return (
