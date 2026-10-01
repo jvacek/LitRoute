@@ -1,0 +1,64 @@
+name: Dependabot severity filter
+
+# Companion to .github/dependabot.yml, which already restricts Dependabot to
+# security updates (open-pull-requests-limit: 0). This workflow closes security
+# PRs that only fix advisories rated below critical (CVSS < 9.0), using the
+# public OSV advisory database. PRs whose severity cannot be determined are
+# left open for manual review.
+#
+# Runs on pull_request_target because workflows triggered by Dependabot PRs on
+# pull_request receive a read-only GITHUB_TOKEN. No PR code is checked out or
+# executed; only the base branch and the OSV API are used.
+
+on:
+  pull_request_target:
+    branches: ['main']
+    types: [opened, synchronize]
+
+concurrency:
+  group: dependabot-severity-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  severity-filter:
+    if: >-
+      github.repository == 'jvacek/LitRoute' &&
+      github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout base branch (for the severity script)
+        uses: actions/checkout@v6
+
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v3
+
+      - name: Evaluate advisories fixed by this PR
+        id: severity
+        env:
+          ECOSYSTEM: ${{ steps.metadata.outputs.package-ecosystem }}
+          NAMES: ${{ steps.metadata.outputs.dependency-names }}
+          PREVIOUS: ${{ steps.metadata.outputs.previous-version }}
+          NEW: ${{ steps.metadata.outputs.new-version }}
+          COMMENT_FILE: ${{ runner.temp }}/severity-comment.md
+        run: python3 .github/scripts/dependabot_severity.py
+
+      - name: Close PR that fixes no critical advisory
+        if: steps.severity.outputs.verdict == 'close'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          gh pr comment "$PR_URL" --body-file "${{ runner.temp }}/severity-comment.md"
+          gh pr close "$PR_URL"
+
+      - name: Comment when severity could not be determined
+        if: steps.severity.outputs.verdict == 'unknown'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr comment "$PR_URL" --body-file "${{ runner.temp }}/severity-comment.md"

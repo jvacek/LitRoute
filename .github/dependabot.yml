@@ -1,6 +1,7 @@
 # Security updates only — version update PRs are disabled via open-pull-requests-limit: 0.
-# A GitHub Actions workflow (.github/workflows/dependabot-severity-filter.yml) further
-# narrows security PRs to critical severity (CVSS >= 9.0).
+# .github/workflows/dependabot-severity-filter.yml further narrows security PRs:
+# PRs that only fix advisories rated below critical (CVSS < 9.0) are closed
+# automatically, based on the public OSV advisory database.
 
 version: 2
 updates:
