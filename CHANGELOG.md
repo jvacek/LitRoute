@@ -1,3 +1,10 @@
+## 2026-10-04
+
+After a little break we're back
+
+- Update a lot of dependencies for security
+- Fix the map breaking due to said updates
+
 ## 2026-05-31
 
 - Fix issue with pictures taken on iPhones being increased in size before sending to server
