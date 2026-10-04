@@ -1,4 +1,5 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
+import '../lib/maplibreWorker';
 import type { RefObject } from 'react';
 import { useMemo } from 'react';
 import ReactMap, { Layer, Source } from 'react-map-gl/maplibre';

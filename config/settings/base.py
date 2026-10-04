@@ -269,7 +269,7 @@ CONTENT_SECURITY_POLICY = {
         ],
         "frame-src": ["https://challenges.cloudflare.com"],
         "font-src": ["'self'", "https://fonts.gstatic.com"],
-        # img-src: sprites/icons (PNG); connect-src: tiles, style JSON, glyphs; worker-src: MapLibre web workers
+        # img-src: sprites/icons (PNG); connect-src: tiles, style JSON, glyphs
         "img-src": [
             "'self'",
             "data:",
@@ -279,7 +279,9 @@ CONTENT_SECURITY_POLICY = {
             "https://gitc.earthdata.nasa.gov",
         ],
         "connect-src": ["'self'", "https://api.maptiler.com", "https://*.ingest.us.sentry.io"],
-        "worker-src": ["blob:"],
+        # 'self': MapLibre's emitted maplibre-gl-worker.mjs; blob: its
+        # cross-origin worker fallback (and Sentry replay, if enabled).
+        "worker-src": ["'self'", "blob:"],
         "frame-ancestors": ["'none'"],
         "object-src": ["'none'"],
     }

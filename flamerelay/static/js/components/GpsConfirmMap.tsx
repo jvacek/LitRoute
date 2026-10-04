@@ -1,4 +1,5 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
+import '../lib/maplibreWorker';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import ReactMap, { Layer, Marker, Source } from 'react-map-gl/maplibre';

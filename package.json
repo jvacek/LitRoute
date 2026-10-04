@@ -79,6 +79,9 @@
       "<rootDir>/flamerelay/static/js"
     ],
     "testEnvironment": "jsdom",
+    "moduleNameMapper": {
+      "^maplibre-gl$": "<rootDir>/flamerelay/static/js/__mocks__/maplibreGlStub.ts"
+    },
     "setupFilesAfterEnv": [
       "<rootDir>/flamerelay/static/js/jest.setup.ts"
     ],

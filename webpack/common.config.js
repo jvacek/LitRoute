@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const webpack = require('webpack');
@@ -18,6 +19,42 @@ function getGitCommit() {
 }
 
 const gitCommit = getGitCommit();
+
+/**
+ * MapLibre v6 resolves its tile/GeoJSON worker relative to import.meta.url,
+ * which webpack bakes to a build-machine file:// path. At runtime the fallback
+ * URL is empty → resolves to the page URL → the CSP blocks the worker, leaving
+ * a blank map. Emit the worker (and the shared chunk it imports) under the
+ * publicPath; lib/maplibreWorker.ts points MapLibre at the emitted copy.
+ *
+ * ponytail: fixed (unhashed) filenames, so after a maplibre-gl upgrade the old
+ * worker can be served for up to the static max-age window. Version the
+ * filenames if that ever bites.
+ */
+class MapLibreWorkerAssetsPlugin {
+  apply(compiler) {
+    compiler.hooks.thisCompilation.tap(
+      'MapLibreWorkerAssetsPlugin',
+      (compilation) => {
+        const dist = path.join(
+          path.dirname(require.resolve('maplibre-gl/package.json')),
+          'dist',
+        );
+        for (const name of [
+          'maplibre-gl-worker.mjs',
+          'maplibre-gl-shared.mjs',
+        ]) {
+          compilation.emitAsset(
+            `js/${name}`,
+            new webpack.sources.RawSource(
+              fs.readFileSync(path.join(dist, name)),
+            ),
+          );
+        }
+      },
+    );
+  }
+}
 
 module.exports = {
   target: 'web',
@@ -101,6 +138,7 @@ module.exports = {
       filename: process.env.WEBPACK_STATS_FILE || 'webpack-stats.json',
     }),
     new MiniCssExtractPlugin({ filename: 'css/[name].[contenthash].css' }),
+    new MapLibreWorkerAssetsPlugin(),
     new webpack.DefinePlugin({
       __GIT_COMMIT__: JSON.stringify(gitCommit),
       __GITHUB_REPO_URL__: JSON.stringify(GITHUB_REPO_URL),
