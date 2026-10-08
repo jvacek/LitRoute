@@ -9,6 +9,7 @@ services:
       context: .
       dockerfile: ./compose/production/django/Dockerfile
     image: ghcr.io/jvacek/flamerelay-django:latest
+    restart: unless-stopped
     depends_on:
       - postgres
       - redis
@@ -32,6 +33,7 @@ services:
       context: .
       dockerfile: ./compose/production/postgres/Dockerfile
     image: ghcr.io/jvacek/flamerelay-postgres:latest
+    restart: unless-stopped
     volumes:
       - production_postgres_data:/var/lib/postgresql/18/docker
       - production_postgres_data_backups:/backups
@@ -40,6 +42,7 @@ services:
 
   redis:
     image: docker.io/redis:8.8
+    restart: unless-stopped
 
     volumes:
       - production_redis_data:/data
