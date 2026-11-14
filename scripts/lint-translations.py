@@ -1,4 +1,7 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script --quiet
+# /// script
+# requires-python = ">=3.10"
+# ///
 # ruff: noqa: T201
 """
 Lint translation files: alphabetically sort keys at every level of every
@@ -6,7 +9,7 @@ locale, and drop any non-EN keys that EN no longer has (stale — renamed
 or removed source string).
 
 Usage:
-    python3 scripts/lint-translations.py [--check] [<file> ...]
+    scripts/lint-translations.py [--check] [<file> ...]
 
 With no file arguments, scans every `flamerelay/static/locales/*/translation.json`.
 Otherwise only the listed files are processed (this is what pre-commit passes).

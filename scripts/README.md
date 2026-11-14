@@ -43,9 +43,11 @@ Per-locale coverage stats and missing-key counts grouped by top-level namespace.
 ### `lint-translations.py`
 
 ```bash
-python3 scripts/lint-translations.py            # rewrite in place; exit 1 if changes were made
-python3 scripts/lint-translations.py --check    # dry run
+scripts/lint-translations.py            # rewrite in place; exit 1 if changes were made
+scripts/lint-translations.py --check    # dry run
 ```
+
+The script carries its own `uv run --script` shebang, so it always runs on a suitable Python regardless of what `python3` points at.
 
 Sorts keys and drops orphans. Default mode rewrites in place and exits 1 when changes were made, so pre-commit re-stages.
 
