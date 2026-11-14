@@ -2,7 +2,7 @@ name: Dependabot severity filter
 
 # Companion to .github/dependabot.yml, which already restricts Dependabot to
 # security updates (open-pull-requests-limit: 0). This workflow closes security
-# PRs that only fix advisories rated below critical (CVSS < 9.0), using the
+# PRs that only fix advisories rated below high (CVSS < 7.0), using the
 # public OSV advisory database. PRs whose severity cannot be determined are
 # left open for manual review.
 #

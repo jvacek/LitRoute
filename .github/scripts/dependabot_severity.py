@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Decide whether a Dependabot PR fixes a critical advisory (CVSS >= 9.0).
+"""Decide whether a Dependabot PR fixes a high or critical advisory (CVSS >= 7.0).
 
 Companion to .github/dependabot.yml, which already limits Dependabot to
 security updates. Reads the outputs of dependabot/fetch-metadata from the
@@ -16,8 +16,8 @@ Environment variables (provided by the workflow):
     COMMENT_FILE  optional; when set, the markdown comment is written there
 
 Verdicts (printed to stdout as JSON):
-    keep     at least one advisory fixed by the PR is CRITICAL
-    close    every advisory fixed by the PR is below critical
+    keep     at least one advisory fixed by the PR is HIGH or CRITICAL
+    close    every advisory fixed by the PR is MODERATE or LOW
     unknown  not enough information to decide; the PR is left open
 """
 
@@ -44,6 +44,11 @@ OSV_ECOSYSTEMS = {
 }
 
 SEVERITIES = ("CRITICAL", "HIGH", "MODERATE", "LOW")
+
+# Keep fixes for high (CVSS >= 7.0) and critical advisories; close low/moderate
+# churn. Set to "CRITICAL" to only keep critical fixes (CVSS >= 9.0).
+SEVERITY_THRESHOLD = "HIGH"
+THRESHOLD_TEXT = "**high** or **critical** (CVSS ≥ 7.0)"
 
 
 def query_osv(ecosystem: str, name: str, version: str) -> list[dict]:
@@ -113,9 +118,9 @@ def verdict_body(verdict: str, reason: str, vulns: list[dict]) -> str:
     highest = next((s for s in SEVERITIES if any(severity(v) == s for v in vulns)), "unknown")
     return (
         f"🤖 **Automated severity filter**\n\n"
-        f"Closing this security update: it fixes no advisory rated **critical** "
-        f"(CVSS ≥ 9.0), the threshold configured for this repository "
-        f"(see [`.github/dependabot.yml`](../blob/main/.github/dependabot.yml)). "
+        f"Closing this security update: it fixes no advisory rated "
+        f"{THRESHOLD_TEXT}, the threshold configured for this repository "
+        f"(see [`.github/scripts/dependabot_severity.py`](../blob/main/.github/scripts/dependabot_severity.py)). "
         f"Highest severity fixed by this PR: `{highest.lower()}`.\n\n"
         "Advisories fixed by this update:\n\n"
         "| Advisory | Severity | CVE |\n"
@@ -191,11 +196,13 @@ def main() -> int:
             )
         return emit("unknown", reason, [])
 
-    if any(severity(vuln) == "CRITICAL" for vuln in fixed):
-        return emit("keep", "fixes at least one critical advisory", fixed)
-    if any(severity(vuln) is None for vuln in fixed):
+    threshold = SEVERITIES.index(SEVERITY_THRESHOLD)
+    severities = [severity(vuln) for vuln in fixed]
+    if any(s is not None and SEVERITIES.index(s) <= threshold for s in severities):
+        return emit("keep", f"fixes at least one advisory rated {SEVERITY_THRESHOLD.lower()} or above", fixed)
+    if any(s is None for s in severities):
         return emit("unknown", "at least one fixed advisory has no severity rating", fixed)
-    return emit("close", "fixes only advisories below critical severity", fixed)
+    return emit("close", f"fixes only advisories below {SEVERITY_THRESHOLD.lower()} severity", fixed)
 
 
 if __name__ == "__main__":
