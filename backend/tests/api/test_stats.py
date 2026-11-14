@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pytest
 from django.core.cache import cache
 from rest_framework import status
 
@@ -42,3 +43,17 @@ class TestGlobePinsView:
     def test_pins_is_list(self, client, db):
         data = client.get("/api/globe-pins/").json()
         assert isinstance(data["pins"], list)
+
+    def test_ranks_by_distance_not_recency(self, client, clear_cache, make_checkin):
+        owner = UserFactory.create()
+        travelled = UnitFactory.create()
+        make_checkin(travelled, owner, location=PARIS, hours_ago=10)
+        make_checkin(travelled, owner, location=LONDON, hours_ago=9)
+        idle = UnitFactory.create()
+        make_checkin(idle, owner, location=PARIS, hours_ago=2)
+        make_checkin(idle, owner, location=PARIS, hours_ago=1)
+
+        pins = client.get("/api/globe-pins/").json()["pins"]
+
+        assert len(pins) == 2  # noqa: PLR2004
+        assert pins[0]["lat"] == pytest.approx(LONDON.y)
