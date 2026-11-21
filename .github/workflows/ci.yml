@@ -31,6 +31,10 @@ jobs:
         with:
           python-version-file: '.python-version'
 
+      # The lint-translations pre-commit hook runs through `uv run --script`.
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.4.0
+
       - name: Set up Node
         uses: actions/setup-node@v6
         with:
