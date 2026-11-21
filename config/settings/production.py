@@ -209,6 +209,12 @@ sentry_sdk.init(
 # for ERROR records — without this, every cache error would be sent twice.
 ignore_logger("django_redis.cache")
 
+# Django logs every request with an unexpected Host header at ERROR. Health
+# probes and scanners hit the container IP directly, so this is mostly noise.
+# The LOGGING entry above still writes it to the console; keep it out of Sentry
+# where one probe every 30s would otherwise burn the monthly event quota.
+ignore_logger("django.security.DisallowedHost")
+
 # django-rest-framework
 # -------------------------------------------------------------------------------
 # Tools that generate code samples can use SERVERS to point to the correct domain
